@@ -91,13 +91,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     
     const userData = response.data;
     
+    // After successful password reset, set requirePasswordReset to false
     setAuthState({
       user: {
         cashierId: userData.cashierId,
         username: userData.username,
         name: userData.name,
         email: userData.email,
-        requirePasswordReset: userData.requirePasswordReset,
+        requirePasswordReset: false, // Explicitly set to false after successful reset
       },
       token: userData.token,
       isAuthenticated: true,

@@ -27,9 +27,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }
 
   // If user requires password reset, redirect to reset password page
-  // However, skip this if password was already reset in this session
-  const passwordResetCompleted = localStorage.getItem('passwordResetCompleted') === 'true';
-  if (user?.requirePasswordReset && !passwordResetCompleted && location.pathname !== '/reset-password') {
+  if (user?.requirePasswordReset && location.pathname !== '/reset-password') {
     return <Navigate to="/reset-password" replace />;
   }
 
