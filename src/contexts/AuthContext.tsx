@@ -82,28 +82,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       throw new Error('No user logged in');
     }
     
-    const response = await authService.resetPassword({
+    await authService.resetPassword({
       username: authState.user.username,
       currentPassword,
       newPassword,
       confirmPassword,
     });
     
-    const userData = response.data;
-    
-    // After successful password reset, set requirePasswordReset to false
-    setAuthState({
-      user: {
-        cashierId: userData.cashierId,
-        username: userData.username,
-        name: userData.name,
-        email: userData.email,
-        requirePasswordReset: false, // Explicitly set to false after successful reset
-      },
-      token: userData.token,
-      isAuthenticated: true,
-      isLoading: false,
-    });
+    // Don't update auth state here - caller will handle logout
+    // User needs to login again with new password after reset
   };
 
   const updateUser = (user: User) => {
