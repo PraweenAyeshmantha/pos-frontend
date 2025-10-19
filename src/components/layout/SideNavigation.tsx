@@ -29,26 +29,26 @@ const SideNavigation: React.FC = () => {
   };
 
   return (
-    <div className="w-24 bg-white shadow-lg flex flex-col items-center py-6 space-y-6 h-screen fixed left-0 top-0">
+    <div className="w-20 bg-gray-50 border-r border-gray-200 shadow-sm flex flex-col items-center py-4 h-screen fixed left-0 top-0 z-20">
       {/* Logo */}
-      <div className="w-16 h-16 bg-teal-400 rounded-full flex items-center justify-center text-white text-2xl mb-4">
+      <div className="w-14 h-14 bg-teal-400 rounded-full flex items-center justify-center text-white text-2xl mb-6">
         🏪
       </div>
 
       {/* Navigation Items */}
-      <div className="flex-1 flex flex-col items-center space-y-4 w-full">
+      <div className="flex-1 flex flex-col items-center space-y-2 w-full">
         {navigationItems.map((item) => (
           <button
             key={item.id}
             onClick={() => handleNavigation(item.path)}
-            className={`flex flex-col items-center justify-center w-full py-3 transition-colors ${
+            className={`flex flex-col items-center justify-center w-full py-4 transition-all ${
               isActive(item.path)
-                ? 'bg-blue-600 text-white'
+                ? 'bg-blue-600 text-white shadow-sm'
                 : 'text-gray-600 hover:bg-gray-100'
             }`}
           >
             <span className="text-2xl mb-1">{item.icon}</span>
-            <span className="text-xs font-medium">{item.label}</span>
+            <span className="text-[10px] font-medium">{item.label}</span>
           </button>
         ))}
       </div>
@@ -56,10 +56,10 @@ const SideNavigation: React.FC = () => {
       {/* Logout */}
       <button
         onClick={() => console.log('Logout clicked')}
-        className="flex flex-col items-center justify-center w-full py-3 text-gray-600 hover:bg-gray-100 transition-colors"
+        className="flex flex-col items-center justify-center w-full py-4 text-gray-600 hover:bg-gray-100 transition-all mt-2"
       >
         <span className="text-2xl mb-1">🔄</span>
-        <span className="text-xs font-medium">Logout</span>
+        <span className="text-[10px] font-medium">Logout</span>
       </button>
     </div>
   );

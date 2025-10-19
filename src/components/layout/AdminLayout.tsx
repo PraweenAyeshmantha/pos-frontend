@@ -16,7 +16,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       <TopNavigation />
       
       {/* Main Content */}
-      <div className="ml-24 pt-16">
+      <div className="ml-20 pt-14">
         {children}
       </div>
     </div>
