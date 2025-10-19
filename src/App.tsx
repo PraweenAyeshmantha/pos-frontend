@@ -8,6 +8,7 @@ import DashboardPage from './pages/admin/dashboard/DashboardPage';
 import CustomersPage from './pages/admin/customers/CustomersPage';
 import OrdersPage from './pages/admin/orders/OrdersPage';
 import StatisticsPage from './pages/admin/statistics/StatisticsPage';
+import SettingsPage from './pages/admin/settings/SettingsPage';
 
 function App() {
   return (
@@ -53,6 +54,12 @@ function App() {
           <Route path="/admin/configuration/general" element={
             <ProtectedRoute>
               <AdminPage />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/admin/settings" element={
+            <ProtectedRoute>
+              <SettingsPage />
             </ProtectedRoute>
           } />
         </Routes>
