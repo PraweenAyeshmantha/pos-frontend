@@ -113,6 +113,8 @@ Response (200 OK):
 
 ## 🔓 Regular Login Flow
 
+**⚠️ First-time admin login?** See the [Admin Login Guide](ADMIN_LOGIN_GUIDE.md) for default credentials and setup instructions.
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │ Step 1: Login                                               │
