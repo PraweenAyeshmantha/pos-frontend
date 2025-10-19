@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { configurationService } from '../../../services/configurationService';
 import type { GeneralConfigFormData } from '../../../types/configuration';
+import Alert from '../../common/Alert';
+import type { AlertType } from '../../common/Alert';
 
 const GeneralConfiguration: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('general');
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [message, setMessage] = useState<{ type: AlertType; text: string } | null>(null);
   
   const [formData, setFormData] = useState<GeneralConfigFormData>({
     license_key: '',
@@ -153,14 +155,12 @@ const GeneralConfiguration: React.FC = () => {
 
       {/* Success/Error Message */}
       {message && (
-        <div
-          className={`mb-6 p-4 rounded-lg ${
-            message.type === 'success'
-              ? 'bg-green-100 text-green-800 border border-green-300'
-              : 'bg-red-100 text-red-800 border border-red-300'
-          }`}
-        >
-          {message.text}
+        <div className="mb-6">
+          <Alert
+            type={message.type}
+            title={message.type.charAt(0).toUpperCase() + message.type.slice(1)}
+            message={message.text}
+          />
         </div>
       )}
 
