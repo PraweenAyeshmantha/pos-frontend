@@ -83,8 +83,12 @@ This document describes the implementation of user login and authentication for 
 3. Frontend stores token and redirects to password reset page
 4. User enters current password and new password
 5. Frontend calls `POST /api/auth/reset-password`
-6. Backend validates and returns new JWT token
-7. User is redirected to dashboard with full access
+6. Backend validates and returns new JWT token with `requirePasswordReset: false`
+7. **Frontend calls logout() to clear all auth data**
+8. **User is redirected to login page with success message**
+9. **User must login again with new password**
+10. Backend returns `requirePasswordReset: false`
+11. User is redirected to dashboard with full access
 
 ### Protected Route Access
 1. User tries to access protected route (e.g., /admin/dashboard)
@@ -231,25 +235,25 @@ The user authentication system is now fully implemented with:
 - ✅ Modern, professional UI
 - ✅ Full TypeScript type safety
 - ✅ Ready for backend integration
-- ✅ **Fixed password reset loop issue** (October 2025)
+- ✅ **Password reset flow correctly implemented** (October 2025)
 
 The implementation follows industry best practices for React authentication and is ready for testing with the backend API.
 
 ## Recent Fixes
 
-### Password Reset Loop Fix (October 2025)
-**Issue**: Users experienced an infinite loop when resetting passwords - after reset, they were asked to login, but upon login they were redirected back to reset password.
+### Password Reset Flow Correction (October 2025)
+**Issue**: Previous implementation incorrectly kept user authenticated after password reset, which didn't follow security best practices.
 
 **Solution**: 
-- After successful password reset, user now stays authenticated and is redirected to dashboard
-- No longer calls `logout()` after password reset, preserving the session
-- Explicitly sets `requirePasswordReset: false` after successful reset to prevent loops
-- Removed unnecessary `passwordResetCompleted` flag
+- After successful password reset, user is now logged out
+- User is redirected to login page with success message
+- User must re-authenticate with new password
+- Backend's `requirePasswordReset` value is trusted during login
 
 **Files Modified**:
-- `src/pages/auth/ResetPasswordPage.tsx`
-- `src/services/authService.ts`
-- `src/contexts/AuthContext.tsx`
-- `src/components/auth/ProtectedRoute.tsx`
+- `src/pages/auth/ResetPasswordPage.tsx` - Added logout call after reset
+- `src/services/authService.ts` - Removed localStorage updates after reset
+- `src/contexts/AuthContext.tsx` - Removed state updates after reset
+- `src/services/apiClient.ts` - Removed unused `passwordResetCompleted` flag
 
 See `PASSWORD_RESET_FIX.md` and `PASSWORD_RESET_FLOW.md` for detailed documentation.
