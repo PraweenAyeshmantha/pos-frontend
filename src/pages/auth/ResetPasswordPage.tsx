@@ -8,7 +8,7 @@ const ResetPasswordPage: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { resetPassword, user } = useAuth();
+  const { resetPassword, logout, user } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -39,9 +39,10 @@ const ResetPasswordPage: React.FC = () => {
     setIsLoading(true);
     try {
       await resetPassword(currentPassword, newPassword, confirmPassword);
-      // Password reset successful - navigate to dashboard
-      // The user already has a valid token after successful reset
-      navigate('/admin/dashboard', { replace: true });
+      // Password reset successful - logout and redirect to login
+      // User needs to login again with new password to authenticate
+      logout();
+      navigate('/login', { replace: true, state: { passwordResetSuccess: true } });
     } catch (err) {
       console.error('Password reset error:', err);
       const error = err as { response?: { data?: { message?: string }; status?: number } };

@@ -34,19 +34,8 @@ class AuthService {
   async resetPassword(resetData: ResetPasswordRequest): Promise<ResetPasswordResponse> {
     const response = await apiClient.post<ResetPasswordResponse>('/auth/reset-password', resetData);
     
-    // Update token in localStorage after successful password reset
-    if (response.data.data.token) {
-      localStorage.setItem('authToken', response.data.data.token);
-      // After successful password reset, explicitly set requirePasswordReset to false
-      // This ensures we don't get stuck in a loop even if backend returns stale data
-      localStorage.setItem('user', JSON.stringify({
-        cashierId: response.data.data.cashierId,
-        username: response.data.data.username,
-        name: response.data.data.name,
-        email: response.data.data.email,
-        requirePasswordReset: false, // Explicitly set to false after successful reset
-      }));
-    }
+    // Don't update localStorage here - user will be logged out after password reset
+    // and need to login again with new password
     
     return response.data;
   }

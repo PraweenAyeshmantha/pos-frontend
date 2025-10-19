@@ -1,6 +1,6 @@
-# Password Reset Flow - Before vs After
+# Password Reset Flow - Correct Implementation
 
-## BEFORE (Broken - Infinite Loop)
+## CORRECT FLOW (Implemented)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -17,55 +17,23 @@
 │               Redirect to /reset-password                         │
 │                                                                   │
 │  User enters: current_password + new_password + confirm          │
-│  Backend returns: { new_token, requirePasswordReset: ? }         │
-│  Frontend stores: new_token + user (with backend's flag value)   │
+│  Backend returns: { new_token, requirePasswordReset: false }     │
 │                                                                   │
-│  ❌ THEN: Frontend calls logout() - CLEARS ALL DATA!            │
-│  ❌ THEN: Redirects to /login with success message              │
+│  ✅ Frontend calls logout() - CLEARS ALL AUTH DATA             │
+│  ✅ Redirect to /login with success message                     │
 │                                                                   │
 └─────────────────────┬───────────────────────────────────────────┘
                       │
                       ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                  Back at Login Page (Again!)                      │
+│                  Back at Login Page                               │
+│                                                                   │
+│  ✅ Success message shown: "Password reset successful!         │
+│     Please login with your new password."                        │
 │                                                                   │
 │  User enters: username + new_password                            │
-│  Backend returns: { token, requirePasswordReset: ? }             │
-│                                                                   │
-│  ❌ PROBLEM: Backend might return stale data                    │
-│  ❌ OR: Frontend state inconsistency                            │
-│  ❌ RESULT: requirePasswordReset = true AGAIN                   │
-│                                                                   │
-└─────────────────────┬───────────────────────────────────────────┘
-                      │
-                      ▼
-                  🔄 LOOP BACK TO RESET PASSWORD PAGE!
-                  🔄 INFINITE LOOP - USER STUCK!
-```
-
-## AFTER (Fixed - Smooth Flow)
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                      Login with default password                 │
-│                                                                   │
-│  User enters: username + default_password                        │
-│  Backend returns: { token, requirePasswordReset: true }          │
-│  Frontend stores: token + user with requirePasswordReset=true    │
-│                                                                   │
-└─────────────────────┬───────────────────────────────────────────┘
-                      │
-                      ▼
-┌─────────────────────────────────────────────────────────────────┐
-│               Redirect to /reset-password                         │
-│                                                                   │
-│  User enters: current_password + new_password + confirm          │
-│  Backend returns: { new_token, requirePasswordReset: ? }         │
-│                                                                   │
-│  ✅ Frontend stores: new_token + user                           │
-│  ✅ Frontend EXPLICITLY sets: requirePasswordReset = false      │
-│  ✅ User STAYS AUTHENTICATED (no logout!)                       │
-│  ✅ Redirect to /admin/dashboard                                │
+│  Backend returns: { token, requirePasswordReset: false }         │
+│  Frontend stores: token + user with requirePasswordReset=false   │
 │                                                                   │
 └─────────────────────┬───────────────────────────────────────────┘
                       │
@@ -81,84 +49,110 @@
 │                                                                   │
 └───────────────────────────────────────────────────────────────────┘
 
-                           🎉 FIXED!
+                           🎉 WORKING!
 ```
 
-## Key Differences
+## Key Implementation Points
 
-| Aspect | Before (Broken) | After (Fixed) |
-|--------|----------------|---------------|
-| **After password reset** | Calls `logout()` | Stays authenticated |
-| **Navigation** | Redirects to `/login` | Redirects to `/admin/dashboard` |
-| **requirePasswordReset flag** | Uses backend value (might be stale) | Explicitly set to `false` |
-| **Session state** | Lost (due to logout) | Preserved |
-| **User experience** | Must re-enter credentials | Seamless transition |
-| **Risk of loop** | High (if backend has issues) | None (frontend enforces correct state) |
-| **passwordResetCompleted flag** | Used as workaround | Removed (not needed) |
+| Aspect | Implementation |
+|--------|----------------|
+| **After password reset** | Calls `logout()` to clear all auth data |
+| **Navigation** | Redirects to `/login` with success message |
+| **requirePasswordReset flag** | Uses backend value during login |
+| **Session state** | Cleared after password reset |
+| **User experience** | Must re-enter credentials after reset |
+| **Security** | User re-authenticates with new password |
 
 ## Authentication State Lifecycle
 
-### BEFORE
 ```
-Login → requirePasswordReset=true → Reset Password → LOGOUT ❌
+Login → requirePasswordReset=true → Reset Password → LOGOUT ✅
   ↑                                                          │
   └──────────────────────────────────────────────────────────┘
-                    (Lost session, must re-login)
-```
-
-### AFTER
-```
-Login → requirePasswordReset=true → Reset Password → requirePasswordReset=false ✅
-                                                              │
-                                                              ▼
-                                                         Dashboard
+           (Re-login required with new password)
 ```
 
 ## Code Changes Summary
 
 ### 1. ResetPasswordPage.tsx
 ```diff
-- await resetPassword(currentPassword, newPassword, confirmPassword);
-- logout();
-- navigate('/login', { replace: true, state: { passwordResetSuccess: true } });
++ const { resetPassword, logout, user } = useAuth();
 
-+ await resetPassword(currentPassword, newPassword, confirmPassword);
-+ navigate('/admin/dashboard', { replace: true });
+  await resetPassword(currentPassword, newPassword, confirmPassword);
+- // Password reset successful - navigate to dashboard
+- // The user already has a valid token after successful reset
+- navigate('/admin/dashboard', { replace: true });
++ // Password reset successful - logout and redirect to login
++ // User needs to login again with new password to authenticate
++ logout();
++ navigate('/login', { replace: true, state: { passwordResetSuccess: true } });
 ```
 
 ### 2. authService.ts
 ```diff
-localStorage.setItem('user', JSON.stringify({
-  ...
-- requirePasswordReset: response.data.data.requirePasswordReset,
-+ requirePasswordReset: false, // Explicitly set to false
-}));
-- localStorage.setItem('passwordResetCompleted', 'true');
+async resetPassword(resetData: ResetPasswordRequest): Promise<ResetPasswordResponse> {
+  const response = await apiClient.post<ResetPasswordResponse>('/auth/reset-password', resetData);
+  
+- // Update token in localStorage after successful password reset
+- if (response.data.data.token) {
+-   localStorage.setItem('authToken', response.data.data.token);
+-   localStorage.setItem('user', JSON.stringify({
+-     ...
+-     requirePasswordReset: false,
+-   }));
+- }
++ // Don't update localStorage here - user will be logged out after password reset
++ // and need to login again with new password
+  
+  return response.data;
+}
 ```
 
 ### 3. AuthContext.tsx
 ```diff
-setAuthState({
-  user: {
-    ...
--   requirePasswordReset: userData.requirePasswordReset,
-+   requirePasswordReset: false, // Explicitly set to false
-  },
-  ...
-});
+const resetPassword = async (currentPassword: string, newPassword: string, confirmPassword: string) => {
+  if (!authState.user) {
+    throw new Error('No user logged in');
+  }
+  
+- const response = await authService.resetPassword({
++ await authService.resetPassword({
+    username: authState.user.username,
+    currentPassword,
+    newPassword,
+    confirmPassword,
+  });
+  
+- const userData = response.data;
+- 
+- // After successful password reset, set requirePasswordReset to false
+- setAuthState({
+-   user: {
+-     ...
+-     requirePasswordReset: false,
+-   },
+-   ...
+- });
++ // Don't update auth state here - caller will handle logout
++ // User needs to login again with new password after reset
+};
 ```
 
-### 4. ProtectedRoute.tsx
+### 4. apiClient.ts
 ```diff
-- const passwordResetCompleted = localStorage.getItem('passwordResetCompleted') === 'true';
-- if (user?.requirePasswordReset && !passwordResetCompleted && ...) {
-+ if (user?.requirePasswordReset && ...) {
+if (error.response?.status === 401) {
+  localStorage.removeItem('authToken');
+  localStorage.removeItem('user');
+- localStorage.removeItem('passwordResetCompleted');
+  window.location.href = '/login';
+}
 ```
 
 ## Why This Works
 
-1. **No Data Loss**: By not logging out, we preserve the authenticated session
-2. **Explicit State**: By setting `requirePasswordReset=false`, we ensure correct state regardless of backend
-3. **Defensive Programming**: Even if backend has bugs, frontend handles it correctly
-4. **Simpler Logic**: Removed unnecessary `passwordResetCompleted` flag
-5. **Better UX**: User doesn't need to re-enter credentials after reset
+1. **Clean State**: By logging out, we ensure no stale auth data remains
+2. **Trust Backend**: We use the backend's `requirePasswordReset` value during login
+3. **Re-authentication**: User must re-authenticate with new password
+4. **Security**: Prevents session hijacking with old credentials
+5. **Simplicity**: No need for workaround flags or complex state management
+6. **Backend Alignment**: Follows backend's guidance message: "Please login with your new password"
