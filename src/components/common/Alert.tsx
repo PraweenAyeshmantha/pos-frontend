@@ -58,7 +58,7 @@ const Alert: React.FC<AlertProps> = ({ type, title, message }) => {
   const styles = getAlertStyles();
 
   return (
-    <div className={`${styles.bgColor} text-white rounded-lg shadow-lg p-4 flex items-start space-x-4 min-w-[300px] max-w-[500px]`}>
+    <div className={`${styles.bgColor} text-white rounded-lg shadow-lg p-4 flex items-start space-x-4 min-w-[300px] max-w-[500px] animate-slide-in`}>
       <div className={`${styles.iconBg} rounded-full p-2 flex-shrink-0`}>
         {styles.icon}
       </div>

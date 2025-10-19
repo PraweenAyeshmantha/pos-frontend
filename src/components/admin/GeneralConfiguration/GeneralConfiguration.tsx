@@ -3,6 +3,7 @@ import { configurationService } from '../../../services/configurationService';
 import type { GeneralConfigFormData } from '../../../types/configuration';
 import Alert from '../../common/Alert';
 import type { AlertType } from '../../common/Alert';
+import ToastContainer from '../../common/ToastContainer';
 
 const GeneralConfiguration: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -152,17 +153,6 @@ const GeneralConfiguration: React.FC = () => {
     <div className="max-w-7xl mx-auto px-4 py-8 bg-gray-100 min-h-screen">
       {/* Header */}
       <h1 className="text-3xl font-semibold mb-6 text-gray-800">General Configuration</h1>
-
-      {/* Success/Error Message */}
-      {message && (
-        <div className="mb-6">
-          <Alert
-            type={message.type}
-            title={message.type.charAt(0).toUpperCase() + message.type.slice(1)}
-            message={message.text}
-          />
-        </div>
-      )}
 
       {/* Tab Navigation - Attached to Form */}
       <div className="bg-white rounded-t-lg shadow-sm">
@@ -551,6 +541,17 @@ const GeneralConfiguration: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Toast Container for Alerts */}
+      {message && (
+        <ToastContainer>
+          <Alert
+            type={message.type}
+            title={message.type.charAt(0).toUpperCase() + message.type.slice(1)}
+            message={message.text}
+          />
+        </ToastContainer>
+      )}
     </div>
   );
 };
