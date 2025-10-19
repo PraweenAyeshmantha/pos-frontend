@@ -38,8 +38,29 @@ apiClient.interceptors.response.use(
     
     // Handle password reset required (423)
     if (error.response?.status === 423) {
-      // Redirect to password reset page
-      window.location.href = '/reset-password';
+      // Check if user has already reset their password
+      const userStr = localStorage.getItem('user');
+      let requirePasswordReset = true;
+      
+      if (userStr) {
+        try {
+          const user = JSON.parse(userStr);
+          requirePasswordReset = user.requirePasswordReset !== false;
+        } catch {
+          // If parsing fails, assume password reset is required
+          requirePasswordReset = true;
+        }
+      }
+      
+      // If password was already reset, treat 423 as session expired (like 401)
+      if (!requirePasswordReset) {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      } else {
+        // Password not yet reset, redirect to password reset page
+        window.location.href = '/reset-password';
+      }
     }
     
     return Promise.reject(error);
