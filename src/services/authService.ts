@@ -37,16 +37,15 @@ class AuthService {
     // Update token in localStorage after successful password reset
     if (response.data.data.token) {
       localStorage.setItem('authToken', response.data.data.token);
+      // After successful password reset, explicitly set requirePasswordReset to false
+      // This ensures we don't get stuck in a loop even if backend returns stale data
       localStorage.setItem('user', JSON.stringify({
         cashierId: response.data.data.cashierId,
         username: response.data.data.username,
         name: response.data.data.name,
         email: response.data.data.email,
-        requirePasswordReset: response.data.data.requirePasswordReset,
+        requirePasswordReset: false, // Explicitly set to false after successful reset
       }));
-      // Set a flag to indicate password was successfully reset in this session
-      // This prevents repeated redirects to password reset page even if backend returns stale data
-      localStorage.setItem('passwordResetCompleted', 'true');
     }
     
     return response.data;
@@ -58,7 +57,6 @@ class AuthService {
   logout(): void {
     localStorage.removeItem('authToken');
     localStorage.removeItem('user');
-    localStorage.removeItem('passwordResetCompleted');
   }
 
   /**
