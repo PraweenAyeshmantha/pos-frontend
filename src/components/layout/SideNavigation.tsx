@@ -17,7 +17,8 @@ const SideNavigation: React.FC = () => {
     { id: 'customers', label: 'Customers', icon: '👥', path: '/admin/customers' },
     { id: 'orders', label: 'Orders', icon: '🛍️', path: '/admin/orders' },
     { id: 'statistics', label: 'Statistics', icon: '💲', path: '/admin/statistics' },
-    { id: 'settings', label: 'Settings', icon: '⚙️', path: '/admin/configuration/general' },
+    { id: 'configuration', label: 'Configuration', icon: '🔧', path: '/admin/configuration/general' },
+    { id: 'settings', label: 'Settings', icon: '⚙️', path: '/admin/settings' },
   ];
 
   const handleNavigation = (path: string) => {
