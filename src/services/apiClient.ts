@@ -33,46 +33,33 @@ apiClient.interceptors.response.use(
       // Clear auth data and redirect to login
       localStorage.removeItem('authToken');
       localStorage.removeItem('user');
-      localStorage.removeItem('passwordResetCompleted');
       window.location.href = '/login';
     }
     
     // Handle password reset required (423)
     if (error.response?.status === 423) {
-      // Check if password was already reset in this session
-      const passwordResetCompleted = localStorage.getItem('passwordResetCompleted') === 'true';
+      // Check if user has already reset their password based on user data
+      const userStr = localStorage.getItem('user');
+      let requirePasswordReset = true;
       
-      // If password was already reset, treat 423 as session expired (like 401)
-      // This handles cases where backend still returns 423 despite successful password reset
-      if (passwordResetCompleted) {
+      if (userStr) {
+        try {
+          const user = JSON.parse(userStr);
+          requirePasswordReset = user.requirePasswordReset !== false;
+        } catch {
+          // If parsing fails, assume password reset is required
+          requirePasswordReset = true;
+        }
+      }
+      
+      // If password was already reset according to user data, treat as session expired
+      if (!requirePasswordReset) {
         localStorage.removeItem('authToken');
         localStorage.removeItem('user');
-        localStorage.removeItem('passwordResetCompleted');
         window.location.href = '/login';
       } else {
-        // Check if user has already reset their password based on user data
-        const userStr = localStorage.getItem('user');
-        let requirePasswordReset = true;
-        
-        if (userStr) {
-          try {
-            const user = JSON.parse(userStr);
-            requirePasswordReset = user.requirePasswordReset !== false;
-          } catch {
-            // If parsing fails, assume password reset is required
-            requirePasswordReset = true;
-          }
-        }
-        
-        // If password was already reset according to user data, treat as session expired
-        if (!requirePasswordReset) {
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('user');
-          window.location.href = '/login';
-        } else {
-          // Password not yet reset, redirect to password reset page
-          window.location.href = '/reset-password';
-        }
+        // Password not yet reset, redirect to password reset page
+        window.location.href = '/reset-password';
       }
     }
     
