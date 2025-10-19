@@ -1,4 +1,8 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+import LoginPage from './pages/auth/LoginPage';
+import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import AdminPage from './pages/admin/AdminPage';
 import DashboardPage from './pages/admin/dashboard/DashboardPage';
 import CustomersPage from './pages/admin/customers/CustomersPage';
@@ -8,14 +12,51 @@ import StatisticsPage from './pages/admin/statistics/StatisticsPage';
 function App() {
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
-        <Route path="/admin/dashboard" element={<DashboardPage />} />
-        <Route path="/admin/customers" element={<CustomersPage />} />
-        <Route path="/admin/orders" element={<OrdersPage />} />
-        <Route path="/admin/statistics" element={<StatisticsPage />} />
-        <Route path="/admin/configuration/general" element={<AdminPage />} />
-      </Routes>
+      <AuthProvider>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/login" element={<LoginPage />} />
+          
+          {/* Protected Routes */}
+          <Route path="/reset-password" element={
+            <ProtectedRoute>
+              <ResetPasswordPage />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
+          
+          <Route path="/admin/dashboard" element={
+            <ProtectedRoute>
+              <DashboardPage />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/admin/customers" element={
+            <ProtectedRoute>
+              <CustomersPage />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/admin/orders" element={
+            <ProtectedRoute>
+              <OrdersPage />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/admin/statistics" element={
+            <ProtectedRoute>
+              <StatisticsPage />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/admin/configuration/general" element={
+            <ProtectedRoute>
+              <AdminPage />
+            </ProtectedRoute>
+          } />
+        </Routes>
+      </AuthProvider>
     </Router>
   );
 }
