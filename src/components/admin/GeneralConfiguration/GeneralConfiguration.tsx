@@ -147,412 +147,408 @@ const GeneralConfiguration: React.FC = () => {
   }
 
   return (
-    <div>
-      {/* Tab Navigation */}
-      <div className="bg-white border-b border-gray-300">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex space-x-2">
-            {['General', 'Payments', 'PWA', 'Login', 'Printer', 'Layout'].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab.toLowerCase())}
-                className={`px-6 py-3 font-medium text-sm ${
-                  activeTab === tab.toLowerCase()
-                    ? 'bg-white border-t-2 border-x-2 border-gray-300 rounded-t-lg'
-                    : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
-                }`}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
+    <div className="max-w-7xl mx-auto px-4 py-8 bg-gray-100 min-h-screen">
+      {/* Header */}
+      <h1 className="text-3xl font-semibold mb-6 text-gray-800">General Configuration</h1>
+
+      {/* Success/Error Message */}
+      {message && (
+        <div
+          className={`mb-6 p-4 rounded-lg ${
+            message.type === 'success'
+              ? 'bg-green-100 text-green-800 border border-green-300'
+              : 'bg-red-100 text-red-800 border border-red-300'
+          }`}
+        >
+          {message.text}
+        </div>
+      )}
+
+      {/* Tab Navigation - Attached to Form */}
+      <div className="bg-white rounded-t-lg shadow-sm">
+        <div className="flex border-b border-gray-200">
+          {['General', 'Payments', 'PWA', 'Login', 'Printer', 'Layout'].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab.toLowerCase())}
+              className={`px-6 py-3 font-medium text-sm transition-colors ${
+                activeTab === tab.toLowerCase()
+                  ? 'text-blue-600 border-b-2 border-blue-600 bg-white'
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-8 bg-gray-100 min-h-screen">
-        <h1 className="text-3xl font-semibold mb-8 text-gray-800">General Configuration</h1>
-
-        {/* Success/Error Message */}
-        {message && (
-          <div
-            className={`mb-6 p-4 rounded-lg ${
-              message.type === 'success'
-                ? 'bg-green-100 text-green-800 border border-green-300'
-                : 'bg-red-100 text-red-800 border border-red-300'
-            }`}
-          >
-            {message.text}
-          </div>
-        )}
-
-        {/* Configuration Form */}
-        <div className="bg-white rounded-lg shadow-sm p-8 space-y-6">
-          {/* Activate License */}
-          <div className="flex items-center justify-between py-4 border-b border-gray-200">
-            <div className="flex items-center space-x-3">
-              <label className="font-semibold text-gray-800">Activate License</label>
-              <button
-                className="text-gray-400 hover:text-gray-600"
-                title="License activation information"
-              >
-                ⓘ
-              </button>
-            </div>
-            <div className="flex items-center space-x-4">
-              <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-medium">
-                {formData.license_key ? 'Activated' : 'Deactivate'}
-              </button>
-              <a href="#" className="text-blue-600 hover:underline text-sm">
-                How to find your purchase code?
-              </a>
-            </div>
-          </div>
-
-          {/* Enable/Disable Module */}
-          <div className="flex items-center justify-between py-4 border-b border-gray-200">
-            <div className="flex items-center space-x-3">
-              <label className="font-semibold text-gray-800">Enable/Disable</label>
-              <button className="text-gray-400 hover:text-gray-600" title="Enable/Disable information">
-                ⓘ
-              </button>
-            </div>
-            <div className="flex items-center space-x-3">
-              <input
-                type="checkbox"
-                checked={formData.module_enabled}
-                onChange={(e) => handleInputChange('module_enabled', e.target.checked)}
-                className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <span className="text-gray-700">Enable MultiPOS - Point of Sale for WooCommerce</span>
-            </div>
-          </div>
-
-          {/* Inventory Type */}
-          <div className="flex items-center justify-between py-4 border-b border-gray-200">
-            <div className="flex items-center space-x-3">
-              <label className="font-semibold text-gray-800">Inventory Type</label>
-              <button className="text-gray-400 hover:text-gray-600" title="Inventory Type information">
-                ⓘ
-              </button>
-            </div>
-            <select
-              value={formData.inventory_type}
-              onChange={(e) => handleInputChange('inventory_type', e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white min-w-[300px]"
-            >
-              <option value="CUSTOM">Custom/Manual Stock</option>
-              <option value="CENTRALIZED">Centralized Stock</option>
-            </select>
-          </div>
-
-          {/* Order Status */}
-          <div className="flex items-center justify-between py-4 border-b border-gray-200">
-            <div className="flex items-center space-x-3">
-              <label className="font-semibold text-gray-800">Order Status</label>
-              <button className="text-gray-400 hover:text-gray-600" title="Order Status information">
-                ⓘ
-              </button>
-            </div>
-            <select
-              value={formData.default_order_status}
-              onChange={(e) => handleInputChange('default_order_status', e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white min-w-[300px]"
-            >
-              <option value="DRAFT">Draft</option>
-              <option value="PENDING">Pending</option>
-              <option value="PREPARING">Preparing</option>
-              <option value="READY">Ready</option>
-              <option value="COMPLETED">Completed</option>
-              <option value="CANCELLED">Cancelled</option>
-              <option value="REFUNDED">Refunded</option>
-              <option value="ON_HOLD">On Hold</option>
-            </select>
-          </div>
-
-          {/* Default Product Barcode */}
-          <div className="flex items-center justify-between py-4 border-b border-gray-200">
-            <div className="flex items-center space-x-3">
-              <label className="font-semibold text-gray-800">Default Product Barcode</label>
-              <button className="text-gray-400 hover:text-gray-600" title="Barcode information">
-                ⓘ
-              </button>
-            </div>
-            <select
-              value={formData.default_barcode_type}
-              onChange={(e) => handleInputChange('default_barcode_type', e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white min-w-[300px]"
-            >
-              <option value="PRODUCT_ID">Product ID</option>
-              <option value="SKU">SKU</option>
-            </select>
-          </div>
-
-          {/* Enable Order Mails */}
-          <div className="flex items-center justify-between py-4 border-b border-gray-200">
-            <div className="flex items-center space-x-3">
-              <label className="font-semibold text-gray-800">Enable/Disable</label>
-              <button className="text-gray-400 hover:text-gray-600" title="Order Mails information">
-                ⓘ
-              </button>
-            </div>
-            <div className="flex items-center space-x-3">
-              <input
-                type="checkbox"
-                checked={formData.enable_order_emails}
-                onChange={(e) => handleInputChange('enable_order_emails', e.target.checked)}
-                className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <span className="text-gray-700">Enable Order Mails</span>
-            </div>
-          </div>
-
-          {/* Enable Split/Multiple Payment Methods */}
-          <div className="flex items-center justify-between py-4 border-b border-gray-200">
-            <div className="flex items-center space-x-3">
-              <label className="font-semibold text-gray-800">Enable/Disable</label>
-              <button className="text-gray-400 hover:text-gray-600" title="Split Payment information">
-                ⓘ
-              </button>
-            </div>
-            <div className="flex items-center space-x-3">
-              <input
-                type="checkbox"
-                checked={formData.enable_split_payment}
-                onChange={(e) => handleInputChange('enable_split_payment', e.target.checked)}
-                className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <span className="text-gray-700">Enable Split/Multiple Payment Methods</span>
-            </div>
-          </div>
-
-          {/* Enable Order Note */}
-          <div className="flex items-center justify-between py-4 border-b border-gray-200">
-            <div className="flex items-center space-x-3">
-              <label className="font-semibold text-gray-800">Enable/Disable</label>
-              <button className="text-gray-400 hover:text-gray-600" title="Order Note information">
-                ⓘ
-              </button>
-            </div>
-            <div className="flex items-center space-x-3">
-              <input
-                type="checkbox"
-                checked={formData.enable_order_note}
-                onChange={(e) => handleInputChange('enable_order_note', e.target.checked)}
-                className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <span className="text-gray-700">Enable Order Note</span>
-            </div>
-          </div>
-
-          {/* Enable Offline Orders */}
-          <div className="flex items-center justify-between py-4 border-b border-gray-200">
-            <div className="flex items-center space-x-3">
-              <label className="font-semibold text-gray-800">Enable/Disable</label>
-              <button className="text-gray-400 hover:text-gray-600" title="Offline Orders information">
-                ⓘ
-              </button>
-            </div>
-            <div className="flex items-center space-x-3">
-              <input
-                type="checkbox"
-                checked={formData.enable_offline_orders}
-                onChange={(e) => handleInputChange('enable_offline_orders', e.target.checked)}
-                className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <span className="text-gray-700">Enable Offline Orders for Online Mode (Fast Orders)</span>
-            </div>
-          </div>
-
-          {/* Enable Adding Custom Product */}
-          <div className="flex items-center justify-between py-4 border-b border-gray-200">
-            <div className="flex items-center space-x-3">
-              <label className="font-semibold text-gray-800">Enable/Disable</label>
-              <button className="text-gray-400 hover:text-gray-600" title="Custom Product information">
-                ⓘ
-              </button>
-            </div>
-            <div className="flex items-center space-x-3">
-              <input
-                type="checkbox"
-                checked={formData.enable_custom_product}
-                onChange={(e) => handleInputChange('enable_custom_product', e.target.checked)}
-                className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <span className="text-gray-700">Enable Adding Custom Product</span>
-            </div>
-          </div>
-
-          {/* Enable Open Cash Drawer Popup */}
-          <div className="flex items-center justify-between py-4 border-b border-gray-200">
-            <div className="flex items-center space-x-3">
-              <label className="font-semibold text-gray-800">Enable/Disable</label>
-              <button className="text-gray-400 hover:text-gray-600" title="Cash Drawer information">
-                ⓘ
-              </button>
-            </div>
-            <div className="flex items-center space-x-3">
-              <input
-                type="checkbox"
-                checked={formData.enable_cash_drawer_popup}
-                onChange={(e) => handleInputChange('enable_cash_drawer_popup', e.target.checked)}
-                className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <span className="text-gray-700">Enable Open Cash Drawer Popup</span>
-            </div>
-          </div>
-
-          {/* Show Variations as Different Products */}
-          <div className="flex items-center justify-between py-4 border-b border-gray-200">
-            <div className="flex items-center space-x-3">
-              <label className="font-semibold text-gray-800">Enable/Disable</label>
-              <button className="text-gray-400 hover:text-gray-600" title="Product Variations information">
-                ⓘ
-              </button>
-            </div>
-            <div className="flex items-center space-x-3">
-              <input
-                type="checkbox"
-                checked={formData.show_variations_as_products}
-                onChange={(e) => handleInputChange('show_variations_as_products', e.target.checked)}
-                className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <span className="text-gray-700">Show Variations as Different Products</span>
-            </div>
-          </div>
-
-          {/* Enable Unit/Weight Based Pricing */}
-          <div className="flex items-center justify-between py-4 border-b border-gray-200">
-            <div className="flex items-center space-x-3">
-              <label className="font-semibold text-gray-800">Enable/Disable</label>
-              <button className="text-gray-400 hover:text-gray-600" title="Weight Based Pricing information">
-                ⓘ
-              </button>
-            </div>
-            <div className="flex items-center space-x-3">
-              <input
-                type="checkbox"
-                checked={formData.enable_weight_based_pricing}
-                onChange={(e) => handleInputChange('enable_weight_based_pricing', e.target.checked)}
-                className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <span className="text-gray-700">Enable Unit/Weight Based Pricing</span>
-            </div>
-          </div>
-
-          {/* Automatic Send Orders to Kitchen */}
-          <div className="flex items-center justify-between py-4 border-b border-gray-200">
-            <div className="flex items-center space-x-3">
-              <label className="font-semibold text-gray-800">Enable/Disable</label>
-              <button className="text-gray-400 hover:text-gray-600" title="Kitchen Orders information">
-                ⓘ
-              </button>
-            </div>
-            <div className="flex items-center space-x-3">
-              <input
-                type="checkbox"
-                checked={formData.auto_send_to_kitchen_on_hold}
-                onChange={(e) => handleInputChange('auto_send_to_kitchen_on_hold', e.target.checked)}
-                className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <span className="text-gray-700">Automatic Send Orders to Kitchen When Put to Hold</span>
-            </div>
-          </div>
-
-          {/* Logo */}
-          <div className="flex items-center justify-between py-4 border-b border-gray-200">
-            <div className="flex items-center space-x-3">
-              <label className="font-semibold text-gray-800">Logo</label>
-              <button className="text-gray-400 hover:text-gray-600" title="Logo information">
-                ⓘ
-              </button>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="w-24 h-24 bg-teal-400 rounded-full flex items-center justify-center overflow-hidden">
-                {logoPreview ? (
-                  <img src={logoPreview} alt="Logo" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="text-white text-4xl">🏪</div>
-                )}
-              </div>
-              <label className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer font-medium">
-                Upload Icon
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleLogoUpload}
-                  className="hidden"
-                />
-              </label>
-            </div>
-          </div>
-
-          {/* Select Default/Guest Customer */}
-          <div className="flex items-center justify-between py-4 border-b border-gray-200">
-            <div className="flex items-center space-x-3">
-              <label className="font-semibold text-gray-800">Select Default/Guest Customer</label>
-              <button className="text-gray-400 hover:text-gray-600" title="Default Customer information">
-                ⓘ
-              </button>
-            </div>
-            <input
-              type="text"
-              value={formData.default_customer_id}
-              onChange={(e) => handleInputChange('default_customer_id', e.target.value)}
-              placeholder="(#2) customer <customer@email.com>"
-              className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[300px]"
-            />
-          </div>
-
-          {/* Endpoint */}
-          <div className="flex items-center justify-between py-4 border-b border-gray-200">
-            <div className="flex items-center space-x-3">
-              <label className="font-semibold text-gray-800">Endpoint</label>
-              <button className="text-gray-400 hover:text-gray-600" title="Endpoint information">
-                ⓘ
-              </button>
-            </div>
-            <input
-              type="text"
-              value={formData.pos_endpoint}
-              onChange={(e) => handleInputChange('pos_endpoint', e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[300px]"
-            />
-          </div>
-
-          {/* Kitchen Endpoint */}
-          <div className="flex items-center justify-between py-4 border-b border-gray-200">
-            <div className="flex items-center space-x-3">
-              <label className="font-semibold text-gray-800">Kitchen Endpoint</label>
-              <button className="text-gray-400 hover:text-gray-600" title="Kitchen Endpoint information">
-                ⓘ
-              </button>
-            </div>
-            <input
-              type="text"
-              value={formData.kitchen_endpoint}
-              onChange={(e) => handleInputChange('kitchen_endpoint', e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[300px]"
-            />
-          </div>
-
-          {/* Rating Message */}
-          <div className="py-4 text-gray-600 text-sm italic">
-            If you really like our plugin, please leave us a ⭐⭐⭐⭐⭐ rating, we'll really appreciate it.
-          </div>
-
-          {/* Save Button */}
-          <div className="pt-6">
+      {/* Configuration Form */}
+      <div className="bg-white rounded-b-lg shadow-sm p-8 space-y-6">
+        {/* Activate License */}
+        <div className="flex items-center justify-between py-4 border-b border-gray-200">
+          <div className="flex items-center space-x-3">
+            <label className="font-semibold text-gray-800">Activate License</label>
             <button
-              onClick={handleSave}
-              disabled={saving}
-              className={`px-8 py-3 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed ${
-                saving ? 'opacity-75' : ''
-              }`}
+              className="text-gray-400 hover:text-gray-600"
+              title="License activation information"
             >
-              {saving ? 'Saving...' : 'Save Changes'}
+              ⓘ
             </button>
           </div>
+          <div className="flex items-center space-x-4">
+            <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-medium">
+              {formData.license_key ? 'Activated' : 'Deactivate'}
+            </button>
+            <a href="#" className="text-blue-600 hover:underline text-sm">
+              How to find your purchase code?
+            </a>
+          </div>
+        </div>
+
+        {/* Enable/Disable Module */}
+        <div className="flex items-center justify-between py-4 border-b border-gray-200">
+          <div className="flex items-center space-x-3">
+            <label className="font-semibold text-gray-800">Enable/Disable</label>
+            <button className="text-gray-400 hover:text-gray-600" title="Enable/Disable information">
+              ⓘ
+            </button>
+          </div>
+          <div className="flex items-center space-x-3">
+            <input
+              type="checkbox"
+              checked={formData.module_enabled}
+              onChange={(e) => handleInputChange('module_enabled', e.target.checked)}
+              className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <span className="text-gray-700">Enable MultiPOS - Point of Sale for WooCommerce</span>
+          </div>
+        </div>
+
+        {/* Inventory Type */}
+        <div className="flex items-center justify-between py-4 border-b border-gray-200">
+          <div className="flex items-center space-x-3">
+            <label className="font-semibold text-gray-800">Inventory Type</label>
+            <button className="text-gray-400 hover:text-gray-600" title="Inventory Type information">
+              ⓘ
+            </button>
+          </div>
+          <select
+            value={formData.inventory_type}
+            onChange={(e) => handleInputChange('inventory_type', e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white min-w-[300px]"
+          >
+            <option value="CUSTOM">Custom/Manual Stock</option>
+            <option value="CENTRALIZED">Centralized Stock</option>
+          </select>
+        </div>
+
+        {/* Order Status */}
+        <div className="flex items-center justify-between py-4 border-b border-gray-200">
+          <div className="flex items-center space-x-3">
+            <label className="font-semibold text-gray-800">Order Status</label>
+            <button className="text-gray-400 hover:text-gray-600" title="Order Status information">
+              ⓘ
+            </button>
+          </div>
+          <select
+            value={formData.default_order_status}
+            onChange={(e) => handleInputChange('default_order_status', e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white min-w-[300px]"
+          >
+            <option value="DRAFT">Draft</option>
+            <option value="PENDING">Pending</option>
+            <option value="PREPARING">Preparing</option>
+            <option value="READY">Ready</option>
+            <option value="COMPLETED">Completed</option>
+            <option value="CANCELLED">Cancelled</option>
+            <option value="REFUNDED">Refunded</option>
+            <option value="ON_HOLD">On Hold</option>
+          </select>
+        </div>
+
+        {/* Default Product Barcode */}
+        <div className="flex items-center justify-between py-4 border-b border-gray-200">
+          <div className="flex items-center space-x-3">
+            <label className="font-semibold text-gray-800">Default Product Barcode</label>
+            <button className="text-gray-400 hover:text-gray-600" title="Barcode information">
+              ⓘ
+            </button>
+          </div>
+          <select
+            value={formData.default_barcode_type}
+            onChange={(e) => handleInputChange('default_barcode_type', e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white min-w-[300px]"
+          >
+            <option value="PRODUCT_ID">Product ID</option>
+            <option value="SKU">SKU</option>
+          </select>
+        </div>
+
+        {/* Enable Order Mails */}
+        <div className="flex items-center justify-between py-4 border-b border-gray-200">
+          <div className="flex items-center space-x-3">
+            <label className="font-semibold text-gray-800">Enable/Disable</label>
+            <button className="text-gray-400 hover:text-gray-600" title="Order Mails information">
+              ⓘ
+            </button>
+          </div>
+          <div className="flex items-center space-x-3">
+            <input
+              type="checkbox"
+              checked={formData.enable_order_emails}
+              onChange={(e) => handleInputChange('enable_order_emails', e.target.checked)}
+              className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <span className="text-gray-700">Enable Order Mails</span>
+          </div>
+        </div>
+
+        {/* Enable Split/Multiple Payment Methods */}
+        <div className="flex items-center justify-between py-4 border-b border-gray-200">
+          <div className="flex items-center space-x-3">
+            <label className="font-semibold text-gray-800">Enable/Disable</label>
+            <button className="text-gray-400 hover:text-gray-600" title="Split Payment information">
+              ⓘ
+            </button>
+          </div>
+          <div className="flex items-center space-x-3">
+            <input
+              type="checkbox"
+              checked={formData.enable_split_payment}
+              onChange={(e) => handleInputChange('enable_split_payment', e.target.checked)}
+              className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <span className="text-gray-700">Enable Split/Multiple Payment Methods</span>
+          </div>
+        </div>
+
+        {/* Enable Order Note */}
+        <div className="flex items-center justify-between py-4 border-b border-gray-200">
+          <div className="flex items-center space-x-3">
+            <label className="font-semibold text-gray-800">Enable/Disable</label>
+            <button className="text-gray-400 hover:text-gray-600" title="Order Note information">
+              ⓘ
+            </button>
+          </div>
+          <div className="flex items-center space-x-3">
+            <input
+              type="checkbox"
+              checked={formData.enable_order_note}
+              onChange={(e) => handleInputChange('enable_order_note', e.target.checked)}
+              className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <span className="text-gray-700">Enable Order Note</span>
+          </div>
+        </div>
+
+        {/* Enable Offline Orders */}
+        <div className="flex items-center justify-between py-4 border-b border-gray-200">
+          <div className="flex items-center space-x-3">
+            <label className="font-semibold text-gray-800">Enable/Disable</label>
+            <button className="text-gray-400 hover:text-gray-600" title="Offline Orders information">
+              ⓘ
+            </button>
+          </div>
+          <div className="flex items-center space-x-3">
+            <input
+              type="checkbox"
+              checked={formData.enable_offline_orders}
+              onChange={(e) => handleInputChange('enable_offline_orders', e.target.checked)}
+              className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <span className="text-gray-700">Enable Offline Orders for Online Mode (Fast Orders)</span>
+          </div>
+        </div>
+
+        {/* Enable Adding Custom Product */}
+        <div className="flex items-center justify-between py-4 border-b border-gray-200">
+          <div className="flex items-center space-x-3">
+            <label className="font-semibold text-gray-800">Enable/Disable</label>
+            <button className="text-gray-400 hover:text-gray-600" title="Custom Product information">
+              ⓘ
+            </button>
+          </div>
+          <div className="flex items-center space-x-3">
+            <input
+              type="checkbox"
+              checked={formData.enable_custom_product}
+              onChange={(e) => handleInputChange('enable_custom_product', e.target.checked)}
+              className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <span className="text-gray-700">Enable Adding Custom Product</span>
+          </div>
+        </div>
+
+        {/* Enable Open Cash Drawer Popup */}
+        <div className="flex items-center justify-between py-4 border-b border-gray-200">
+          <div className="flex items-center space-x-3">
+            <label className="font-semibold text-gray-800">Enable/Disable</label>
+            <button className="text-gray-400 hover:text-gray-600" title="Cash Drawer information">
+              ⓘ
+            </button>
+          </div>
+          <div className="flex items-center space-x-3">
+            <input
+              type="checkbox"
+              checked={formData.enable_cash_drawer_popup}
+              onChange={(e) => handleInputChange('enable_cash_drawer_popup', e.target.checked)}
+              className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <span className="text-gray-700">Enable Open Cash Drawer Popup</span>
+          </div>
+        </div>
+
+        {/* Show Variations as Different Products */}
+        <div className="flex items-center justify-between py-4 border-b border-gray-200">
+          <div className="flex items-center space-x-3">
+            <label className="font-semibold text-gray-800">Enable/Disable</label>
+            <button className="text-gray-400 hover:text-gray-600" title="Product Variations information">
+              ⓘ
+            </button>
+          </div>
+          <div className="flex items-center space-x-3">
+            <input
+              type="checkbox"
+              checked={formData.show_variations_as_products}
+              onChange={(e) => handleInputChange('show_variations_as_products', e.target.checked)}
+              className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <span className="text-gray-700">Show Variations as Different Products</span>
+          </div>
+        </div>
+
+        {/* Enable Unit/Weight Based Pricing */}
+        <div className="flex items-center justify-between py-4 border-b border-gray-200">
+          <div className="flex items-center space-x-3">
+            <label className="font-semibold text-gray-800">Enable/Disable</label>
+            <button className="text-gray-400 hover:text-gray-600" title="Weight Based Pricing information">
+              ⓘ
+            </button>
+          </div>
+          <div className="flex items-center space-x-3">
+            <input
+              type="checkbox"
+              checked={formData.enable_weight_based_pricing}
+              onChange={(e) => handleInputChange('enable_weight_based_pricing', e.target.checked)}
+              className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <span className="text-gray-700">Enable Unit/Weight Based Pricing</span>
+          </div>
+        </div>
+
+        {/* Automatic Send Orders to Kitchen */}
+        <div className="flex items-center justify-between py-4 border-b border-gray-200">
+          <div className="flex items-center space-x-3">
+            <label className="font-semibold text-gray-800">Enable/Disable</label>
+            <button className="text-gray-400 hover:text-gray-600" title="Kitchen Orders information">
+              ⓘ
+            </button>
+          </div>
+          <div className="flex items-center space-x-3">
+            <input
+              type="checkbox"
+              checked={formData.auto_send_to_kitchen_on_hold}
+              onChange={(e) => handleInputChange('auto_send_to_kitchen_on_hold', e.target.checked)}
+              className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <span className="text-gray-700">Automatic Send Orders to Kitchen When Put to Hold</span>
+          </div>
+        </div>
+
+        {/* Logo */}
+        <div className="flex items-center justify-between py-4 border-b border-gray-200">
+          <div className="flex items-center space-x-3">
+            <label className="font-semibold text-gray-800">Logo</label>
+            <button className="text-gray-400 hover:text-gray-600" title="Logo information">
+              ⓘ
+            </button>
+          </div>
+          <div className="flex items-center space-x-4">
+            <div className="w-24 h-24 bg-teal-400 rounded-full flex items-center justify-center overflow-hidden">
+              {logoPreview ? (
+                <img src={logoPreview} alt="Logo" className="w-full h-full object-cover" />
+              ) : (
+                <div className="text-white text-4xl">🏪</div>
+              )}
+            </div>
+            <label className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer font-medium">
+              Upload Icon
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleLogoUpload}
+                className="hidden"
+              />
+            </label>
+          </div>
+        </div>
+
+        {/* Select Default/Guest Customer */}
+        <div className="flex items-center justify-between py-4 border-b border-gray-200">
+          <div className="flex items-center space-x-3">
+            <label className="font-semibold text-gray-800">Select Default/Guest Customer</label>
+            <button className="text-gray-400 hover:text-gray-600" title="Default Customer information">
+              ⓘ
+            </button>
+          </div>
+          <input
+            type="text"
+            value={formData.default_customer_id}
+            onChange={(e) => handleInputChange('default_customer_id', e.target.value)}
+            placeholder="(#2) customer <customer@email.com>"
+            className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[300px]"
+          />
+        </div>
+
+        {/* Endpoint */}
+        <div className="flex items-center justify-between py-4 border-b border-gray-200">
+          <div className="flex items-center space-x-3">
+            <label className="font-semibold text-gray-800">Endpoint</label>
+            <button className="text-gray-400 hover:text-gray-600" title="Endpoint information">
+              ⓘ
+            </button>
+          </div>
+          <input
+            type="text"
+            value={formData.pos_endpoint}
+            onChange={(e) => handleInputChange('pos_endpoint', e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[300px]"
+          />
+        </div>
+
+        {/* Kitchen Endpoint */}
+        <div className="flex items-center justify-between py-4 border-b border-gray-200">
+          <div className="flex items-center space-x-3">
+            <label className="font-semibold text-gray-800">Kitchen Endpoint</label>
+            <button className="text-gray-400 hover:text-gray-600" title="Kitchen Endpoint information">
+              ⓘ
+            </button>
+          </div>
+          <input
+            type="text"
+            value={formData.kitchen_endpoint}
+            onChange={(e) => handleInputChange('kitchen_endpoint', e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[300px]"
+          />
+        </div>
+
+        {/* Rating Message */}
+        <div className="py-4 text-gray-600 text-sm italic">
+          If you really like our plugin, please leave us a ⭐⭐⭐⭐⭐ rating, we'll really appreciate it.
+        </div>
+
+        {/* Save Button */}
+        <div className="pt-6">
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className={`px-8 py-3 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed ${
+              saving ? 'opacity-75' : ''
+            }`}
+          >
+            {saving ? 'Saving...' : 'Save Changes'}
+          </button>
         </div>
       </div>
     </div>
