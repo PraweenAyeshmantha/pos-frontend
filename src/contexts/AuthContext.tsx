@@ -42,7 +42,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (username: string, password: string) => {
     try {
       const response = await authService.login({ username, password });
-      const userData = response.data;
+      const userData = response.data; // response.data contains the user data from the nested API response
       
       setAuthState({
         user: {
