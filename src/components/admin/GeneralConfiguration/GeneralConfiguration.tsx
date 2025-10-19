@@ -147,7 +147,7 @@ const GeneralConfiguration: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div>
       {/* Tab Navigation */}
       <div className="bg-white border-b border-gray-300">
         <div className="max-w-7xl mx-auto px-4">
@@ -170,7 +170,7 @@ const GeneralConfiguration: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-8 bg-gray-100 min-h-screen">
         <h1 className="text-3xl font-semibold mb-8 text-gray-800">General Configuration</h1>
 
         {/* Success/Error Message */}
