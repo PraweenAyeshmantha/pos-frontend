@@ -12,7 +12,8 @@ const LoginPage: React.FC = () => {
   const location = useLocation();
 
   // Get the intended destination or default to dashboard
-  const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/admin/dashboard';
+  const from = (location.state as { from?: { pathname: string }; passwordResetSuccess?: boolean })?.from?.pathname || '/admin/dashboard';
+  const passwordResetSuccess = (location.state as { passwordResetSuccess?: boolean })?.passwordResetSuccess || false;
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -60,6 +61,13 @@ const LoginPage: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-800 mb-2">POS System</h1>
           <p className="text-gray-600">Sign in to your account</p>
         </div>
+
+        {/* Success Message */}
+        {passwordResetSuccess && (
+          <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 rounded-md text-sm">
+            Password reset successful! Please login with your new password.
+          </div>
+        )}
 
         {/* Error Message */}
         {error && (
