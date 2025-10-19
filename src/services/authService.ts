@@ -44,6 +44,9 @@ class AuthService {
         email: response.data.data.email,
         requirePasswordReset: response.data.data.requirePasswordReset,
       }));
+      // Set a flag to indicate password was successfully reset in this session
+      // This prevents repeated redirects to password reset page even if backend returns stale data
+      localStorage.setItem('passwordResetCompleted', 'true');
     }
     
     return response.data;
@@ -55,6 +58,7 @@ class AuthService {
   logout(): void {
     localStorage.removeItem('authToken');
     localStorage.removeItem('user');
+    localStorage.removeItem('passwordResetCompleted');
   }
 
   /**
