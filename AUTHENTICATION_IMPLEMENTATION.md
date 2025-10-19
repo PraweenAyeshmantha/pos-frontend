@@ -231,5 +231,25 @@ The user authentication system is now fully implemented with:
 - ✅ Modern, professional UI
 - ✅ Full TypeScript type safety
 - ✅ Ready for backend integration
+- ✅ **Fixed password reset loop issue** (October 2025)
 
 The implementation follows industry best practices for React authentication and is ready for testing with the backend API.
+
+## Recent Fixes
+
+### Password Reset Loop Fix (October 2025)
+**Issue**: Users experienced an infinite loop when resetting passwords - after reset, they were asked to login, but upon login they were redirected back to reset password.
+
+**Solution**: 
+- After successful password reset, user now stays authenticated and is redirected to dashboard
+- No longer calls `logout()` after password reset, preserving the session
+- Explicitly sets `requirePasswordReset: false` after successful reset to prevent loops
+- Removed unnecessary `passwordResetCompleted` flag
+
+**Files Modified**:
+- `src/pages/auth/ResetPasswordPage.tsx`
+- `src/services/authService.ts`
+- `src/contexts/AuthContext.tsx`
+- `src/components/auth/ProtectedRoute.tsx`
+
+See `PASSWORD_RESET_FIX.md` and `PASSWORD_RESET_FLOW.md` for detailed documentation.
