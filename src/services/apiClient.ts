@@ -28,12 +28,20 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    // TODO: Uncomment when login page is implemented
-    // if (error.response?.status === 401) {
-    //   // Handle unauthorized access
-    //   localStorage.removeItem('authToken');
-    //   window.location.href = '/login';
-    // }
+    // Handle unauthorized access (401)
+    if (error.response?.status === 401) {
+      // Clear auth data and redirect to login
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
+    }
+    
+    // Handle password reset required (423)
+    if (error.response?.status === 423) {
+      // Redirect to password reset page
+      window.location.href = '/reset-password';
+    }
+    
     return Promise.reject(error);
   }
 );
