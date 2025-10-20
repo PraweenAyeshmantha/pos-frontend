@@ -4,7 +4,7 @@ import authService from '../services/authService';
 import type { User, AuthState } from '../types/auth';
 
 interface AuthContextType extends AuthState {
-  login: (username: string, password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<User>;
   logout: () => void;
   resetPassword: (currentPassword: string, newPassword: string, confirmPassword: string) => Promise<void>;
   updateUser: (user: User) => void;
@@ -64,6 +64,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         isAuthenticated: true,
         isLoading: false,
       });
+      
+      return user; // Return the user object so caller can check requirePasswordReset
     } catch (error) {
       setAuthState({
         user: null,
