@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
 
 interface NavigationItem {
   id: string;
@@ -11,6 +12,7 @@ interface NavigationItem {
 const CashierSideNavigation: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { logout } = useAuth();
 
   const navigationItems: NavigationItem[] = [
     { id: 'home', label: 'Home', icon: '🏠', path: '/cashier/pos' },
@@ -27,6 +29,11 @@ const CashierSideNavigation: React.FC = () => {
   const isActive = (path: string) => {
     return location.pathname === path || location.pathname.startsWith(path);
   };
+
+  const handleLogout = useCallback(() => {
+    logout();
+    navigate('/login');
+  }, [logout, navigate]);
 
   return (
     <div className="w-20 bg-gray-50 border-r border-gray-200 shadow-sm flex flex-col items-center py-4 h-screen fixed left-0 top-0 z-20">
@@ -55,7 +62,7 @@ const CashierSideNavigation: React.FC = () => {
 
       {/* Logout */}
       <button
-        onClick={() => console.log('Logout clicked')}
+        onClick={handleLogout}
         className="flex flex-col items-center justify-center w-full py-4 text-gray-600 hover:bg-gray-100 transition-all mt-2"
       >
         <span className="text-2xl mb-1">🔄</span>

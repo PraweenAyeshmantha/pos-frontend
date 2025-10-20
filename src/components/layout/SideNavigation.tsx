@@ -1,5 +1,7 @@
-import React, { memo, useCallback } from 'react';
+import React, { memo, useCallback, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
+import ConfirmationDialog from '../common/ConfirmationDialog';
 
 interface NavigationItem {
   id: string;
@@ -20,6 +22,8 @@ const navigationItems: NavigationItem[] = [
 const SideNavigation: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { logout } = useAuth();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const handleNavigation = useCallback((path: string) => {
     navigate(path);
@@ -28,6 +32,24 @@ const SideNavigation: React.FC = () => {
   const isActive = useCallback((path: string) => {
     return location.pathname === path || location.pathname.startsWith(path);
   }, [location.pathname]);
+
+  const handleLogout = useCallback(() => {
+    logout();
+    navigate('/login');
+  }, [logout, navigate]);
+
+  const handleLogoutClick = useCallback(() => {
+    setShowLogoutConfirm(true);
+  }, []);
+
+  const handleCloseDialog = useCallback(() => {
+    setShowLogoutConfirm(false);
+  }, []);
+
+  const handleConfirmLogout = useCallback(() => {
+    handleCloseDialog();
+    handleLogout();
+  }, [handleCloseDialog, handleLogout]);
 
   return (
     <div className="w-20 bg-gray-50 border-r border-gray-200 shadow-sm flex flex-col items-center py-4 h-screen fixed left-0 top-0 z-20">
@@ -56,12 +78,22 @@ const SideNavigation: React.FC = () => {
 
       {/* Logout */}
       <button
-        onClick={() => console.log('Logout clicked')}
+        onClick={handleLogoutClick}
         className="flex flex-col items-center justify-center w-full py-4 text-gray-600 hover:bg-gray-100 transition-all mt-2"
       >
         <span className="text-2xl mb-1">🔄</span>
         <span className="text-[10px] font-medium">Logout</span>
       </button>
+
+      <ConfirmationDialog
+        open={showLogoutConfirm}
+        title="Confirm Logout"
+        message="You will be signed out of the admin portal. Are you sure you want to continue?"
+        confirmLabel="Logout"
+        cancelLabel="Stay Logged In"
+        onCancel={handleCloseDialog}
+        onConfirm={handleConfirmLogout}
+      />
     </div>
   );
 };
