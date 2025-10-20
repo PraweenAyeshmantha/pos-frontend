@@ -35,7 +35,7 @@ class AuthService {
   async resetPassword(resetData: ResetPasswordRequest): Promise<ResetPasswordResponse> {
     const response = await apiClient.post<ResetPasswordResponse>('/auth/reset-password', resetData);
     
-    // Don't update localStorage here - user will be logged out after password reset
+    // Don't update sessionStorage here - user will be logged out after password reset
     // and need to login again with new password
     
     return response.data;
