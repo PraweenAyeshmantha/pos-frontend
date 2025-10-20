@@ -13,7 +13,7 @@ const apiClient: AxiosInstance = axios.create({
 apiClient.interceptors.request.use(
   (config) => {
     // Add auth token if available
-    const token = localStorage.getItem('authToken');
+    const token = sessionStorage.getItem('authToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -31,15 +31,15 @@ apiClient.interceptors.response.use(
     // Handle unauthorized access (401)
     if (error.response?.status === 401) {
       // Clear auth data and redirect to login
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('user');
+      sessionStorage.removeItem('authToken');
+      sessionStorage.removeItem('user');
       window.location.href = '/login';
     }
     
     // Handle password reset required (423)
     if (error.response?.status === 423) {
       // Check if user has already reset their password based on user data
-      const userStr = localStorage.getItem('user');
+      const userStr = sessionStorage.getItem('user');
       let requirePasswordReset = true;
       
       if (userStr) {
@@ -54,8 +54,8 @@ apiClient.interceptors.response.use(
       
       // If password was already reset according to user data, treat as session expired
       if (!requirePasswordReset) {
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('user');
+        sessionStorage.removeItem('authToken');
+        sessionStorage.removeItem('user');
         window.location.href = '/login';
       } else {
         // Password not yet reset, redirect to password reset page

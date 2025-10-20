@@ -26,8 +26,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isLoading: true,
   });
 
-  // Initialize auth state from localStorage on mount
+  // Initialize auth state from sessionStorage on mount
   useEffect(() => {
+    // Clean up any old localStorage data (migration from localStorage to sessionStorage)
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('user');
+    
     const token = authService.getToken();
     const user = authService.getCurrentUser();
     
@@ -44,14 +48,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const response = await authService.login({ username, password });
       const userData = response.data; // response.data contains the user data from the nested API response
       
+      // Create user object with explicit boolean for requirePasswordReset
+      const user = {
+        cashierId: userData.cashierId,
+        username: userData.username,
+        name: userData.name,
+        email: userData.email,
+        // Explicitly convert to boolean to avoid any truthy/falsy issues
+        requirePasswordReset: userData.requirePasswordReset === true,
+      };
+      
       setAuthState({
-        user: {
-          cashierId: userData.cashierId,
-          username: userData.username,
-          name: userData.name,
-          email: userData.email,
-          requirePasswordReset: userData.requirePasswordReset,
-        },
+        user,
         token: userData.token,
         isAuthenticated: true,
         isLoading: false,
@@ -98,7 +106,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       ...prev,
       user,
     }));
-    localStorage.setItem('user', JSON.stringify(user));
+    sessionStorage.setItem('user', JSON.stringify(user));
   };
 
   return (
