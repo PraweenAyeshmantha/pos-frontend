@@ -192,32 +192,11 @@ const OutletsPage: React.FC = () => {
           {/* Outlets Table */}
           {!loading && (
             <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-              {/* Bulk Actions */}
-              <div className="flex items-center gap-3 border-b border-gray-200 bg-gray-50 px-6 py-3">
-                <select className="h-9 rounded-lg border border-gray-200 bg-white px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100">
-                  <option>Bulk actions</option>
-                  <option>Enable selected</option>
-                  <option>Disable selected</option>
-                </select>
-                <button
-                  type="button"
-                  className="rounded-lg border border-gray-200 bg-white px-4 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
-                >
-                  Apply
-                </button>
-              </div>
-
               {/* Table */}
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="border-b border-gray-200 bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left">
-                        <input
-                          type="checkbox"
-                          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                      </th>
                       <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
                         ID
                       </th>
@@ -253,19 +232,13 @@ const OutletsPage: React.FC = () => {
                   <tbody className="divide-y divide-gray-200">
                     {filteredOutlets.length === 0 ? (
                       <tr>
-                        <td colSpan={11} className="px-6 py-12 text-center text-gray-500">
+                        <td colSpan={10} className="px-6 py-12 text-center text-gray-500">
                           No outlets found. Click "Add New" to create your first outlet.
                         </td>
                       </tr>
                     ) : (
                       filteredOutlets.map((outlet) => (
                         <tr key={outlet.id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4">
-                            <input
-                              type="checkbox"
-                              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                            />
-                          </td>
                           <td className="px-6 py-4 text-sm text-gray-900">{outlet.id}</td>
                           <td className="px-6 py-4">
                             <div className="text-sm font-medium text-gray-900">{outlet.name}</div>
@@ -314,19 +287,22 @@ const OutletsPage: React.FC = () => {
                               : '-'}
                           </td>
                           <td className="px-6 py-4">
-                            <div className="flex flex-col gap-2">
-                              <button
-                                type="button"
-                                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
-                              >
-                                Assign Stocks
-                              </button>
+                            <div className="flex items-center gap-2">
                               <button
                                 type="button"
                                 onClick={() => handleEdit(outlet)}
-                                className="rounded-lg border border-blue-600 bg-white px-4 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50"
+                                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+                                title="Edit outlet"
                               >
-                                Kitchen View
+                                Edit
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setDeleteConfirm({ show: true, outlet })}
+                                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
+                                title="Delete outlet"
+                              >
+                                Delete
                               </button>
                             </div>
                           </td>
@@ -335,21 +311,6 @@ const OutletsPage: React.FC = () => {
                     )}
                   </tbody>
                 </table>
-              </div>
-
-              {/* Bulk Actions Bottom */}
-              <div className="flex items-center gap-3 border-t border-gray-200 bg-gray-50 px-6 py-3">
-                <select className="h-9 rounded-lg border border-gray-200 bg-white px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100">
-                  <option>Bulk actions</option>
-                  <option>Enable selected</option>
-                  <option>Disable selected</option>
-                </select>
-                <button
-                  type="button"
-                  className="rounded-lg border border-gray-200 bg-white px-4 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
-                >
-                  Apply
-                </button>
               </div>
             </div>
           )}
