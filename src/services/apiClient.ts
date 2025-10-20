@@ -1,12 +1,14 @@
-import axios, { type AxiosInstance } from 'axios';
+import axios, { type AxiosInstance, type AxiosError } from 'axios';
+import env from '../config/env';
 
 // Create axios instance with default config
 const apiClient: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/pos-codex/api',
+  baseURL: env.apiBaseUrl,
   headers: {
     'Content-Type': 'application/json',
-    'X-Tenant-ID': import.meta.env.VITE_TENANT_ID || 'PaPos',
+    'X-Tenant-ID': env.tenantId,
   },
+  timeout: 30000, // 30 second timeout
 });
 
 // Request interceptor for adding auth token if needed
@@ -27,9 +29,28 @@ apiClient.interceptors.request.use(
 // Response interceptor for error handling
 apiClient.interceptors.response.use(
   (response) => response,
-  (error) => {
+  (error: AxiosError) => {
+    // Log errors in development
+    if (env.isDevelopment) {
+      console.error('API Error:', {
+        url: error.config?.url,
+        method: error.config?.method,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+    }
+
+    // Handle network errors
+    if (!error.response) {
+      console.error('Network error: Unable to reach the server');
+      return Promise.reject({
+        ...error,
+        message: 'Network error: Unable to reach the server. Please check your connection.',
+      });
+    }
+    
     // Handle unauthorized access (401)
-    if (error.response?.status === 401) {
+    if (error.response.status === 401) {
       // Clear auth data and redirect to login
       sessionStorage.removeItem('authToken');
       sessionStorage.removeItem('user');
@@ -37,7 +58,7 @@ apiClient.interceptors.response.use(
     }
     
     // Handle password reset required (423)
-    if (error.response?.status === 423) {
+    if (error.response.status === 423) {
       // Check if user has already reset their password based on user data
       const userStr = sessionStorage.getItem('user');
       let requirePasswordReset = true;

@@ -1,25 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, memo, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+
+// Get user initials for avatar
+const getInitials = (name: string) => {
+  const parts = name.split(' ');
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return name.substring(0, 2).toUpperCase();
+};
 
 const TopNavigation: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     logout();
     navigate('/login');
-  };
+  }, [logout, navigate]);
 
-  // Get user initials for avatar
-  const getInitials = (name: string) => {
-    const parts = name.split(' ');
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[1][0]).toUpperCase();
-    }
-    return name.substring(0, 2).toUpperCase();
-  };
+  const toggleDropdown = useCallback(() => {
+    setShowDropdown(prev => !prev);
+  }, []);
+
+  const userInitials = useMemo(() => 
+    user ? getInitials(user.name) : 'U',
+    [user]
+  );
 
   return (
     <div className="h-14 bg-blue-600 shadow-md flex items-center justify-between px-6 fixed top-0 right-0 left-20 z-10">
@@ -47,11 +56,11 @@ const TopNavigation: React.FC = () => {
         {/* User Profile with Dropdown */}
         <div className="relative">
           <button
-            onClick={() => setShowDropdown(!showDropdown)}
+            onClick={toggleDropdown}
             className="flex items-center space-x-2 bg-blue-700 px-3 py-1.5 rounded-full hover:bg-blue-800 transition-colors"
           >
             <div className="w-7 h-7 bg-orange-400 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-              {user ? getInitials(user.name) : 'U'}
+              {userInitials}
             </div>
             <span className="text-white font-medium text-sm">{user?.name || 'User'}</span>
             <svg 
@@ -88,4 +97,4 @@ const TopNavigation: React.FC = () => {
   );
 };
 
-export default TopNavigation;
+export default memo(TopNavigation);
