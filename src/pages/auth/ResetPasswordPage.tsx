@@ -1,38 +1,57 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import Alert, { type AlertType } from '../../components/common/Alert';
+import ToastContainer from '../../components/common/ToastContainer';
 
 const ResetPasswordPage: React.FC = () => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [toast, setToast] = useState<{ type: AlertType; text: string } | null>(null);
   const { resetPassword, logout, user } = useAuth();
   const navigate = useNavigate();
+  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showToast = useCallback((type: AlertType, text: string) => {
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current);
+    }
+
+    setToast({ type, text });
+    toastTimeoutRef.current = setTimeout(() => setToast(null), 3000);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimeoutRef.current) {
+        clearTimeout(toastTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    
+
     // Validation
     if (!currentPassword.trim() || !newPassword.trim() || !confirmPassword.trim()) {
-      setError('Please fill in all fields');
+      showToast('warning', 'Please fill in all fields');
       return;
     }
 
     if (newPassword.length < 4) {
-      setError('New password must be at least 4 characters long');
+      showToast('warning', 'New password must be at least 4 characters long');
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setError('New password and confirm password do not match');
+      showToast('warning', 'New password and confirm password do not match');
       return;
     }
 
     if (currentPassword === newPassword) {
-      setError('New password must be different from current password');
+      showToast('warning', 'New password must be different from current password');
       return;
     }
 
@@ -46,13 +65,14 @@ const ResetPasswordPage: React.FC = () => {
     } catch (err) {
       console.error('Password reset error:', err);
       const error = err as { response?: { data?: { message?: string }; status?: number } };
+      let message = 'Unable to reset password. Please try again.';
       if (error.response?.data?.message) {
-        setError(error.response.data.message);
+        message = error.response.data.message;
       } else if (error.response?.status === 400) {
-        setError(error.response?.data?.message || 'Password reset failed. Please check your inputs.');
-      } else {
-        setError('Unable to reset password. Please try again.');
+        message = error.response?.data?.message || 'Password reset failed. Please check your inputs.';
       }
+
+      showToast('error', message);
     } finally {
       setIsLoading(false);
     }
@@ -71,13 +91,6 @@ const ResetPasswordPage: React.FC = () => {
             Please change your password to continue
           </p>
         </div>
-
-        {/* Error Message */}
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm">
-            {error}
-          </div>
-        )}
 
         {/* Reset Password Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -158,6 +171,16 @@ const ResetPasswordPage: React.FC = () => {
           <p>Choose a strong password to secure your account</p>
         </div>
       </div>
+
+      {toast && (
+        <ToastContainer>
+          <Alert
+            type={toast.type}
+            title={toast.type.charAt(0).toUpperCase() + toast.type.slice(1)}
+            message={toast.text}
+          />
+        </ToastContainer>
+      )}
     </div>
   );
 };

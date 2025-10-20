@@ -1,22 +1,34 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import Alert, { type AlertType } from '../../components/common/Alert';
+import ToastContainer from '../../components/common/ToastContainer';
 
 const LoginPage: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
+  const [toast, setToast] = useState<{ type: AlertType; text: string } | null>(null);
   const { login, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Get the intended destination or default to dashboard
   // Filter out /reset-password from 'from' to avoid redirect loop after password reset
   const fromPath = (location.state as { from?: { pathname: string }; passwordResetSuccess?: boolean })?.from?.pathname;
   const from = (fromPath && fromPath !== '/reset-password') ? fromPath : '/admin/dashboard';
   const passwordResetSuccess = (location.state as { passwordResetSuccess?: boolean })?.passwordResetSuccess || false;
+
+  const showToast = useCallback((type: AlertType, text: string) => {
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current);
+    }
+
+    setToast({ type, text });
+    toastTimeoutRef.current = setTimeout(() => setToast(null), 3000);
+  }, []);
 
   // Redirect if already authenticated (e.g., user navigated to /login while logged in)
   // Skip this check if we're already navigating from a login submission
@@ -32,12 +44,25 @@ const LoginPage: React.FC = () => {
     }
   }, [isAuthenticated, user, navigate, from, isNavigating]);
 
+  useEffect(() => {
+    if (passwordResetSuccess) {
+      showToast('success', 'Password reset successful! Please login with your new password.');
+    }
+  }, [passwordResetSuccess, showToast]);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimeoutRef.current) {
+        clearTimeout(toastTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    
+
     if (!username.trim() || !password.trim()) {
-      setError('Please enter both username and password');
+      showToast('warning', 'Please enter both username and password');
       return;
     }
 
@@ -56,15 +81,16 @@ const LoginPage: React.FC = () => {
     } catch (err) {
       console.error('Login error:', err);
       const error = err as { response?: { data?: { message?: string }; status?: number } };
+      let message = 'Unable to connect to the server. Please try again.';
       if (error.response?.data?.message) {
-        setError(error.response.data.message);
+        message = error.response.data.message;
       } else if (error.response?.status === 401) {
-        setError('Invalid username or password');
+        message = 'Invalid username or password';
       } else if (error.response?.status === 400) {
-        setError(error.response?.data?.message || 'Account is inactive or invalid credentials');
-      } else {
-        setError('Unable to connect to the server. Please try again.');
+        message = error.response?.data?.message || 'Account is inactive or invalid credentials';
       }
+
+      showToast('error', message);
     } finally {
       setIsLoading(false);
     }
@@ -78,20 +104,6 @@ const LoginPage: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-800 mb-2">POS System</h1>
           <p className="text-gray-600">Sign in to your account</p>
         </div>
-
-        {/* Success Message */}
-        {passwordResetSuccess && (
-          <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 rounded-md text-sm">
-            Password reset successful! Please login with your new password.
-          </div>
-        )}
-
-        {/* Error Message */}
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm">
-            {error}
-          </div>
-        )}
 
         {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -155,6 +167,16 @@ const LoginPage: React.FC = () => {
           <p>Enter your credentials to access the POS system</p>
         </div>
       </div>
+
+      {toast && (
+        <ToastContainer>
+          <Alert
+            type={toast.type}
+            title={toast.type.charAt(0).toUpperCase() + toast.type.slice(1)}
+            message={toast.text}
+          />
+        </ToastContainer>
+      )}
     </div>
   );
 };
