@@ -80,7 +80,7 @@ const SideNavigation: React.FC = () => {
         onClick={handleLogoutClick}
         className="flex flex-col items-center justify-center w-full py-4 text-gray-600 hover:bg-gray-100 transition-all mt-2"
       >
-        <span className="text-2xl mb-1">🔄</span>
+        <span className="text-2xl mb-1">🚪</span>
         <span className="text-[10px] font-medium">Logout</span>
       </button>
 
