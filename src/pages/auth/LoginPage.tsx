@@ -7,6 +7,7 @@ const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
   const { login, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -16,8 +17,9 @@ const LoginPage: React.FC = () => {
   const passwordResetSuccess = (location.state as { passwordResetSuccess?: boolean })?.passwordResetSuccess || false;
 
   // Redirect if already authenticated (e.g., user navigated to /login while logged in)
+  // Skip this check if we're already navigating from a login submission
   useEffect(() => {
-    if (isAuthenticated && user) {
+    if (isAuthenticated && user && !isNavigating) {
       // If password reset is required, redirect to reset password page
       if (user.requirePasswordReset) {
         navigate('/reset-password', { replace: true });
@@ -26,7 +28,7 @@ const LoginPage: React.FC = () => {
         navigate(from, { replace: true });
       }
     }
-  }, [isAuthenticated, user, navigate, from]);
+  }, [isAuthenticated, user, navigate, from, isNavigating]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,6 +42,8 @@ const LoginPage: React.FC = () => {
     setIsLoading(true);
     try {
       const loggedInUser = await login(username, password);
+      // Set navigating flag to prevent useEffect from interfering
+      setIsNavigating(true);
       // Navigate immediately after successful login based on the response
       // This ensures we use the latest requirePasswordReset value from the backend
       if (loggedInUser.requirePasswordReset) {
