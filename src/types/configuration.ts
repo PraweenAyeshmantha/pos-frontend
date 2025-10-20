@@ -50,3 +50,14 @@ export interface PwaConfigFormData {
   pwa_icon_192: string;
   pwa_icon_512: string;
 }
+
+export interface LoginConfigFormData {
+  login_heading_text: string;
+  login_footer_text: string;
+  login_button_text: string;
+  enable_remember_me: boolean;
+  enable_forgot_password: boolean;
+  login_bg_primary_color: string;
+  login_bg_secondary_color: string;
+  login_font_color: string;
+}

@@ -6,6 +6,7 @@ import type { AlertType } from '../../common/Alert';
 import ToastContainer from '../../common/ToastContainer';
 import PaymentsConfiguration from '../PaymentsConfiguration/PaymentsConfiguration';
 import PWAConfiguration from '../PWAConfiguration/PWAConfiguration';
+import LoginConfiguration from '../LoginConfiguration/LoginConfiguration';
 
 const GeneralConfiguration: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -551,7 +552,9 @@ const GeneralConfiguration: React.FC = () => {
 
         {activeTab === 'pwa' && <PWAConfiguration />}
 
-        {['login', 'printer', 'layout'].includes(activeTab) && (
+        {activeTab === 'login' && <LoginConfiguration />}
+
+        {['printer', 'layout'].includes(activeTab) && (
           <div className="py-24 text-center text-gray-500">
             Configuration settings for {activeTab.toUpperCase()} will be available soon.
           </div>

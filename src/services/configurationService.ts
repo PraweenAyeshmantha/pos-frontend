@@ -22,6 +22,11 @@ export const configurationService = {
     return getConfigurationsByCategory('pwa');
   },
 
+  // Get all Login configurations
+  getAllLoginConfigurations: async (): Promise<Configuration[]> => {
+    return getConfigurationsByCategory('login');
+  },
+
   // Get configuration by key
   getConfigurationByKey: async (key: string, category: string = 'GENERAL'): Promise<Configuration> => {
     const response = await apiClient.get<ApiResponse<Configuration>>(
