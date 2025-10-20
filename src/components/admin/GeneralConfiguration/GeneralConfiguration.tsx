@@ -4,6 +4,7 @@ import type { GeneralConfigFormData } from '../../../types/configuration';
 import Alert from '../../common/Alert';
 import type { AlertType } from '../../common/Alert';
 import ToastContainer from '../../common/ToastContainer';
+import PaymentsConfiguration from '../PaymentsConfiguration/PaymentsConfiguration';
 
 const GeneralConfiguration: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -174,7 +175,9 @@ const GeneralConfiguration: React.FC = () => {
       </div>
 
       {/* Configuration Form */}
-      <div className="bg-white rounded-b-lg shadow-sm p-8 space-y-6">
+      <div className="bg-white rounded-b-lg shadow-sm p-8">
+        {activeTab === 'general' && (
+          <div className="space-y-6">
         {/* Activate License */}
         <div className="flex items-center justify-between py-4 border-b border-gray-200">
           <div className="flex items-center space-x-3">
@@ -540,10 +543,20 @@ const GeneralConfiguration: React.FC = () => {
             {saving ? 'Saving...' : 'Save Changes'}
           </button>
         </div>
+          </div>
+        )}
+
+        {activeTab === 'payments' && <PaymentsConfiguration />}
+
+        {['pwa', 'login', 'printer', 'layout'].includes(activeTab) && (
+          <div className="py-24 text-center text-gray-500">
+            Configuration settings for {activeTab.toUpperCase()} will be available soon.
+          </div>
+        )}
       </div>
 
       {/* Toast Container for Alerts */}
-      {message && (
+      {message && activeTab === 'general' && (
         <ToastContainer>
           <Alert
             type={message.type}
