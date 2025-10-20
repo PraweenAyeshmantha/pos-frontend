@@ -15,7 +15,7 @@ const LoginPage: React.FC = () => {
   const from = (location.state as { from?: { pathname: string }; passwordResetSuccess?: boolean })?.from?.pathname || '/admin/dashboard';
   const passwordResetSuccess = (location.state as { passwordResetSuccess?: boolean })?.passwordResetSuccess || false;
 
-  // Redirect if already authenticated
+  // Redirect if already authenticated (e.g., user navigated to /login while logged in)
   useEffect(() => {
     if (isAuthenticated && user) {
       // If password reset is required, redirect to reset password page
@@ -39,9 +39,14 @@ const LoginPage: React.FC = () => {
 
     setIsLoading(true);
     try {
-      await login(username, password);
-      // After successful login, the useEffect will handle navigation
-      // based on requirePasswordReset flag from the login API response
+      const loggedInUser = await login(username, password);
+      // Navigate immediately after successful login based on the response
+      // This ensures we use the latest requirePasswordReset value from the backend
+      if (loggedInUser.requirePasswordReset) {
+        navigate('/reset-password', { replace: true });
+      } else {
+        navigate(from, { replace: true });
+      }
     } catch (err) {
       console.error('Login error:', err);
       const error = err as { response?: { data?: { message?: string }; status?: number } };
