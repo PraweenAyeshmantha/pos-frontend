@@ -41,3 +41,40 @@ export interface GeneralConfigFormData {
   pos_endpoint: string;
   kitchen_endpoint: string;
 }
+
+export interface PwaConfigFormData {
+  pwa_name: string;
+  pwa_short_name: string;
+  pwa_theme_color: string;
+  pwa_background_color: string;
+  pwa_icon_192: string;
+  pwa_icon_512: string;
+}
+
+export interface LoginConfigFormData {
+  login_heading_text: string;
+  login_footer_text: string;
+  login_button_text: string;
+  enable_remember_me: boolean;
+  enable_forgot_password: boolean;
+  login_bg_primary_color: string;
+  login_bg_secondary_color: string;
+  login_font_color: string;
+}
+
+export interface PrinterConfigFormData {
+  barcode_page_width: string;
+  barcode_page_height: string;
+  barcode_page_margin: string;
+  barcode_margin: string;
+  barcode_orientation: 'HORIZONTAL' | 'VERTICAL';
+  invoice_page_width: string;
+  invoice_page_height: string;
+  invoice_page_margin: string;
+}
+
+export interface LayoutConfigFormData {
+  layout_gradient_primary_color: string;
+  layout_gradient_secondary_color: string;
+  layout_font_size: string;
+}
