@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import SideNavigation from './SideNavigation';
 import TopNavigation from './TopNavigation';
 
@@ -23,4 +23,4 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   );
 };
 
-export default AdminLayout;
+export default memo(AdminLayout);

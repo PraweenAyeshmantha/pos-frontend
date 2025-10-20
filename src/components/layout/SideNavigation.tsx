@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 interface NavigationItem {
@@ -8,26 +8,26 @@ interface NavigationItem {
   path: string;
 }
 
+const navigationItems: NavigationItem[] = [
+  { id: 'home', label: 'Home', icon: '🏠', path: '/admin/dashboard' },
+  { id: 'customers', label: 'Customers', icon: '👥', path: '/admin/customers' },
+  { id: 'orders', label: 'Orders', icon: '🛍️', path: '/admin/orders' },
+  { id: 'statistics', label: 'Statistics', icon: '💲', path: '/admin/statistics' },
+  { id: 'configuration', label: 'Configuration', icon: '🔧', path: '/admin/configuration/general' },
+  { id: 'settings', label: 'Settings', icon: '⚙️', path: '/admin/settings' },
+];
+
 const SideNavigation: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const navigationItems: NavigationItem[] = [
-    { id: 'home', label: 'Home', icon: '🏠', path: '/admin/dashboard' },
-    { id: 'customers', label: 'Customers', icon: '👥', path: '/admin/customers' },
-    { id: 'orders', label: 'Orders', icon: '🛍️', path: '/admin/orders' },
-    { id: 'statistics', label: 'Statistics', icon: '💲', path: '/admin/statistics' },
-    { id: 'configuration', label: 'Configuration', icon: '🔧', path: '/admin/configuration/general' },
-    { id: 'settings', label: 'Settings', icon: '⚙️', path: '/admin/settings' },
-  ];
-
-  const handleNavigation = (path: string) => {
+  const handleNavigation = useCallback((path: string) => {
     navigate(path);
-  };
+  }, [navigate]);
 
-  const isActive = (path: string) => {
+  const isActive = useCallback((path: string) => {
     return location.pathname === path || location.pathname.startsWith(path);
-  };
+  }, [location.pathname]);
 
   return (
     <div className="w-20 bg-gray-50 border-r border-gray-200 shadow-sm flex flex-col items-center py-4 h-screen fixed left-0 top-0 z-20">
@@ -66,4 +66,4 @@ const SideNavigation: React.FC = () => {
   );
 };
 
-export default SideNavigation;
+export default memo(SideNavigation);

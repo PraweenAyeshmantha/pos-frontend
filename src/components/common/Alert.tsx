@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo, useMemo } from 'react';
 
 export type AlertType = 'info' | 'success' | 'warning' | 'error';
 
@@ -10,7 +10,7 @@ export interface AlertProps {
 }
 
 const Alert: React.FC<AlertProps> = ({ type, title, message }) => {
-  const getAlertStyles = () => {
+  const alertStyles = useMemo(() => {
     switch (type) {
       case 'info':
         return {
@@ -53,14 +53,12 @@ const Alert: React.FC<AlertProps> = ({ type, title, message }) => {
           ),
         };
     }
-  };
-
-  const styles = getAlertStyles();
+  }, [type]);
 
   return (
-    <div className={`${styles.bgColor} text-white rounded-lg shadow-lg p-4 flex items-start space-x-4 min-w-[300px] max-w-[500px] animate-slide-in`}>
-      <div className={`${styles.iconBg} rounded-full p-2 flex-shrink-0`}>
-        {styles.icon}
+    <div className={`${alertStyles.bgColor} text-white rounded-lg shadow-lg p-4 flex items-start space-x-4 min-w-[300px] max-w-[500px] animate-slide-in`}>
+      <div className={`${alertStyles.iconBg} rounded-full p-2 flex-shrink-0`}>
+        {alertStyles.icon}
       </div>
       <div className="flex-1">
         <h3 className="font-semibold text-lg mb-1">{title}</h3>
@@ -70,4 +68,4 @@ const Alert: React.FC<AlertProps> = ({ type, title, message }) => {
   );
 };
 
-export default Alert;
+export default memo(Alert);
