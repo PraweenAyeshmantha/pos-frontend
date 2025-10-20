@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useMemo, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import authService from '../services/authService';
 import type { User, AuthState } from '../types/auth';
@@ -43,7 +43,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     });
   }, []);
 
-  const login = async (username: string, password: string) => {
+  const login = useCallback(async (username: string, password: string) => {
     try {
       const response = await authService.login({ username, password });
       const userData = response.data; // response.data contains the user data from the nested API response
@@ -75,9 +75,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
       throw error;
     }
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     authService.logout();
     setAuthState({
       user: null,
@@ -85,9 +85,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       isAuthenticated: false,
       isLoading: false,
     });
-  };
+  }, []);
 
-  const resetPassword = async (currentPassword: string, newPassword: string, confirmPassword: string) => {
+  const resetPassword = useCallback(async (currentPassword: string, newPassword: string, confirmPassword: string) => {
     if (!authState.user) {
       throw new Error('No user logged in');
     }
@@ -101,18 +101,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     
     // Don't update auth state here - caller will handle logout
     // User needs to login again with new password after reset
-  };
+  }, [authState.user]);
 
-  const updateUser = (user: User) => {
+  const updateUser = useCallback((user: User) => {
     setAuthState(prev => ({
       ...prev,
       user,
     }));
     sessionStorage.setItem('user', JSON.stringify(user));
-  };
+  }, []);
+
+  const contextValue = useMemo(
+    () => ({
+      ...authState,
+      login,
+      logout,
+      resetPassword,
+      updateUser,
+    }),
+    [authState, login, logout, resetPassword, updateUser]
+  );
 
   return (
-    <AuthContext.Provider value={{ ...authState, login, logout, resetPassword, updateUser }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
