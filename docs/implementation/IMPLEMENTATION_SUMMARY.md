@@ -161,7 +161,7 @@ Access at: http://localhost:5173
 ## Backend Integration
 
 The application is configured to connect to:
-- Base URL: `http://localhost:8080/pos-codex/api`
+- Base URL: `http://localhost:8080/posai/api`
 - Tenant ID: `PaPos`
 
 Update `.env` file to change these values.

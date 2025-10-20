@@ -20,7 +20,7 @@ function validateEnv(): EnvConfig {
 
   // Provide defaults for development
   const config: EnvConfig = {
-    apiBaseUrl: apiBaseUrl || 'http://localhost:8080/pos-codex/api',
+    apiBaseUrl: apiBaseUrl || 'http://localhost:8080/posai/api',
     tenantId: tenantId || 'PaPos',
     isDevelopment: mode === 'development',
     isProduction: mode === 'production',

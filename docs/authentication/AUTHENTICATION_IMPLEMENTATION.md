@@ -171,7 +171,7 @@ The frontend is fully prepared to integrate with the POS backend API:
 
 ### Environment Configuration
 ```env
-VITE_API_BASE_URL=http://localhost:8080/pos-codex/api
+VITE_API_BASE_URL=http://localhost:8080/posai/api
 VITE_TENANT_ID=PaPos
 ```
 
