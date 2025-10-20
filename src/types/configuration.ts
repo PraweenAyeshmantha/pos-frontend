@@ -72,3 +72,9 @@ export interface PrinterConfigFormData {
   invoice_page_height: string;
   invoice_page_margin: string;
 }
+
+export interface LayoutConfigFormData {
+  layout_gradient_primary_color: string;
+  layout_gradient_secondary_color: string;
+  layout_font_size: string;
+}

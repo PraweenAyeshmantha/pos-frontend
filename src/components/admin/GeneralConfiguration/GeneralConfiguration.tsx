@@ -8,6 +8,7 @@ import PaymentsConfiguration from '../PaymentsConfiguration/PaymentsConfiguratio
 import PWAConfiguration from '../PWAConfiguration/PWAConfiguration';
 import LoginConfiguration from '../LoginConfiguration/LoginConfiguration';
 import PrinterConfiguration from '../PrinterConfiguration/PrinterConfiguration';
+import LayoutConfiguration from '../LayoutConfiguration/LayoutConfiguration';
 
 const tabDefinitions = [
   { key: 'general', label: 'General' },
@@ -570,11 +571,7 @@ const GeneralConfiguration: React.FC = () => {
 
         {activeTab === 'printer' && <PrinterConfiguration />}
 
-        {activeTab === 'layout' && (
-          <div className="py-24 text-center text-gray-500">
-            Configuration settings for LAYOUT will be available soon.
-          </div>
-        )}
+        {activeTab === 'layout' && <LayoutConfiguration />}
       </div>
 
       {/* Toast Container for Alerts */}
