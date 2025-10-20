@@ -109,11 +109,11 @@ public class PrinterService {
 ### REST API (cURL)
 ```bash
 # Get all printer configurations
-curl -X GET http://localhost:8080/pos-codex/api/admin/configurations/printer \
+curl -X GET http://localhost:8080/posai/api/admin/configurations/printer \
   -H "X-Tenant-ID: PaPos"
 
 # Bulk update barcode settings
-curl -X POST "http://localhost:8080/pos-codex/api/admin/configurations/bulk-update?category=PRINTER" \
+curl -X POST "http://localhost:8080/posai/api/admin/configurations/bulk-update?category=PRINTER" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{"configurations": {"barcode_page_width": "100", "barcode_orientation": "VERTICAL"}}'
@@ -167,7 +167,7 @@ All configurations are tenant-specific:
 
 ### 1. Thermal Receipt Printer (80mm)
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/admin/configurations/bulk-update?category=PRINTER" \
+curl -X POST "http://localhost:8080/posai/api/admin/configurations/bulk-update?category=PRINTER" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{"configurations": {"invoice_page_width": "80", "invoice_page_height": "297", "invoice_page_margin": "5"}}'
@@ -175,7 +175,7 @@ curl -X POST "http://localhost:8080/pos-codex/api/admin/configurations/bulk-upda
 
 ### 2. A4 Paper Invoice
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/admin/configurations/bulk-update?category=PRINTER" \
+curl -X POST "http://localhost:8080/posai/api/admin/configurations/bulk-update?category=PRINTER" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{"configurations": {"invoice_page_width": "210", "invoice_page_height": "297", "invoice_page_margin": "10"}}'
@@ -183,7 +183,7 @@ curl -X POST "http://localhost:8080/pos-codex/api/admin/configurations/bulk-upda
 
 ### 3. Barcode Label Printer
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/admin/configurations/bulk-update?category=PRINTER" \
+curl -X POST "http://localhost:8080/posai/api/admin/configurations/bulk-update?category=PRINTER" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{"configurations": {"barcode_page_width": "100", "barcode_page_height": "50", "barcode_orientation": "HORIZONTAL"}}'

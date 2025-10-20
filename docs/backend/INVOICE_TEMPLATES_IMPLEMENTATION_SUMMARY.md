@@ -129,7 +129,7 @@ The Invoice Templates feature addresses the following requirements:
 ### Create a New Invoice Template
 
 ```bash
-curl -X POST http://localhost:8080/pos-codex/api/admin/invoice-templates \
+curl -X POST http://localhost:8080/posai/api/admin/invoice-templates \
   -H "Content-Type: application/json" \
   -H "X-Tenant-ID: PaPos" \
   -d '{
@@ -148,7 +148,7 @@ curl -X POST http://localhost:8080/pos-codex/api/admin/invoice-templates \
 ### Get Active Invoice Templates
 
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/admin/invoice-templates?active=true" \
+curl -X GET "http://localhost:8080/posai/api/admin/invoice-templates?active=true" \
   -H "Content-Type: application/json" \
   -H "X-Tenant-ID: PaPos"
 ```
@@ -156,7 +156,7 @@ curl -X GET "http://localhost:8080/pos-codex/api/admin/invoice-templates?active=
 ### Get Invoice Templates for a Specific Outlet
 
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/admin/invoice-templates?outletId=1" \
+curl -X GET "http://localhost:8080/posai/api/admin/invoice-templates?outletId=1" \
   -H "Content-Type: application/json" \
   -H "X-Tenant-ID: PaPos"
 ```
@@ -164,7 +164,7 @@ curl -X GET "http://localhost:8080/pos-codex/api/admin/invoice-templates?outletI
 ### Assign Outlet to Template
 
 ```bash
-curl -X POST http://localhost:8080/pos-codex/api/admin/invoice-templates/1/outlets/1 \
+curl -X POST http://localhost:8080/posai/api/admin/invoice-templates/1/outlets/1 \
   -H "Content-Type: application/json" \
   -H "X-Tenant-ID: PaPos"
 ```
@@ -172,7 +172,7 @@ curl -X POST http://localhost:8080/pos-codex/api/admin/invoice-templates/1/outle
 ### Update Invoice Template
 
 ```bash
-curl -X PUT http://localhost:8080/pos-codex/api/admin/invoice-templates/1 \
+curl -X PUT http://localhost:8080/posai/api/admin/invoice-templates/1 \
   -H "Content-Type: application/json" \
   -H "X-Tenant-ID: PaPos" \
   -d '{

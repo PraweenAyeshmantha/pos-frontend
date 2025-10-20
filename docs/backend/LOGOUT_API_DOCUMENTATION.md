@@ -198,7 +198,7 @@ Logs out a cashier with an option to clear browser data.
 This is the recommended approach when the cashier wants to ensure fresh data on next login.
 
 ```bash
-curl -X POST http://localhost:8080/pos-codex/api/pos/settings/logout \
+curl -X POST http://localhost:8080/posai/api/pos/settings/logout \
   -H "Content-Type: application/json" \
   -H "X-Tenant-ID: tenant123" \
   -d '{
@@ -212,7 +212,7 @@ curl -X POST http://localhost:8080/pos-codex/api/pos/settings/logout \
 This approach is useful for faster subsequent logins when the cashier expects to return soon.
 
 ```bash
-curl -X POST http://localhost:8080/pos-codex/api/pos/settings/logout \
+curl -X POST http://localhost:8080/posai/api/pos/settings/logout \
   -H "Content-Type: application/json" \
   -H "X-Tenant-ID: tenant123" \
   -d '{
@@ -226,7 +226,7 @@ curl -X POST http://localhost:8080/pos-codex/api/pos/settings/logout \
 When `clearBrowserData` is not specified, it defaults to `false`.
 
 ```bash
-curl -X POST http://localhost:8080/pos-codex/api/pos/settings/logout \
+curl -X POST http://localhost:8080/posai/api/pos/settings/logout \
   -H "Content-Type: application/json" \
   -H "X-Tenant-ID: tenant123" \
   -d '{
@@ -369,7 +369,7 @@ See [SETTINGS_API_DOCUMENTATION.md](SETTINGS_API_DOCUMENTATION.md) for more deta
 ```bash
 #!/bin/bash
 
-BASE_URL="http://localhost:8080/pos-codex"
+BASE_URL="http://localhost:8080/posai"
 TENANT_ID="tenant123"
 
 echo "Test 1: Logout with clear data"

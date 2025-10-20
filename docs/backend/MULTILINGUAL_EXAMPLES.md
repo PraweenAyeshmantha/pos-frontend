@@ -28,7 +28,7 @@ The API uses the standard `Accept-Language` HTTP header to determine the user's 
 ```bash
 curl -X GET \
   -H "Accept-Language: en" \
-  http://localhost:8080/pos-codex/api/admin/products/999999
+  http://localhost:8080/posai/api/admin/products/999999
 ```
 
 Response:
@@ -48,7 +48,7 @@ Response:
 ```bash
 curl -X GET \
   -H "Accept-Language: es" \
-  http://localhost:8080/pos-codex/api/admin/products/999999
+  http://localhost:8080/posai/api/admin/products/999999
 ```
 
 Response:
@@ -68,7 +68,7 @@ Response:
 ```bash
 curl -X GET \
   -H "Accept-Language: fr" \
-  http://localhost:8080/pos-codex/api/admin/products/999999
+  http://localhost:8080/posai/api/admin/products/999999
 ```
 
 Response:
@@ -98,7 +98,7 @@ curl -X POST \
     "category": "Test",
     "active": true
   }' \
-  http://localhost:8080/pos-codex/api/admin/products
+  http://localhost:8080/posai/api/admin/products
 ```
 
 Response (Success):
@@ -132,7 +132,7 @@ curl -X POST \
     "name": "",
     "price": -5
   }' \
-  http://localhost:8080/pos-codex/api/admin/products
+  http://localhost:8080/posai/api/admin/products
 ```
 
 Response (Validation Error):
@@ -170,7 +170,7 @@ const userLanguage = navigator.language.split('-')[0]; // e.g., 'en', 'es', 'fr'
 async function getProduct(productId) {
   try {
     const response = await fetch(
-      `http://localhost:8080/pos-codex/api/admin/products/${productId}`,
+      `http://localhost:8080/posai/api/admin/products/${productId}`,
       {
         headers: {
           'Accept-Language': userLanguage,
@@ -207,7 +207,7 @@ function ProductList() {
   const fetchProducts = async () => {
     try {
       const response = await fetch(
-        'http://localhost:8080/pos-codex/api/admin/products',
+        'http://localhost:8080/posai/api/admin/products',
         {
           headers: {
             'Accept-Language': language,
@@ -261,7 +261,7 @@ import axios from 'axios';
 
 // Create axios instance
 const api = axios.create({
-  baseURL: 'http://localhost:8080/pos-codex/api',
+  baseURL: 'http://localhost:8080/posai/api',
   headers: {
     'Content-Type': 'application/json'
   }
@@ -315,7 +315,7 @@ async function createProduct(productData) {
 # English
 curl -X GET \
   -H "Accept-Language: en" \
-  http://localhost:8080/pos-codex/api/admin/products
+  http://localhost:8080/posai/api/admin/products
 
 # Expected: "You need to be signed in to perform this action. Please log in and try again."
 ```
@@ -324,7 +324,7 @@ curl -X GET \
 # Spanish
 curl -X GET \
   -H "Accept-Language: es" \
-  http://localhost:8080/pos-codex/api/admin/products
+  http://localhost:8080/posai/api/admin/products
 
 # Expected: "Debe iniciar sesión para realizar esta acción. Por favor, inicie sesión e inténtelo de nuevo."
 ```
@@ -336,7 +336,7 @@ curl -X GET \
 curl -X DELETE \
   -H "Accept-Language: fr" \
   -H "X-Tenant-ID: PaPos" \
-  http://localhost:8080/pos-codex/api/admin/categories/1
+  http://localhost:8080/posai/api/admin/categories/1
 
 # Expected (French): "Cette action ne peut pas être terminée car d'autres enregistrements dépendent de ces données."
 ```
@@ -353,7 +353,7 @@ curl -X POST \
     "productId": 1,
     "quantity": 1000
   }' \
-  http://localhost:8080/pos-codex/api/pos/cart
+  http://localhost:8080/posai/api/pos/cart
 
 # Expected (Spanish): "Esta operación resultaría en un stock negativo. Por favor, verifique la cantidad disponible."
 ```
@@ -365,13 +365,13 @@ curl -X POST \
 curl -X GET \
   -H "Accept-Language: en" \
   -H "X-Tenant-ID: PaPos" \
-  http://localhost:8080/pos-codex/api/admin/products/999
+  http://localhost:8080/posai/api/admin/products/999
 
 # Then switch to French
 curl -X GET \
   -H "Accept-Language: fr" \
   -H "X-Tenant-ID: PaPos" \
-  http://localhost:8080/pos-codex/api/admin/products/999
+  http://localhost:8080/posai/api/admin/products/999
 
 # Each request will return messages in the specified language
 ```
@@ -393,7 +393,7 @@ function getBrowserLanguage() {
 
 // Use in API calls
 const language = getBrowserLanguage();
-fetch('http://localhost:8080/pos-codex/api/admin/products', {
+fetch('http://localhost:8080/posai/api/admin/products', {
   headers: {
     'Accept-Language': language,
     'X-Tenant-ID': 'PaPos'
@@ -427,7 +427,7 @@ While the current implementation uses the `Accept-Language` header, you can exte
 
 ```bash
 # Example (requires custom implementation)
-curl http://localhost:8080/pos-codex/api/admin/products?lang=es
+curl http://localhost:8080/posai/api/admin/products?lang=es
 ```
 
 This would require adding a custom LocaleResolver that checks both header and query parameters.

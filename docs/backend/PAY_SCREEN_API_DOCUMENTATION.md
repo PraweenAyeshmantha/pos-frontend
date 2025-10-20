@@ -42,7 +42,7 @@ Check if order notes and split payments are enabled.
 
 **Request:**
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/admin/configurations?category=GENERAL" \
+curl -X GET "http://localhost:8080/posai/api/admin/configurations?category=GENERAL" \
   -H "X-Tenant-ID: PaPos"
 ```
 
@@ -83,7 +83,7 @@ Retrieve all active payment methods for the pay screen.
 
 **Request:**
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/pos/payment-methods" \
+curl -X GET "http://localhost:8080/posai/api/pos/payment-methods" \
   -H "X-Tenant-ID: PaPos"
 ```
 
@@ -132,7 +132,7 @@ If you want to show only payment methods assigned to a specific outlet.
 
 **Request:**
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/admin/outlets/1/payment-methods" \
+curl -X GET "http://localhost:8080/posai/api/admin/outlets/1/payment-methods" \
   -H "X-Tenant-ID: PaPos"
 ```
 
@@ -231,7 +231,7 @@ Create a new order with multiple payment methods.
 
 **Request:**
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/pos/orders" \
+curl -X POST "http://localhost:8080/posai/api/pos/orders" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -335,7 +335,7 @@ Complete an on-hold order (e.g., from a dining table) with payment processing.
 
 **Request:**
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/pos/orders/123/complete" \
+curl -X POST "http://localhost:8080/posai/api/pos/orders/123/complete" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -491,7 +491,7 @@ function calculatePaymentTotals(orderTotal, payments) {
 Administrators can add new payment methods via the admin API:
 
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/admin/payment-methods" \
+curl -X POST "http://localhost:8080/posai/api/admin/payment-methods" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -507,11 +507,11 @@ curl -X POST "http://localhost:8080/pos-codex/api/admin/payment-methods" \
 
 ```bash
 # Add payment method to outlet
-curl -X POST "http://localhost:8080/pos-codex/api/admin/outlets/1/payment-methods/3" \
+curl -X POST "http://localhost:8080/posai/api/admin/outlets/1/payment-methods/3" \
   -H "X-Tenant-ID: PaPos"
 
 # Remove payment method from outlet
-curl -X DELETE "http://localhost:8080/pos-codex/api/admin/outlets/1/payment-methods/3" \
+curl -X DELETE "http://localhost:8080/posai/api/admin/outlets/1/payment-methods/3" \
   -H "X-Tenant-ID: PaPos"
 ```
 
@@ -581,7 +581,7 @@ This is not enforced on the backend. The order will be created but status may re
 ### Test Scenario 1: Single Payment Method
 
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/pos/orders" \
+curl -X POST "http://localhost:8080/posai/api/pos/orders" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -597,7 +597,7 @@ curl -X POST "http://localhost:8080/pos-codex/api/pos/orders" \
 ### Test Scenario 2: Multiple Payment Methods (Split Payment)
 
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/pos/orders" \
+curl -X POST "http://localhost:8080/posai/api/pos/orders" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -617,13 +617,13 @@ curl -X POST "http://localhost:8080/pos-codex/api/pos/orders" \
 
 First check if notes are enabled:
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/admin/configurations?category=GENERAL" \
+curl -X GET "http://localhost:8080/posai/api/admin/configurations?category=GENERAL" \
   -H "X-Tenant-ID: PaPos" | jq '.data[] | select(.configKey=="enable_order_note")'
 ```
 
 Then create order with notes:
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/pos/orders" \
+curl -X POST "http://localhost:8080/posai/api/pos/orders" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{

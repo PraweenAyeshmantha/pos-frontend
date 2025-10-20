@@ -6,7 +6,7 @@ The Barcode Management API provides comprehensive functionality for assigning, m
 
 ## Base URL
 ```
-http://localhost:8080/pos-codex/api/admin/barcodes
+http://localhost:8080/posai/api/admin/barcodes
 ```
 
 ## Features
@@ -97,7 +97,7 @@ Content-Type: application/json
 
 **Example (cURL):**
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/admin/barcodes/assign" \
+curl -X POST "http://localhost:8080/posai/api/admin/barcodes/assign" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -172,7 +172,7 @@ Content-Type: application/json
 
 **Example (cURL):**
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/admin/barcodes/assign/bulk" \
+curl -X POST "http://localhost:8080/posai/api/admin/barcodes/assign/bulk" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -230,7 +230,7 @@ X-Tenant-ID: PaPos
 
 **Example (cURL):**
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/admin/barcodes/product/1" \
+curl -X GET "http://localhost:8080/posai/api/admin/barcodes/product/1" \
   -H "X-Tenant-ID: PaPos"
 ```
 
@@ -271,7 +271,7 @@ X-Tenant-ID: PaPos
 
 **Example (cURL):**
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/admin/barcodes/BC-APPLE-001" \
+curl -X GET "http://localhost:8080/posai/api/admin/barcodes/BC-APPLE-001" \
   -H "X-Tenant-ID: PaPos"
 ```
 
@@ -312,7 +312,7 @@ X-Tenant-ID: PaPos
 
 **Example (cURL):**
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/admin/barcodes/product/1/primary" \
+curl -X GET "http://localhost:8080/posai/api/admin/barcodes/product/1/primary" \
   -H "X-Tenant-ID: PaPos"
 ```
 
@@ -358,11 +358,11 @@ X-Tenant-ID: PaPos
 **Example (cURL):**
 ```bash
 # Update barcode code
-curl -X PUT "http://localhost:8080/pos-codex/api/admin/barcodes/1?code=BC-APPLE-NEW" \
+curl -X PUT "http://localhost:8080/posai/api/admin/barcodes/1?code=BC-APPLE-NEW" \
   -H "X-Tenant-ID: PaPos"
 
 # Set as primary barcode
-curl -X PUT "http://localhost:8080/pos-codex/api/admin/barcodes/1?isPrimary=true" \
+curl -X PUT "http://localhost:8080/posai/api/admin/barcodes/1?isPrimary=true" \
   -H "X-Tenant-ID: PaPos"
 ```
 
@@ -397,7 +397,7 @@ X-Tenant-ID: PaPos
 
 **Example (cURL):**
 ```bash
-curl -X DELETE "http://localhost:8080/pos-codex/api/admin/barcodes/1" \
+curl -X DELETE "http://localhost:8080/posai/api/admin/barcodes/1" \
   -H "X-Tenant-ID: PaPos"
 ```
 
@@ -462,7 +462,7 @@ Content-Type: application/json
 
 **Example (cURL):**
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/admin/barcodes/print" \
+curl -X POST "http://localhost:8080/posai/api/admin/barcodes/print" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -478,7 +478,7 @@ curl -X POST "http://localhost:8080/pos-codex/api/admin/barcodes/print" \
 ### 1. Assign Custom Barcode to a Single Product
 
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/admin/barcodes/assign" \
+curl -X POST "http://localhost:8080/posai/api/admin/barcodes/assign" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -493,7 +493,7 @@ curl -X POST "http://localhost:8080/pos-codex/api/admin/barcodes/assign" \
 After processing a CSV file with columns: `product_id,barcode`, create a mapping and call:
 
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/admin/barcodes/assign/bulk" \
+curl -X POST "http://localhost:8080/posai/api/admin/barcodes/assign/bulk" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -510,7 +510,7 @@ curl -X POST "http://localhost:8080/pos-codex/api/admin/barcodes/assign/bulk" \
 Print 10 copies each of selected product barcodes:
 
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/admin/barcodes/print" \
+curl -X POST "http://localhost:8080/posai/api/admin/barcodes/print" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -522,7 +522,7 @@ curl -X POST "http://localhost:8080/pos-codex/api/admin/barcodes/print" \
 ### 4. Look Up Product by Scanning Barcode
 
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/admin/barcodes/8901234567890" \
+curl -X GET "http://localhost:8080/posai/api/admin/barcodes/8901234567890" \
   -H "X-Tenant-ID: PaPos"
 ```
 
@@ -543,7 +543,7 @@ ID,Name,Price,Meta: _ddwcpos_barcode_init
 After import, use the bulk assignment API to sync barcodes:
 
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/admin/barcodes/assign/bulk" \
+curl -X POST "http://localhost:8080/posai/api/admin/barcodes/assign/bulk" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{

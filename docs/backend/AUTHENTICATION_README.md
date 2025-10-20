@@ -43,7 +43,7 @@ A comprehensive JWT authentication system has been implemented for the POS Backe
 
 ### 1. Login (Get JWT Token)
 ```bash
-curl -X POST http://localhost:8080/pos-codex/api/auth/login \
+curl -X POST http://localhost:8080/posai/api/auth/login \
   -H "X-Tenant-ID: default" \
   -H "Content-Type: application/json" \
   -d '{
@@ -67,7 +67,7 @@ curl -X POST http://localhost:8080/pos-codex/api/auth/login \
 
 ### 2. Access Protected APIs
 ```bash
-curl -X GET http://localhost:8080/pos-codex/api/admin/outlets \
+curl -X GET http://localhost:8080/posai/api/admin/outlets \
   -H "X-Tenant-ID: default" \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 ```
@@ -76,7 +76,7 @@ curl -X GET http://localhost:8080/pos-codex/api/admin/outlets \
 
 **Step 1: Initial Login**
 ```bash
-curl -X POST http://localhost:8080/pos-codex/api/auth/login \
+curl -X POST http://localhost:8080/posai/api/auth/login \
   -H "X-Tenant-ID: default" \
   -H "Content-Type: application/json" \
   -d '{
@@ -89,7 +89,7 @@ curl -X POST http://localhost:8080/pos-codex/api/auth/login \
 
 **Step 2: Reset Password**
 ```bash
-curl -X POST http://localhost:8080/pos-codex/api/auth/reset-password \
+curl -X POST http://localhost:8080/posai/api/auth/reset-password \
   -H "X-Tenant-ID: default" \
   -H "Content-Type: application/json" \
   -d '{

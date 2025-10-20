@@ -2,7 +2,7 @@
 
 ## Base URL
 ```
-http://localhost:8080/pos-codex
+http://localhost:8080/posai
 ```
 
 ## Authentication & Headers
@@ -128,7 +128,7 @@ This endpoint retrieves all login screen configurations to display the POS login
 
 **Usage Example**:
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/pos" \
+curl -X GET "http://localhost:8080/posai/api/pos" \
   -H "X-Tenant-ID: PaPos"
 ```
 
@@ -179,15 +179,15 @@ Retrieves active products for the POS home screen. Supports filtering by categor
 **Usage Examples**:
 ```bash
 # Get all active products
-curl -X GET "http://localhost:8080/pos-codex/api/pos/products" \
+curl -X GET "http://localhost:8080/posai/api/pos/products" \
   -H "X-Tenant-ID: PaPos"
 
 # Get products by category
-curl -X GET "http://localhost:8080/pos-codex/api/pos/products?category=Clothing" \
+curl -X GET "http://localhost:8080/posai/api/pos/products?category=Clothing" \
   -H "X-Tenant-ID: PaPos"
 
 # Search products
-curl -X GET "http://localhost:8080/pos-codex/api/pos/products?search=shirt" \
+curl -X GET "http://localhost:8080/posai/api/pos/products?search=shirt" \
   -H "X-Tenant-ID: PaPos"
 ```
 
@@ -228,7 +228,7 @@ Retrieves all active product categories with product counts for the POS home scr
 
 **Usage Example**:
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/pos/categories" \
+curl -X GET "http://localhost:8080/posai/api/pos/categories" \
   -H "X-Tenant-ID: PaPos"
 ```
 
@@ -271,7 +271,7 @@ Retrieves all active customers for selection in the POS system.
 
 **Usage Example**:
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/pos/customers" \
+curl -X GET "http://localhost:8080/posai/api/pos/customers" \
   -H "X-Tenant-ID: PaPos"
 ```
 
@@ -320,7 +320,7 @@ Retrieves all active payment methods available for the POS system.
 
 **Usage Example**:
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/pos/payment-methods" \
+curl -X GET "http://localhost:8080/posai/api/pos/payment-methods" \
   -H "X-Tenant-ID: PaPos"
 ```
 
@@ -394,7 +394,7 @@ Creates a new order with items and processes payments. The order can be complete
 
 **Usage Example**:
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/pos/orders" \
+curl -X POST "http://localhost:8080/posai/api/pos/orders" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -469,7 +469,7 @@ Applies a discount to an existing order. Supports both fixed amount and percenta
 **Usage Example**:
 ```bash
 # Apply fixed discount
-curl -X POST "http://localhost:8080/pos-codex/api/pos/orders/1/discount" \
+curl -X POST "http://localhost:8080/posai/api/pos/orders/1/discount" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -478,7 +478,7 @@ curl -X POST "http://localhost:8080/pos-codex/api/pos/orders/1/discount" \
   }'
 
 # Apply percentage discount
-curl -X POST "http://localhost:8080/pos-codex/api/pos/orders/1/discount" \
+curl -X POST "http://localhost:8080/posai/api/pos/orders/1/discount" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -529,7 +529,7 @@ Places an order on hold. Useful when a customer needs to temporarily pause their
 
 **Usage Example**:
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/pos/orders/1/hold" \
+curl -X POST "http://localhost:8080/posai/api/pos/orders/1/hold" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -604,7 +604,7 @@ This endpoint retrieves all outlets assigned to a specific cashier by their user
 
 **Usage Example**:
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/pos/cashier/johndoe/outlets" \
+curl -X GET "http://localhost:8080/posai/api/pos/cashier/johndoe/outlets" \
   -H "X-Tenant-ID: PaPos"
 ```
 
@@ -2202,7 +2202,7 @@ DELETE /api/pos/customers/{id}
 
 ### Create an Outlet
 ```bash
-curl -X POST http://localhost:8080/pos-codex/api/admin/outlets \
+curl -X POST http://localhost:8080/posai/api/admin/outlets \
   -H "X-Tenant-ID: PaPos" \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
@@ -2218,21 +2218,21 @@ curl -X POST http://localhost:8080/pos-codex/api/admin/outlets \
 
 ### Search for Products
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/admin/products/search?term=coffee" \
+curl -X GET "http://localhost:8080/posai/api/admin/products/search?term=coffee" \
   -H "X-Tenant-ID: PaPos" \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
 ### Get Orders by Date Range
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/admin/orders?outletId=1&startDate=2025-10-01T00:00:00Z&endDate=2025-10-31T23:59:59Z" \
+curl -X GET "http://localhost:8080/posai/api/admin/orders?outletId=1&startDate=2025-10-01T00:00:00Z&endDate=2025-10-31T23:59:59Z" \
   -H "X-Tenant-ID: PaPos" \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
 ### Create a Customer
 ```bash
-curl -X POST http://localhost:8080/pos-codex/api/pos/customers \
+curl -X POST http://localhost:8080/posai/api/pos/customers \
   -H "X-Tenant-ID: PaPos" \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
@@ -2245,7 +2245,7 @@ curl -X POST http://localhost:8080/pos-codex/api/pos/customers \
 
 ### Update Configuration
 ```bash
-curl -X PUT http://localhost:8080/pos-codex/api/admin/configurations/1 \
+curl -X PUT http://localhost:8080/posai/api/admin/configurations/1 \
   -H "X-Tenant-ID: PaPos" \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \

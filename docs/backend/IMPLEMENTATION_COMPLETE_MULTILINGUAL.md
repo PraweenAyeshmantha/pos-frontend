@@ -172,19 +172,19 @@ All message categories have been fully translated:
 
 ```bash
 # English
-curl -H "Accept-Language: en" http://localhost:8080/pos-codex/api/admin/products/999
+curl -H "Accept-Language: en" http://localhost:8080/posai/api/admin/products/999
 
 # Spanish
-curl -H "Accept-Language: es" http://localhost:8080/pos-codex/api/admin/products/999
+curl -H "Accept-Language: es" http://localhost:8080/posai/api/admin/products/999
 
 # French
-curl -H "Accept-Language: fr" http://localhost:8080/pos-codex/api/admin/products/999
+curl -H "Accept-Language: fr" http://localhost:8080/posai/api/admin/products/999
 ```
 
 ### JavaScript
 
 ```javascript
-fetch('http://localhost:8080/pos-codex/api/admin/products', {
+fetch('http://localhost:8080/posai/api/admin/products', {
   headers: {
     'Accept-Language': 'es',
     'X-Tenant-ID': 'PaPos'

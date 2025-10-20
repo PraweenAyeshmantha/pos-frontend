@@ -19,7 +19,7 @@ Three sample coupons are automatically created when the application starts:
 ### 2. Apply a Coupon to an Order
 
 ```bash
-POST /pos-codex/api/pos/orders/{orderId}/coupon
+POST /posai/api/pos/orders/{orderId}/coupon
 Content-Type: application/json
 X-TenantID: PaPos
 
@@ -31,7 +31,7 @@ X-TenantID: PaPos
 ### 3. Apply a Custom Discount
 
 ```bash
-POST /pos-codex/api/pos/orders/{orderId}/discount
+POST /posai/api/pos/orders/{orderId}/discount
 Content-Type: application/json
 X-TenantID: PaPos
 
@@ -67,7 +67,7 @@ Based on the provided mockups, the frontend should implement:
 2. Show modal with coupon code input
 3. On "Add" click:
    ```javascript
-   POST /pos-codex/api/pos/orders/{orderId}/coupon
+   POST /posai/api/pos/orders/{orderId}/coupon
    Body: { "couponCode": userInput }
    ```
 4. On success: Update order display with new discount
@@ -78,7 +78,7 @@ Based on the provided mockups, the frontend should implement:
 2. Show modal with discount type and value inputs
 3. On "Add" click:
    ```javascript
-   POST /pos-codex/api/pos/orders/{orderId}/discount
+   POST /posai/api/pos/orders/{orderId}/discount
    Body: { 
      "discountType": "PERCENTAGE" | "FIXED",
      "discountValue": numericValue
@@ -110,7 +110,7 @@ Total:           $100.00
 ### Create a New Coupon
 
 ```bash
-POST /pos-codex/api/coupons
+POST /posai/api/coupons
 Content-Type: application/json
 X-TenantID: PaPos
 
@@ -128,21 +128,21 @@ X-TenantID: PaPos
 ### List All Active Coupons
 
 ```bash
-GET /pos-codex/api/coupons
+GET /posai/api/coupons
 X-TenantID: PaPos
 ```
 
 ### Get Coupon Details
 
 ```bash
-GET /pos-codex/api/coupons/code/{couponCode}
+GET /posai/api/coupons/code/{couponCode}
 X-TenantID: PaPos
 ```
 
 ### Update a Coupon
 
 ```bash
-PUT /pos-codex/api/coupons/{id}
+PUT /posai/api/coupons/{id}
 Content-Type: application/json
 X-TenantID: PaPos
 
@@ -160,7 +160,7 @@ X-TenantID: PaPos
 ### Delete a Coupon
 
 ```bash
-DELETE /pos-codex/api/coupons/{id}
+DELETE /posai/api/coupons/{id}
 X-TenantID: PaPos
 ```
 

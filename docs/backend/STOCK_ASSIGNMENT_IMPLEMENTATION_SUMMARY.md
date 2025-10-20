@@ -78,7 +78,7 @@ ID,Name,Price,Meta: _ddwcpos_outlet_stock_1,Meta: _ddwcpos_outlet_stock_2
 
 ### Bulk Assignment (Primary Use Case)
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/admin/stocks/assign/bulk" \
+curl -X POST "http://localhost:8080/posai/api/admin/stocks/assign/bulk" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -92,7 +92,7 @@ curl -X POST "http://localhost:8080/pos-codex/api/admin/stocks/assign/bulk" \
 
 ### Single Assignment
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/admin/stocks/assign" \
+curl -X POST "http://localhost:8080/posai/api/admin/stocks/assign" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{

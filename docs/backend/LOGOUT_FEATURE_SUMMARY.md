@@ -87,7 +87,7 @@ This document summarizes the implementation of the Logout feature for the POS sy
 
 ### Request with Data Clearing
 ```bash
-curl -X POST http://localhost:8080/pos-codex/api/pos/settings/logout \
+curl -X POST http://localhost:8080/posai/api/pos/settings/logout \
   -H "Content-Type: application/json" \
   -H "X-Tenant-ID: tenant123" \
   -d '{

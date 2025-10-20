@@ -73,7 +73,7 @@ All APIs require the `X-Tenant-ID` header for multi-tenancy support.
 
 **Example:**
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/pos/customers" \
+curl -X POST "http://localhost:8080/posai/api/pos/customers" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -139,7 +139,7 @@ curl -X POST "http://localhost:8080/pos-codex/api/pos/customers" \
 
 **Example:**
 ```bash
-curl -X PUT "http://localhost:8080/pos-codex/api/pos/customers/1" \
+curl -X PUT "http://localhost:8080/posai/api/pos/customers/1" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -200,7 +200,7 @@ curl -X PUT "http://localhost:8080/pos-codex/api/pos/customers/1" \
 
 **Example:**
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/pos/customers/1" \
+curl -X GET "http://localhost:8080/posai/api/pos/customers/1" \
   -H "X-Tenant-ID: PaPos"
 ```
 
@@ -249,7 +249,7 @@ curl -X GET "http://localhost:8080/pos-codex/api/pos/customers/1" \
 
 **Example:**
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/pos/customers" \
+curl -X GET "http://localhost:8080/posai/api/pos/customers" \
   -H "X-Tenant-ID: PaPos"
 ```
 
@@ -301,7 +301,7 @@ curl -X GET "http://localhost:8080/pos-codex/api/pos/customers" \
 
 **Example:**
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/pos/customers?active=true" \
+curl -X GET "http://localhost:8080/posai/api/pos/customers?active=true" \
   -H "X-Tenant-ID: PaPos"
 ```
 
@@ -355,25 +355,25 @@ curl -X GET "http://localhost:8080/pos-codex/api/pos/customers?active=true" \
 
 **Search by name:**
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/pos/customers/search?term=John" \
+curl -X GET "http://localhost:8080/posai/api/pos/customers/search?term=John" \
   -H "X-Tenant-ID: PaPos"
 ```
 
 **Search by email:**
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/pos/customers/search?term=john.doe@example.com" \
+curl -X GET "http://localhost:8080/posai/api/pos/customers/search?term=john.doe@example.com" \
   -H "X-Tenant-ID: PaPos"
 ```
 
 **Search by phone:**
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/pos/customers/search?term=1234567890" \
+curl -X GET "http://localhost:8080/posai/api/pos/customers/search?term=1234567890" \
   -H "X-Tenant-ID: PaPos"
 ```
 
 **Search with partial match:**
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/pos/customers/search?term=123" \
+curl -X GET "http://localhost:8080/posai/api/pos/customers/search?term=123" \
   -H "X-Tenant-ID: PaPos"
 ```
 
@@ -414,7 +414,7 @@ curl -X GET "http://localhost:8080/pos-codex/api/pos/customers/search?term=123" 
 
 **Example:**
 ```bash
-curl -X DELETE "http://localhost:8080/pos-codex/api/pos/customers/1" \
+curl -X DELETE "http://localhost:8080/posai/api/pos/customers/1" \
   -H "X-Tenant-ID: PaPos"
 ```
 

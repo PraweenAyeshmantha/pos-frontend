@@ -19,7 +19,7 @@ When logging in for the first time, you must use the default credentials:
 
 **Request:**
 ```bash
-curl -X POST http://localhost:8080/pos-codex/api/auth/login \
+curl -X POST http://localhost:8080/posai/api/auth/login \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -71,7 +71,7 @@ After the initial login, you must reset your password:
 
 **Request:**
 ```bash
-curl -X POST http://localhost:8080/pos-codex/api/auth/reset-password \
+curl -X POST http://localhost:8080/posai/api/auth/reset-password \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -105,7 +105,7 @@ After resetting your password, login again with your new credentials:
 
 **Request:**
 ```bash
-curl -X POST http://localhost:8080/pos-codex/api/auth/login \
+curl -X POST http://localhost:8080/posai/api/auth/login \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -157,7 +157,7 @@ Use the JWT token from the login response to access protected endpoints:
 
 **Request:**
 ```bash
-curl -X GET http://localhost:8080/pos-codex/api/admin/outlets \
+curl -X GET http://localhost:8080/posai/api/admin/outlets \
   -H "X-Tenant-ID: PaPos" \
   -H "Authorization: Bearer eyJhbGciOiJIUzUxMiJ9..."
 ```
@@ -170,7 +170,7 @@ Here's a complete bash script to login as admin for the first time:
 #!/bin/bash
 
 # Configuration
-BASE_URL="http://localhost:8080/pos-codex"
+BASE_URL="http://localhost:8080/posai"
 TENANT_ID="PaPos"
 
 # Default credentials
@@ -314,7 +314,7 @@ This means the admin user has full access to all features and operations in the 
 - Save your JWT token in an environment variable for easy access during development:
   ```bash
   export JWT_TOKEN="eyJhbGciOiJIUzUxMiJ9..."
-  curl -H "X-Tenant-ID: PaPos" -H "Authorization: Bearer $JWT_TOKEN" http://localhost:8080/pos-codex/api/admin/outlets
+  curl -H "X-Tenant-ID: PaPos" -H "Authorization: Bearer $JWT_TOKEN" http://localhost:8080/posai/api/admin/outlets
   ```
 
 - Use tools like Postman or Insomnia to save your token and test APIs easily

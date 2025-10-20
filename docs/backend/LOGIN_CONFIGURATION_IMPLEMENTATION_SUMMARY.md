@@ -141,13 +141,13 @@ This implementation:
 
 ### Basic Retrieval
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/admin/configurations/login" \
+curl -X GET "http://localhost:8080/posai/api/admin/configurations/login" \
   -H "X-Tenant-ID: PaPos"
 ```
 
 ### Bulk Update
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/admin/configurations/bulk-update?category=LOGIN" \
+curl -X POST "http://localhost:8080/posai/api/admin/configurations/bulk-update?category=LOGIN" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{

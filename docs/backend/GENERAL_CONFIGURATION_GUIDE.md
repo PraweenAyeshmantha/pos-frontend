@@ -169,7 +169,7 @@ GET /api/admin/configurations/by-key?key={configKey}&category=GENERAL
 
 **Example**:
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/admin/configurations/by-key?key=module_enabled&category=GENERAL" \
+curl -X GET "http://localhost:8080/posai/api/admin/configurations/by-key?key=module_enabled&category=GENERAL" \
   -H "X-Tenant-ID: PaPos"
 ```
 
@@ -192,7 +192,7 @@ PUT /api/admin/configurations/{id}
 
 **Example**:
 ```bash
-curl -X PUT http://localhost:8080/pos-codex/api/admin/configurations/1 \
+curl -X PUT http://localhost:8080/posai/api/admin/configurations/1 \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -244,7 +244,7 @@ POST /api/admin/configurations/bulk-update?category=GENERAL
 
 **Example**:
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/admin/configurations/bulk-update?category=GENERAL" \
+curl -X POST "http://localhost:8080/posai/api/admin/configurations/bulk-update?category=GENERAL" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{

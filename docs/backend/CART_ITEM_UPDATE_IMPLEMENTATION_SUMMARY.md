@@ -58,7 +58,7 @@ PUT /api/pos/orders/{orderId}/items/{itemId}
 
 ### Request
 ```bash
-curl -X PUT "http://localhost:8080/pos-codex/api/pos/orders/1/items/1" \
+curl -X PUT "http://localhost:8080/posai/api/pos/orders/1/items/1" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{

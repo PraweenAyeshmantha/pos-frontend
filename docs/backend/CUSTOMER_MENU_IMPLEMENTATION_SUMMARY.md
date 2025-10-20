@@ -187,7 +187,7 @@ CREATE TABLE customers (
 
 All endpoints require the `X-Tenant-ID` header for proper multi-tenancy isolation:
 ```bash
-curl -H "X-Tenant-ID: PaPos" http://localhost:8080/pos-codex/api/pos/customers
+curl -H "X-Tenant-ID: PaPos" http://localhost:8080/posai/api/pos/customers
 ```
 
 ## Response Format

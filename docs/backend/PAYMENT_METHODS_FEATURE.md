@@ -173,7 +173,7 @@ DELETE /api/admin/payment-methods/{id}
 
 ```bash
 # Add credit card payment
-curl -X POST http://localhost:8080/pos-codex/api/admin/payment-methods \
+curl -X POST http://localhost:8080/posai/api/admin/payment-methods \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -185,7 +185,7 @@ curl -X POST http://localhost:8080/pos-codex/api/admin/payment-methods \
   }'
 
 # Add mobile payment
-curl -X POST http://localhost:8080/pos-codex/api/admin/payment-methods \
+curl -X POST http://localhost:8080/posai/api/admin/payment-methods \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -201,7 +201,7 @@ curl -X POST http://localhost:8080/pos-codex/api/admin/payment-methods \
 
 ```bash
 # Get only active payment methods for display
-curl -X GET "http://localhost:8080/pos-codex/api/admin/payment-methods?active=true" \
+curl -X GET "http://localhost:8080/posai/api/admin/payment-methods?active=true" \
   -H "X-Tenant-ID: PaPos"
 ```
 
@@ -209,7 +209,7 @@ curl -X GET "http://localhost:8080/pos-codex/api/admin/payment-methods?active=tr
 
 ```bash
 # Update a payment method
-curl -X PUT http://localhost:8080/pos-codex/api/admin/payment-methods/2 \
+curl -X PUT http://localhost:8080/posai/api/admin/payment-methods/2 \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -219,7 +219,7 @@ curl -X PUT http://localhost:8080/pos-codex/api/admin/payment-methods/2 \
   }'
 
 # Deactivate a payment method (soft delete)
-curl -X PUT http://localhost:8080/pos-codex/api/admin/payment-methods/2 \
+curl -X PUT http://localhost:8080/posai/api/admin/payment-methods/2 \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -229,7 +229,7 @@ curl -X PUT http://localhost:8080/pos-codex/api/admin/payment-methods/2 \
   }'
 
 # Delete a payment method (not default)
-curl -X DELETE http://localhost:8080/pos-codex/api/admin/payment-methods/2 \
+curl -X DELETE http://localhost:8080/posai/api/admin/payment-methods/2 \
   -H "X-Tenant-ID: PaPos"
 ```
 

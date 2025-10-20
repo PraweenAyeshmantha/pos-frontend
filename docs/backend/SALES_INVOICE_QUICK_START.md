@@ -17,7 +17,7 @@ This single endpoint provides all the data needed to print an invoice or receipt
 ### 1. Get Invoice Data
 
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/admin/orders/123/invoice" \
+curl -X GET "http://localhost:8080/posai/api/admin/orders/123/invoice" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json"
 ```
