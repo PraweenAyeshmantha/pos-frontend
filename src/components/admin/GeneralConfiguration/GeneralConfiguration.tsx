@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo, useCallback } from 'react';
 import { configurationService } from '../../../services/configurationService';
 import type { GeneralConfigFormData } from '../../../types/configuration';
 import Alert from '../../common/Alert';
@@ -34,12 +34,7 @@ const GeneralConfiguration: React.FC = () => {
 
   const [logoPreview, setLogoPreview] = useState<string>('');
 
-  // Fetch configurations on component mount
-  useEffect(() => {
-    fetchConfigurations();
-  }, []);
-
-  const fetchConfigurations = async () => {
+  const fetchConfigurations = useCallback(async () => {
     try {
       setLoading(true);
       const configs = await configurationService.getAllGeneralConfigurations();
@@ -82,11 +77,16 @@ const GeneralConfiguration: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const handleInputChange = (key: keyof GeneralConfigFormData, value: string | boolean) => {
+  // Fetch configurations on component mount
+  useEffect(() => {
+    fetchConfigurations();
+  }, [fetchConfigurations]);
+
+  const handleInputChange = useCallback((key: keyof GeneralConfigFormData, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [key]: value }));
-  };
+  }, []);
 
   const handleSave = async () => {
     try {
@@ -556,4 +556,4 @@ const GeneralConfiguration: React.FC = () => {
   );
 };
 
-export default GeneralConfiguration;
+export default memo(GeneralConfiguration);

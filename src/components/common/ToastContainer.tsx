@@ -1,4 +1,4 @@
-import React, { type ReactNode } from 'react';
+import React, { memo, type ReactNode } from 'react';
 
 interface ToastContainerProps {
   children: ReactNode;
@@ -12,4 +12,4 @@ const ToastContainer: React.FC<ToastContainerProps> = ({ children }) => {
   );
 };
 
-export default ToastContainer;
+export default memo(ToastContainer);
