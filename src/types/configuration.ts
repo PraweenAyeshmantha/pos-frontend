@@ -41,3 +41,12 @@ export interface GeneralConfigFormData {
   pos_endpoint: string;
   kitchen_endpoint: string;
 }
+
+export interface PwaConfigFormData {
+  pwa_name: string;
+  pwa_short_name: string;
+  pwa_theme_color: string;
+  pwa_background_color: string;
+  pwa_icon_192: string;
+  pwa_icon_512: string;
+}

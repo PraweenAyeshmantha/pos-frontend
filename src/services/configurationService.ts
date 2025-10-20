@@ -1,13 +1,25 @@
 import apiClient from './apiClient';
 import type { Configuration, ApiResponse } from '../types/configuration';
 
+const getConfigurationsByCategory = async (category: string): Promise<Configuration[]> => {
+  const response = await apiClient.get<ApiResponse<Configuration[]>>(
+    `/admin/configurations/${category.toLowerCase()}`
+  );
+  return response.data.data;
+};
+
 export const configurationService = {
+  // Get configurations for a specific category
+  getAllConfigurationsByCategory: getConfigurationsByCategory,
+
   // Get all general configurations
   getAllGeneralConfigurations: async (): Promise<Configuration[]> => {
-    const response = await apiClient.get<ApiResponse<Configuration[]>>(
-      '/admin/configurations/general'
-    );
-    return response.data.data;
+    return getConfigurationsByCategory('general');
+  },
+
+  // Get all PWA configurations
+  getAllPwaConfigurations: async (): Promise<Configuration[]> => {
+    return getConfigurationsByCategory('pwa');
   },
 
   // Get configuration by key
