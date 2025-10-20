@@ -134,41 +134,29 @@ const OutletsPage: React.FC = () => {
                   Manage your store locations, addresses, and outlet-specific settings.
                 </p>
               </div>
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={handleAddNew}
-                  className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                >
-                  Add New
-                </button>
-                <button
-                  type="button"
-                  className="rounded-lg border border-blue-600 bg-white px-5 py-2.5 text-sm font-semibold text-blue-600 shadow-sm transition hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                >
-                  Visit POS
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={handleAddNew}
+                className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              >
+                Add New Outlet
+              </button>
             </div>
 
             {/* Search Bar */}
-            <div className="mt-6 flex items-center justify-end">
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  placeholder="Search outlets..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-10 w-80 rounded-lg border border-gray-200 px-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-                />
-                <button
-                  type="button"
-                  onClick={fetchOutlets}
-                  className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
-                >
-                  Search
-                </button>
+            <div className="mt-6 flex items-center justify-between">
+              <div className="text-sm text-gray-600">
+                {filteredOutlets.length === outlets.length
+                  ? `Showing ${outlets.length} outlet${outlets.length !== 1 ? 's' : ''}`
+                  : `Showing ${filteredOutlets.length} of ${outlets.length} outlet${outlets.length !== 1 ? 's' : ''}`}
               </div>
+              <input
+                type="text"
+                placeholder="Search by name, email, phone, mode, or address..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-10 w-96 rounded-lg border border-gray-200 px-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              />
             </div>
           </div>
 
