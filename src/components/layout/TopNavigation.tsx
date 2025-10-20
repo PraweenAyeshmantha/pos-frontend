@@ -1,5 +1,5 @@
 import React, { useState, memo, useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 
 // Get user initials for avatar
@@ -14,12 +14,14 @@ const getInitials = (name: string) => {
 const TopNavigation: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { tenantId } = useParams<{ tenantId: string }>();
   const [showDropdown, setShowDropdown] = useState(false);
 
   const handleLogout = useCallback(() => {
     logout();
-    navigate('/login');
-  }, [logout, navigate]);
+    const loginPath = tenantId ? `/posai/${tenantId}/login` : '/';
+    navigate(loginPath);
+  }, [logout, navigate, tenantId]);
 
   const toggleDropdown = useCallback(() => {
     setShowDropdown(prev => !prev);
