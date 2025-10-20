@@ -13,7 +13,9 @@ const LoginPage: React.FC = () => {
   const location = useLocation();
 
   // Get the intended destination or default to dashboard
-  const from = (location.state as { from?: { pathname: string }; passwordResetSuccess?: boolean })?.from?.pathname || '/admin/dashboard';
+  // Filter out /reset-password from 'from' to avoid redirect loop after password reset
+  const fromPath = (location.state as { from?: { pathname: string }; passwordResetSuccess?: boolean })?.from?.pathname;
+  const from = (fromPath && fromPath !== '/reset-password') ? fromPath : '/admin/dashboard';
   const passwordResetSuccess = (location.state as { passwordResetSuccess?: boolean })?.passwordResetSuccess || false;
 
   // Redirect if already authenticated (e.g., user navigated to /login while logged in)
