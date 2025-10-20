@@ -46,7 +46,7 @@ cp .env.example .env
 Edit `.env` file:
 
 ```env
-VITE_API_BASE_URL=http://localhost:8080/pos-codex/api
+VITE_API_BASE_URL=http://localhost:8080/posai/api
 VITE_TENANT_ID=PaPos
 ```
 
