@@ -21,7 +21,7 @@ const POSAdminPage: React.FC = () => {
         title: 'Analytics',
         description: 'Review sales trends, outlet performance, and other business KPIs.',
         path: '/admin/statistics',
-        icon: '�',
+        icon: '📊',
         accentClass: 'bg-indigo-100 text-indigo-600',
       },
       {
