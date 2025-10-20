@@ -257,20 +257,22 @@ const PaymentsConfiguration: React.FC = () => {
     <>
       <div className="space-y-6">
         <div className="border border-gray-200 rounded-lg overflow-hidden">
-          <div className="grid grid-cols-[repeat(3,minmax(0,1fr))_56px] bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
-            <div className="px-6 py-3 flex items-center space-x-2">
+          <div className="grid grid-cols-[repeat(3,minmax(0,1fr))_56px] gap-4 bg-gray-50 px-6 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
+            <div className="flex items-center space-x-2">
               <span>Name</span>
               <span className="text-gray-400" title="Customer-facing label displayed on the POS.">ⓘ</span>
             </div>
-            <div className="px-6 py-3 flex items-center space-x-2">
+            <div className="flex items-center space-x-2">
               <span>Slug</span>
               <span className="text-gray-400" title="Unique identifier used by integrations.">ⓘ</span>
             </div>
-            <div className="px-6 py-3 flex items-center space-x-2">
+            <div className="flex items-center space-x-2">
               <span>Status</span>
               <span className="text-gray-400" title="Enable or disable availability at the POS.">ⓘ</span>
             </div>
-            <div className="px-6 py-3"></div>
+            <div className="flex items-center justify-end">
+              <span className="sr-only">Actions</span>
+            </div>
           </div>
 
           {paymentMethods.length === 0 ? (
@@ -281,7 +283,7 @@ const PaymentsConfiguration: React.FC = () => {
             paymentMethods.map((method) => (
               <div
                 key={method.tempId}
-                className="grid grid-cols-[repeat(3,minmax(0,1fr))_56px] px-6 py-4 items-center text-sm border-t border-gray-200"
+                className="grid grid-cols-[repeat(3,minmax(0,1fr))_56px] gap-4 px-6 py-4 items-center text-sm border-t border-gray-200"
               >
                 <input
                   type="text"
