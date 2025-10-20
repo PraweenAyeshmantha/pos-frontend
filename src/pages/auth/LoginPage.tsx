@@ -7,7 +7,7 @@ const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -17,10 +17,16 @@ const LoginPage: React.FC = () => {
 
   // Redirect if already authenticated
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate(from, { replace: true });
+    if (isAuthenticated && user) {
+      // If password reset is required, redirect to reset password page
+      if (user.requirePasswordReset) {
+        navigate('/reset-password', { replace: true });
+      } else {
+        // Otherwise, redirect to intended destination
+        navigate(from, { replace: true });
+      }
     }
-  }, [isAuthenticated, navigate, from]);
+  }, [isAuthenticated, user, navigate, from]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,8 +40,8 @@ const LoginPage: React.FC = () => {
     setIsLoading(true);
     try {
       await login(username, password);
-      // After successful login, check if password reset is required
-      // The navigate will happen in the App.tsx based on requirePasswordReset flag
+      // After successful login, the useEffect will handle navigation
+      // based on requirePasswordReset flag from the login API response
     } catch (err) {
       console.error('Login error:', err);
       const error = err as { response?: { data?: { message?: string }; status?: number } };
