@@ -4,6 +4,7 @@ Modern React-based frontend application for the Point of Sale (POS) system backe
 
 ## Features
 
+- **Outlets Management**: Complete CRUD interface for managing store locations with addresses, payment methods, and settings
 - **General Configuration Screen**: Admin interface to manage POS system configurations
 - **Modern UI**: Built with React, TypeScript, and Tailwind CSS
 - **Responsive Design**: Clean and professional interface following modern UI standards
@@ -98,6 +99,36 @@ src/
 - `npm run lint` - Run ESLint to check code quality
 
 ## Features Implemented
+
+### Outlets Management 🏪 (NEW)
+
+A comprehensive interface for managing multiple store locations:
+
+**Features**:
+- List all outlets in a searchable table
+- Create new outlets with detailed information
+- Edit existing outlet settings
+- Delete outlets with confirmation
+- Search and filter functionality
+- Status management (Enable/Disable)
+- Bulk actions support
+
+**Outlet Information Managed**:
+- Basic details (Name, Mode, Inventory Type)
+- Complete address (Street, City, State, Country, Postcode)
+- Contact information (Phone, Email)
+- Payment methods (Cash, Card, Chip & Pin, PayPal, Bank Transfer)
+- Invoice templates
+- Table configurations
+- Operational status
+
+**Documentation**:
+- [Complete Implementation Guide](./docs/implementation/OUTLETS_IMPLEMENTATION.md)
+- [Quick Reference](./docs/implementation/OUTLETS_QUICK_REFERENCE.md)
+- [Architecture Details](./docs/implementation/OUTLETS_ARCHITECTURE.md)
+- [Summary](./docs/implementation/OUTLETS_COMPLETE.md)
+
+**Access**: Navigate to **POS Admin → Outlets** or directly to `/admin/outlets`
 
 ### General Configuration Screen
 

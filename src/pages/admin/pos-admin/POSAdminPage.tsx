@@ -32,6 +32,14 @@ const POSAdminPage: React.FC = () => {
         icon: '🛠️',
         accentClass: 'bg-emerald-100 text-emerald-600',
       },
+      {
+        id: 'outlets',
+        title: 'Outlets',
+        description: 'Manage store locations, addresses, and outlet-specific settings.',
+        path: '/admin/outlets',
+        icon: '🏪',
+        accentClass: 'bg-amber-100 text-amber-600',
+      },
     ],
     [],
   );

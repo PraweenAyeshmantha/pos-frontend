@@ -1,0 +1,389 @@
+import React, { useCallback, useEffect, useState } from 'react';
+import AdminLayout from '../../../components/layout/AdminLayout';
+import Alert, { type AlertType } from '../../../components/common/Alert';
+import ConfirmationDialog from '../../../components/common/ConfirmationDialog';
+import { outletService } from '../../../services/outletService';
+import type { Outlet, OutletMode } from '../../../types/outlet';
+import AddOutletModal from '../../../components/admin/outlets/AddOutletModal';
+
+const MODE_LABELS: Record<OutletMode, string> = {
+  GROCERY_RETAIL: 'Grocery / Retail',
+  RESTAURANT_CAFE: 'Restaurant / Cafe',
+};
+
+const formatMode = (mode: OutletMode): string => MODE_LABELS[mode] ?? mode;
+
+const formatStatusLabel = (isActive: boolean): string => (isActive ? 'Enabled' : 'Disabled');
+
+const OutletsPage: React.FC = () => {
+  const [outlets, setOutlets] = useState<Outlet[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showAddModal, setShowAddModal] = useState<boolean>(false);
+  const [editingOutlet, setEditingOutlet] = useState<Outlet | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; outlet: Outlet | null }>({
+    show: false,
+    outlet: null,
+  });
+  const [alert, setAlert] = useState<{ type: AlertType; title: string; message: string } | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+
+  const fetchOutlets = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await outletService.getAll();
+      setOutlets(data);
+    } catch (err) {
+      setError('Failed to load outlets. Please try again.');
+      console.error('Error fetching outlets:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchOutlets();
+  }, [fetchOutlets]);
+
+  const handleAddNew = useCallback(() => {
+    setEditingOutlet(null);
+    setShowAddModal(true);
+  }, []);
+
+  const handleEdit = useCallback((outlet: Outlet) => {
+    setEditingOutlet(outlet);
+    setShowAddModal(true);
+  }, []);
+
+  const handleCloseModal = useCallback(() => {
+    setShowAddModal(false);
+    setEditingOutlet(null);
+  }, []);
+
+  const handleSaveSuccess = useCallback(
+    (action: 'create' | 'update') => {
+      setShowAddModal(false);
+      setEditingOutlet(null);
+      setAlert({
+        type: 'success',
+        title: 'Success',
+        message: action === 'update' ? 'Outlet updated successfully' : 'Outlet created successfully',
+      });
+      fetchOutlets();
+      setTimeout(() => setAlert(null), 3000);
+    },
+    [fetchOutlets],
+  );
+
+  const handleDeleteConfirm = useCallback(async () => {
+    if (!deleteConfirm.outlet) return;
+
+    try {
+      await outletService.delete(deleteConfirm.outlet.id);
+      setAlert({
+        type: 'success',
+        title: 'Deleted',
+        message: 'Outlet deleted successfully',
+      });
+      fetchOutlets();
+      setTimeout(() => setAlert(null), 3000);
+    } catch (err) {
+      setAlert({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to delete outlet',
+      });
+      console.error('Error deleting outlet:', err);
+      setTimeout(() => setAlert(null), 3000);
+    } finally {
+      setDeleteConfirm({ show: false, outlet: null });
+    }
+  }, [deleteConfirm.outlet, fetchOutlets]);
+
+  const handleDeleteCancel = useCallback(() => {
+    setDeleteConfirm({ show: false, outlet: null });
+  }, []);
+
+  const filteredOutlets = outlets.filter((outlet) => {
+    if (!searchQuery) {
+      return true;
+    }
+    const query = searchQuery.toLowerCase();
+    const modeLabel = formatMode(outlet.mode).toLowerCase();
+    const addressMatch = outlet.address?.toLowerCase().includes(query) ?? false;
+    return (
+      outlet.name.toLowerCase().includes(query) ||
+      outlet.email.toLowerCase().includes(query) ||
+      outlet.phone.includes(query) ||
+      modeLabel.includes(query) ||
+      addressMatch
+    );
+  });
+
+  return (
+    <AdminLayout>
+      <div className="min-h-screen bg-gray-100">
+        <div className="mx-auto max-w-7xl px-6 py-8">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-semibold text-gray-800">Outlets</h1>
+                <p className="mt-2 text-gray-600">
+                  Manage your store locations, addresses, and outlet-specific settings.
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={handleAddNew}
+                  className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+                  Add New
+                </button>
+                <button
+                  type="button"
+                  className="rounded-lg border border-blue-600 bg-white px-5 py-2.5 text-sm font-semibold text-blue-600 shadow-sm transition hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+                  Visit POS
+                </button>
+              </div>
+            </div>
+
+            {/* Search Bar */}
+            <div className="mt-6 flex items-center justify-end">
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Search outlets..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="h-10 w-80 rounded-lg border border-gray-200 px-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                />
+                <button
+                  type="button"
+                  onClick={fetchOutlets}
+                  className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+                >
+                  Search
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Error Alert */}
+          {error && (
+            <div className="mb-6">
+              <Alert type="error" title="Error" message={error} />
+            </div>
+          )}
+
+          {/* Loading State */}
+          {loading && (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600"></div>
+                <p className="mt-4 text-gray-600">Loading outlets...</p>
+              </div>
+            </div>
+          )}
+
+          {/* Outlets Table */}
+          {!loading && (
+            <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+              {/* Bulk Actions */}
+              <div className="flex items-center gap-3 border-b border-gray-200 bg-gray-50 px-6 py-3">
+                <select className="h-9 rounded-lg border border-gray-200 bg-white px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100">
+                  <option>Bulk actions</option>
+                  <option>Enable selected</option>
+                  <option>Disable selected</option>
+                </select>
+                <button
+                  type="button"
+                  className="rounded-lg border border-gray-200 bg-white px-4 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+                >
+                  Apply
+                </button>
+              </div>
+
+              {/* Table */}
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="border-b border-gray-200 bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left">
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                        ID
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                        Name
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                        Mode
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                        Address
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                        Email
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                        Phone
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                        Created At
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                        Updated At
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                        Action
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {filteredOutlets.length === 0 ? (
+                      <tr>
+                        <td colSpan={11} className="px-6 py-12 text-center text-gray-500">
+                          No outlets found. Click "Add New" to create your first outlet.
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredOutlets.map((outlet) => (
+                        <tr key={outlet.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4">
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            />
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-900">{outlet.id}</td>
+                          <td className="px-6 py-4">
+                            <div className="text-sm font-medium text-gray-900">{outlet.name}</div>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-600">{formatMode(outlet.mode)}</td>
+                          <td className="px-6 py-4">
+                            <div className="text-sm text-gray-600">
+                              {outlet.address
+                                ? outlet.address.split(',').map((segment, index) => (
+                                    <div key={index}>{segment.trim()}</div>
+                                  ))
+                                : '-'}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-600">{outlet.email}</td>
+                          <td className="px-6 py-4 text-sm text-gray-600">{outlet.phone}</td>
+                          <td className="px-6 py-4">
+                            <span
+                              className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                                outlet.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                              }`}
+                            >
+                              {formatStatusLabel(outlet.isActive)}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-600">
+                            {outlet.createdAt
+                              ? new Date(outlet.createdAt).toLocaleDateString('en-US', {
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })
+                              : '-'}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-600">
+                            {outlet.updatedAt
+                              ? new Date(outlet.updatedAt).toLocaleDateString('en-US', {
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })
+                              : '-'}
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex flex-col gap-2">
+                              <button
+                                type="button"
+                                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+                              >
+                                Assign Stocks
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleEdit(outlet)}
+                                className="rounded-lg border border-blue-600 bg-white px-4 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50"
+                              >
+                                Kitchen View
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Bulk Actions Bottom */}
+              <div className="flex items-center gap-3 border-t border-gray-200 bg-gray-50 px-6 py-3">
+                <select className="h-9 rounded-lg border border-gray-200 bg-white px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100">
+                  <option>Bulk actions</option>
+                  <option>Enable selected</option>
+                  <option>Disable selected</option>
+                </select>
+                <button
+                  type="button"
+                  className="rounded-lg border border-gray-200 bg-white px-4 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Add/Edit Modal */}
+      {showAddModal && (
+        <AddOutletModal
+          outlet={editingOutlet}
+          onClose={handleCloseModal}
+          onSuccess={handleSaveSuccess}
+        />
+      )}
+
+      {/* Delete Confirmation */}
+      <ConfirmationDialog
+        open={deleteConfirm.show}
+        title="Delete Outlet"
+        message={`Are you sure you want to delete "${deleteConfirm.outlet?.name}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+      />
+
+      {/* Alert Toast */}
+      {alert && (
+        <div className="fixed bottom-6 right-6 z-50">
+          <Alert type={alert.type} title={alert.title} message={alert.message} />
+        </div>
+      )}
+    </AdminLayout>
+  );
+};
+
+export default OutletsPage;
