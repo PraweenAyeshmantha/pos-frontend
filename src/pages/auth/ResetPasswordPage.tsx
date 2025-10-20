@@ -39,7 +39,8 @@ const ResetPasswordPage: React.FC = () => {
     setIsLoading(true);
     try {
       await resetPassword(currentPassword, newPassword, confirmPassword);
-      // Logout user and redirect to login page to authenticate with new password
+      // Password reset successful - logout and redirect to login
+      // User needs to login again with new password to authenticate
       logout();
       navigate('/login', { replace: true, state: { passwordResetSuccess: true } });
     } catch (err) {

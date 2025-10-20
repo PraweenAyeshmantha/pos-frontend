@@ -11,15 +11,16 @@ class AuthService {
   async login(credentials: LoginRequest): Promise<LoginResponse> {
     const response = await apiClient.post<LoginResponse>('/auth/login', credentials);
     
-    // Store token in localStorage if login successful
+    // Store token in sessionStorage if login successful (expires when browser closes)
     if (response.data.data.token) {
-      localStorage.setItem('authToken', response.data.data.token);
-      localStorage.setItem('user', JSON.stringify({
+      sessionStorage.setItem('authToken', response.data.data.token);
+      sessionStorage.setItem('user', JSON.stringify({
         cashierId: response.data.data.cashierId,
         username: response.data.data.username,
         name: response.data.data.name,
         email: response.data.data.email,
-        requirePasswordReset: response.data.data.requirePasswordReset,
+        // Explicitly convert to boolean to avoid any truthy/falsy issues
+        requirePasswordReset: response.data.data.requirePasswordReset === true,
       }));
     }
     
@@ -34,20 +35,8 @@ class AuthService {
   async resetPassword(resetData: ResetPasswordRequest): Promise<ResetPasswordResponse> {
     const response = await apiClient.post<ResetPasswordResponse>('/auth/reset-password', resetData);
     
-    // Update token in localStorage after successful password reset
-    if (response.data.data.token) {
-      localStorage.setItem('authToken', response.data.data.token);
-      localStorage.setItem('user', JSON.stringify({
-        cashierId: response.data.data.cashierId,
-        username: response.data.data.username,
-        name: response.data.data.name,
-        email: response.data.data.email,
-        requirePasswordReset: response.data.data.requirePasswordReset,
-      }));
-      // Set a flag to indicate password was successfully reset in this session
-      // This prevents repeated redirects to password reset page even if backend returns stale data
-      localStorage.setItem('passwordResetCompleted', 'true');
-    }
+    // Don't update sessionStorage here - user will be logged out after password reset
+    // and need to login again with new password
     
     return response.data;
   }
@@ -56,17 +45,16 @@ class AuthService {
    * Logout user by clearing stored token and user data
    */
   logout(): void {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
-    localStorage.removeItem('passwordResetCompleted');
+    sessionStorage.removeItem('authToken');
+    sessionStorage.removeItem('user');
   }
 
   /**
-   * Get current user from localStorage
+   * Get current user from sessionStorage
    * @returns User object or null if not authenticated
    */
   getCurrentUser() {
-    const userStr = localStorage.getItem('user');
+    const userStr = sessionStorage.getItem('user');
     if (userStr) {
       try {
         return JSON.parse(userStr);
@@ -78,11 +66,11 @@ class AuthService {
   }
 
   /**
-   * Get current auth token from localStorage
+   * Get current auth token from sessionStorage
    * @returns JWT token or null if not authenticated
    */
   getToken(): string | null {
-    return localStorage.getItem('authToken');
+    return sessionStorage.getItem('authToken');
   }
 
   /**
