@@ -24,7 +24,7 @@ Modern React-based frontend application for the Point of Sale (POS) system backe
 
 - Node.js (v18 or higher)
 - npm (v9 or higher)
-- Backend POS API running (see backend-docs for setup)
+- Backend POS API running (see [docs/backend](./docs/backend) for setup)
 
 ## Getting Started
 
@@ -141,7 +141,7 @@ The application integrates with the following backend endpoints:
 - `PUT /api/admin/configurations/{id}` - Update single configuration
 - `POST /api/admin/configurations/bulk-update` - Update multiple configurations
 
-See `backend-docs/GENERAL_CONFIGURATION_GUIDE.md` for detailed API documentation.
+See [docs/backend/GENERAL_CONFIGURATION_GUIDE.md](./docs/backend/GENERAL_CONFIGURATION_GUIDE.md) for detailed API documentation.
 
 ## Development Notes
 
@@ -168,6 +168,16 @@ See `backend-docs/GENERAL_CONFIGURATION_GUIDE.md` for detailed API documentation
 3. Run linting: `npm run lint`
 4. Build to ensure no errors: `npm run build`
 5. Submit a pull request
+
+## 📚 Documentation
+
+Comprehensive documentation is available in the [docs](./docs) directory:
+
+- **[Documentation Index](./docs/README.md)** - Complete documentation overview
+- **[Authentication Guides](./docs/authentication/)** - Authentication and password management
+- **[Implementation Guides](./docs/implementation/)** - Implementation details and summaries
+- **[Testing Documentation](./docs/testing/)** - Testing guides and instructions
+- **[Backend API Documentation](./docs/backend/)** - Complete backend API reference (107+ documents)
 
 ## License
 
