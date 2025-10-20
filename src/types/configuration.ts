@@ -61,3 +61,14 @@ export interface LoginConfigFormData {
   login_bg_secondary_color: string;
   login_font_color: string;
 }
+
+export interface PrinterConfigFormData {
+  barcode_page_width: string;
+  barcode_page_height: string;
+  barcode_page_margin: string;
+  barcode_margin: string;
+  barcode_orientation: 'HORIZONTAL' | 'VERTICAL';
+  invoice_page_width: string;
+  invoice_page_height: string;
+  invoice_page_margin: string;
+}

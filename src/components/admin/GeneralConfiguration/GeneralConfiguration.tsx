@@ -7,11 +7,23 @@ import ToastContainer from '../../common/ToastContainer';
 import PaymentsConfiguration from '../PaymentsConfiguration/PaymentsConfiguration';
 import PWAConfiguration from '../PWAConfiguration/PWAConfiguration';
 import LoginConfiguration from '../LoginConfiguration/LoginConfiguration';
+import PrinterConfiguration from '../PrinterConfiguration/PrinterConfiguration';
+
+const tabDefinitions = [
+  { key: 'general', label: 'General' },
+  { key: 'payments', label: 'Payments' },
+  { key: 'pwa', label: 'PWA' },
+  { key: 'login', label: 'Login' },
+  { key: 'printer', label: 'Printer' },
+  { key: 'layout', label: 'Layout' },
+] as const;
+
+type TabKey = typeof tabDefinitions[number]['key'];
 
 const GeneralConfiguration: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState('general');
+  const [activeTab, setActiveTab] = useState<TabKey>('general');
   const [message, setMessage] = useState<{ type: AlertType; text: string } | null>(null);
   
   const [formData, setFormData] = useState<GeneralConfigFormData>({
@@ -152,25 +164,27 @@ const GeneralConfiguration: React.FC = () => {
     );
   }
 
+  const activeTabLabel = tabDefinitions.find((tab) => tab.key === activeTab)?.label ?? 'General';
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 bg-gray-100 min-h-screen">
       {/* Header */}
-      <h1 className="text-3xl font-semibold mb-6 text-gray-800">General Configuration</h1>
+      <h1 className="text-3xl font-semibold mb-6 text-gray-800">{`${activeTabLabel} Configuration`}</h1>
 
       {/* Tab Navigation - Attached to Form */}
       <div className="bg-white rounded-t-lg shadow-sm">
         <div className="flex border-b border-gray-200">
-          {['General', 'Payments', 'PWA', 'Login', 'Printer', 'Layout'].map((tab) => (
+          {tabDefinitions.map((tab) => (
             <button
-              key={tab}
-              onClick={() => setActiveTab(tab.toLowerCase())}
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
               className={`px-6 py-3 font-medium text-sm transition-colors ${
-                activeTab === tab.toLowerCase()
+                activeTab === tab.key
                   ? 'text-blue-600 border-b-2 border-blue-600 bg-white'
                   : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
               }`}
             >
-              {tab}
+              {tab.label}
             </button>
           ))}
         </div>
@@ -554,9 +568,11 @@ const GeneralConfiguration: React.FC = () => {
 
         {activeTab === 'login' && <LoginConfiguration />}
 
-        {['printer', 'layout'].includes(activeTab) && (
+        {activeTab === 'printer' && <PrinterConfiguration />}
+
+        {activeTab === 'layout' && (
           <div className="py-24 text-center text-gray-500">
-            Configuration settings for {activeTab.toUpperCase()} will be available soon.
+            Configuration settings for LAYOUT will be available soon.
           </div>
         )}
       </div>

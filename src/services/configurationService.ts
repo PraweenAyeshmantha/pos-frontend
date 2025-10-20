@@ -27,6 +27,11 @@ export const configurationService = {
     return getConfigurationsByCategory('login');
   },
 
+  // Get all Printer configurations
+  getAllPrinterConfigurations: async (): Promise<Configuration[]> => {
+    return getConfigurationsByCategory('printer');
+  },
+
   // Get configuration by key
   getConfigurationByKey: async (key: string, category: string = 'GENERAL'): Promise<Configuration> => {
     const response = await apiClient.get<ApiResponse<Configuration>>(
