@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import AdminLayout from '../../../components/layout/AdminLayout';
 
 interface AdminTile {
@@ -13,6 +13,7 @@ interface AdminTile {
 
 const POSAdminPage: React.FC = () => {
   const navigate = useNavigate();
+  const { tenantId } = useParams<{ tenantId: string }>();
 
   const tiles = useMemo<AdminTile[]>(
     () => [
@@ -46,9 +47,10 @@ const POSAdminPage: React.FC = () => {
 
   const handleTileClick = useCallback(
     (path: string) => {
-      navigate(path);
+      const fullPath = tenantId ? `/posai/${tenantId}${path}` : path;
+      navigate(fullPath);
     },
-    [navigate],
+    [navigate, tenantId],
   );
 
   return (

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import Alert, { type AlertType } from '../../components/common/Alert';
 import ToastContainer from '../../components/common/ToastContainer';
@@ -13,12 +13,13 @@ const LoginPage: React.FC = () => {
   const { login, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { tenantId } = useParams<{ tenantId: string }>();
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Get the intended destination or default to dashboard
   // Filter out /reset-password from 'from' to avoid redirect loop after password reset
   const fromPath = (location.state as { from?: { pathname: string }; passwordResetSuccess?: boolean })?.from?.pathname;
-  const from = (fromPath && fromPath !== '/reset-password') ? fromPath : '/admin/dashboard';
+  const baseFrom = (fromPath && !fromPath.includes('/reset-password')) ? fromPath : `/posai/${tenantId}/admin/dashboard`;
   const passwordResetSuccess = (location.state as { passwordResetSuccess?: boolean })?.passwordResetSuccess || false;
 
   const showToast = useCallback((type: AlertType, text: string) => {
@@ -36,13 +37,13 @@ const LoginPage: React.FC = () => {
     if (isAuthenticated && user && !isNavigating) {
       // If password reset is required, redirect to reset password page
       if (user.requirePasswordReset) {
-        navigate('/reset-password', { replace: true });
+        navigate(`/posai/${tenantId}/reset-password`, { replace: true });
       } else {
         // Otherwise, redirect to intended destination
-        navigate(from, { replace: true });
+        navigate(baseFrom, { replace: true });
       }
     }
-  }, [isAuthenticated, user, navigate, from, isNavigating]);
+  }, [isAuthenticated, user, navigate, baseFrom, isNavigating, tenantId]);
 
   useEffect(() => {
     if (passwordResetSuccess) {
@@ -74,9 +75,9 @@ const LoginPage: React.FC = () => {
       // Navigate immediately after successful login based on the response
       // This ensures we use the latest requirePasswordReset value from the backend
       if (loggedInUser.requirePasswordReset) {
-        navigate('/reset-password', { replace: true });
+        navigate(`/posai/${tenantId}/reset-password`, { replace: true });
       } else {
-        navigate(from, { replace: true });
+        navigate(baseFrom, { replace: true });
       }
     } catch (err) {
       console.error('Login error:', err);

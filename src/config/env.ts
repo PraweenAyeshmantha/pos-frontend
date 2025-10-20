@@ -4,7 +4,6 @@
 
 interface EnvConfig {
   apiBaseUrl: string;
-  tenantId: string;
   isDevelopment: boolean;
   isProduction: boolean;
 }
@@ -15,7 +14,6 @@ interface EnvConfig {
  */
 function validateEnv(): EnvConfig {
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
-  const tenantId = import.meta.env.VITE_TENANT_ID;
   const mode = import.meta.env.MODE;
 
   // Provide defaults for development
@@ -31,13 +29,6 @@ function validateEnv(): EnvConfig {
     console.warn(
       '⚠️ VITE_API_BASE_URL not set, using default:',
       config.apiBaseUrl
-    );
-  }
-
-  if (!tenantId && mode === 'development') {
-    console.warn(
-      '⚠️ VITE_TENANT_ID not set, using default:',
-      config.tenantId
     );
   }
 

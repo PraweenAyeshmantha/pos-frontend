@@ -1,5 +1,5 @@
 import React, { memo, useMemo } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation, useParams } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 
 interface ProtectedRouteProps {
@@ -21,6 +21,7 @@ LoadingSpinner.displayName = 'LoadingSpinner';
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { isAuthenticated, isLoading, user } = useAuth();
   const location = useLocation();
+  const { tenantId } = useParams<{ tenantId: string }>();
 
   // Memoize password reset check to avoid recalculation
   const requirePasswordReset = useMemo(() => {
@@ -50,12 +51,15 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   if (!isAuthenticated) {
     // Redirect to login page but save the location they were trying to access
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    // Include tenant ID in the redirect URL
+    const loginPath = tenantId ? `/posai/${tenantId}/login` : '/';
+    return <Navigate to={loginPath} state={{ from: location }} replace />;
   }
 
   // If user requires password reset, redirect to reset password page
-  if (requirePasswordReset && location.pathname !== '/reset-password') {
-    return <Navigate to="/reset-password" replace />;
+  if (requirePasswordReset && !location.pathname.includes('/reset-password')) {
+    const resetPath = tenantId ? `/posai/${tenantId}/reset-password` : '/';
+    return <Navigate to={resetPath} replace />;
   }
 
   return <>{children}</>;
