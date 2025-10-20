@@ -26,8 +26,25 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  // Check if user requires password reset
+  // Read from sessionStorage as fallback to ensure we have the latest data
+  // This prevents race conditions where React state hasn't updated yet
+  let requirePasswordReset = user?.requirePasswordReset || false;
+  
+  // Double-check with sessionStorage to get the most recent value
+  const userStr = sessionStorage.getItem('user');
+  if (userStr) {
+    try {
+      const sessionUser = JSON.parse(userStr);
+      requirePasswordReset = sessionUser.requirePasswordReset === true;
+    } catch {
+      // If parsing fails, use the context value
+      requirePasswordReset = user?.requirePasswordReset || false;
+    }
+  }
+
   // If user requires password reset, redirect to reset password page
-  if (user?.requirePasswordReset && location.pathname !== '/reset-password') {
+  if (requirePasswordReset && location.pathname !== '/reset-password') {
     return <Navigate to="/reset-password" replace />;
   }
 
