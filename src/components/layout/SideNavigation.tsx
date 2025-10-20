@@ -12,10 +12,9 @@ interface NavigationItem {
 
 const navigationItems: NavigationItem[] = [
   { id: 'home', label: 'Home', icon: '🏠', path: '/admin/dashboard' },
+  { id: 'posAdmin', label: 'POS Admin', icon: '🗂️', path: '/admin/pos-admin' },
   { id: 'customers', label: 'Customers', icon: '👥', path: '/admin/customers' },
   { id: 'orders', label: 'Orders', icon: '🛍️', path: '/admin/orders' },
-  { id: 'statistics', label: 'Statistics', icon: '💲', path: '/admin/statistics' },
-  { id: 'configuration', label: 'Configuration', icon: '🔧', path: '/admin/configuration/general' },
   { id: 'settings', label: 'Settings', icon: '⚙️', path: '/admin/settings' },
 ];
 
