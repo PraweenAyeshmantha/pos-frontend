@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 
 interface NavigationItem {
@@ -13,6 +13,7 @@ const CashierSideNavigation: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { logout } = useAuth();
+  const { tenantId } = useParams<{ tenantId: string }>();
 
   const navigationItems: NavigationItem[] = [
     { id: 'home', label: 'Home', icon: '🏠', path: '/cashier/pos' },
@@ -23,17 +24,20 @@ const CashierSideNavigation: React.FC = () => {
   ];
 
   const handleNavigation = (path: string) => {
-    navigate(path);
+    const fullPath = tenantId ? `/posai/${tenantId}${path}` : path;
+    navigate(fullPath);
   };
 
   const isActive = (path: string) => {
-    return location.pathname === path || location.pathname.startsWith(path);
+    const fullPath = tenantId ? `/posai/${tenantId}${path}` : path;
+    return location.pathname === fullPath || location.pathname.startsWith(fullPath);
   };
 
   const handleLogout = useCallback(() => {
     logout();
-    navigate('/login');
-  }, [logout, navigate]);
+    const loginPath = tenantId ? `/posai/${tenantId}/login` : '/';
+    navigate(loginPath);
+  }, [logout, navigate, tenantId]);
 
   return (
     <div className="w-20 bg-gray-50 border-r border-gray-200 shadow-sm flex flex-col items-center py-4 h-screen fixed left-0 top-0 z-20">
