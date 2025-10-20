@@ -376,7 +376,7 @@ const AddOutletModal: React.FC<AddOutletModalProps> = ({ outlet, onClose, onSucc
                         selected ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
                     >
-                      × {method}
+                      {selected ? '✓ ' : ''}{method}
                     </button>
                   );
                 })}
