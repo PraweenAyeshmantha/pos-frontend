@@ -49,6 +49,14 @@ const POSAdminPage: React.FC = () => {
         icon: '👥',
         accentClass: 'bg-sky-100 text-sky-600',
       },
+      {
+        id: 'tables',
+        title: 'Tables',
+        description: 'Configure dining tables, seating capacity, and availability per outlet.',
+        path: '/admin/tables',
+        icon: '🍽️',
+        accentClass: 'bg-rose-100 text-rose-600',
+      },
     ],
     [],
   );
