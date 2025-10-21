@@ -43,7 +43,7 @@ Retrieves all active tables for a restaurant/cafe outlet with optional status fi
 
 **Request Example:**
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/pos/tables?outletId=1&status=AVAILABLE" \
+curl -X GET "http://localhost:8080/posai/api/pos/tables?outletId=1&status=AVAILABLE" \
   -H "X-Tenant-ID: PaPos"
 ```
 
@@ -135,7 +135,7 @@ Creates a new order for a specific table and automatically sets it to ON_HOLD st
 
 **Request Example:**
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/pos/tables/1/orders" \
+curl -X POST "http://localhost:8080/posai/api/pos/tables/1/orders" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -237,7 +237,7 @@ Retrieves all ON_HOLD orders for a specific table.
 
 **Request Example:**
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/pos/tables/1/orders" \
+curl -X GET "http://localhost:8080/posai/api/pos/tables/1/orders" \
   -H "X-Tenant-ID: PaPos"
 ```
 
@@ -304,7 +304,7 @@ Associates an existing order with a table and sets the order status to ON_HOLD. 
 
 **Request Example:**
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/pos/orders/1/table" \
+curl -X POST "http://localhost:8080/posai/api/pos/orders/1/table" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{"tableId": 1}'
@@ -366,7 +366,7 @@ Completes a held order by applying discounts, processing payments, and updating 
 
 **Request Example:**
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/pos/orders/1/complete" \
+curl -X POST "http://localhost:8080/posai/api/pos/orders/1/complete" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -516,11 +516,11 @@ The Tables Menu APIs integrate seamlessly with existing POS features:
 
 ```bash
 # 1. Get available tables
-curl -X GET "http://localhost:8080/pos-codex/api/pos/tables?outletId=1&status=AVAILABLE" \
+curl -X GET "http://localhost:8080/posai/api/pos/tables?outletId=1&status=AVAILABLE" \
   -H "X-Tenant-ID: PaPos"
 
 # 2. Create order for table
-curl -X POST "http://localhost:8080/pos-codex/api/pos/tables/1/orders" \
+curl -X POST "http://localhost:8080/posai/api/pos/tables/1/orders" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -539,11 +539,11 @@ curl -X POST "http://localhost:8080/pos-codex/api/pos/tables/1/orders" \
   }'
 
 # 3. Get orders for table (when customer requests bill)
-curl -X GET "http://localhost:8080/pos-codex/api/pos/tables/1/orders" \
+curl -X GET "http://localhost:8080/posai/api/pos/tables/1/orders" \
   -H "X-Tenant-ID: PaPos"
 
 # 4. Complete order with payment
-curl -X POST "http://localhost:8080/pos-codex/api/pos/orders/1/complete" \
+curl -X POST "http://localhost:8080/posai/api/pos/orders/1/complete" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -558,7 +558,7 @@ curl -X POST "http://localhost:8080/pos-codex/api/pos/orders/1/complete" \
   }'
 
 # 5. Verify table is available again
-curl -X GET "http://localhost:8080/pos-codex/api/pos/tables?outletId=1&status=AVAILABLE" \
+curl -X GET "http://localhost:8080/posai/api/pos/tables?outletId=1&status=AVAILABLE" \
   -H "X-Tenant-ID: PaPos"
 ```
 

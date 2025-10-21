@@ -98,7 +98,7 @@ Retrieves a specific product by its barcode code.
 
 **Example (cURL):**
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/pos/products/barcode/BC-APPLE-001" \
+curl -X GET "http://localhost:8080/posai/api/pos/products/barcode/BC-APPLE-001" \
   -H "X-Tenant-ID: PaPos"
 ```
 
@@ -414,47 +414,47 @@ This script tests:
 
 1. **Load Categories**
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/pos/categories" \
+curl -X GET "http://localhost:8080/posai/api/pos/categories" \
   -H "X-Tenant-ID: PaPos"
 ```
 
 2. **Load Products for Selected Category**
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/pos/products?category=Clothing" \
+curl -X GET "http://localhost:8080/posai/api/pos/products?category=Clothing" \
   -H "X-Tenant-ID: PaPos"
 ```
 
 3. **Search Products (by name, SKU, ID, or barcode)**
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/pos/products?search=shirt" \
+curl -X GET "http://localhost:8080/posai/api/pos/products?search=shirt" \
   -H "X-Tenant-ID: PaPos"
 
 # Search by barcode in general search
-curl -X GET "http://localhost:8080/pos-codex/api/pos/products?search=BC-APPLE-001" \
+curl -X GET "http://localhost:8080/posai/api/pos/products?search=BC-APPLE-001" \
   -H "X-Tenant-ID: PaPos"
 ```
 
 4. **Get Product by Barcode**
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/pos/products/barcode/BC-APPLE-001" \
+curl -X GET "http://localhost:8080/posai/api/pos/products/barcode/BC-APPLE-001" \
   -H "X-Tenant-ID: PaPos"
 ```
 
 5. **Load Customers**
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/pos/customers" \
+curl -X GET "http://localhost:8080/posai/api/pos/customers" \
   -H "X-Tenant-ID: PaPos"
 ```
 
 6. **Load Payment Methods**
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/pos/payment-methods" \
+curl -X GET "http://localhost:8080/posai/api/pos/payment-methods" \
   -H "X-Tenant-ID: PaPos"
 ```
 
 7. **Create Order with Payment**
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/pos/orders" \
+curl -X POST "http://localhost:8080/posai/api/pos/orders" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{

@@ -78,7 +78,7 @@ GET /api/pos/products/barcode/{code}
 
 **Example Request:**
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/pos/products/barcode/BC-APPLE-001" \
+curl -X GET "http://localhost:8080/posai/api/pos/products/barcode/BC-APPLE-001" \
   -H "X-Tenant-ID: PaPos"
 ```
 
@@ -133,19 +133,19 @@ GET /api/pos/products?search={term}
 **Example Requests:**
 ```bash
 # Search by barcode
-curl -X GET "http://localhost:8080/pos-codex/api/pos/products?search=BC-APPLE-001" \
+curl -X GET "http://localhost:8080/posai/api/pos/products?search=BC-APPLE-001" \
   -H "X-Tenant-ID: PaPos"
 
 # Search by name
-curl -X GET "http://localhost:8080/pos-codex/api/pos/products?search=apple" \
+curl -X GET "http://localhost:8080/posai/api/pos/products?search=apple" \
   -H "X-Tenant-ID: PaPos"
 
 # Search by SKU
-curl -X GET "http://localhost:8080/pos-codex/api/pos/products?search=APPLE-SKU" \
+curl -X GET "http://localhost:8080/posai/api/pos/products?search=APPLE-SKU" \
   -H "X-Tenant-ID: PaPos"
 
 # Search by ID
-curl -X GET "http://localhost:8080/pos-codex/api/pos/products?search=123" \
+curl -X GET "http://localhost:8080/posai/api/pos/products?search=123" \
   -H "X-Tenant-ID: PaPos"
 ```
 
@@ -182,7 +182,7 @@ curl -X GET "http://localhost:8080/pos-codex/api/pos/products?search=123" \
 async function handleBarcodeScanned(barcodeCode) {
   try {
     const response = await fetch(
-      `http://localhost:8080/pos-codex/api/pos/products/barcode/${encodeURIComponent(barcodeCode)}`,
+      `http://localhost:8080/posai/api/pos/products/barcode/${encodeURIComponent(barcodeCode)}`,
       {
         headers: { 'X-Tenant-ID': 'PaPos' }
       }
@@ -209,7 +209,7 @@ async function handleBarcodeScanned(barcodeCode) {
 async function handleSearchInput(searchTerm) {
   try {
     const response = await fetch(
-      `http://localhost:8080/pos-codex/api/pos/products?search=${encodeURIComponent(searchTerm)}`,
+      `http://localhost:8080/posai/api/pos/products?search=${encodeURIComponent(searchTerm)}`,
       {
         headers: { 'X-Tenant-ID': 'PaPos' }
       }
@@ -233,7 +233,7 @@ async function unifiedSearch(input) {
   // Use general search endpoint
   // It will match by name, SKU, ID, or barcode
   const response = await fetch(
-    `http://localhost:8080/pos-codex/api/pos/products?search=${encodeURIComponent(input)}`,
+    `http://localhost:8080/posai/api/pos/products?search=${encodeURIComponent(input)}`,
     {
       headers: { 'X-Tenant-ID': 'PaPos' }
     }

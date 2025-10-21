@@ -28,7 +28,7 @@ The POS endpoint serves as the entry point for the Point of Sale application. It
 
 **Example**:
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/pos" \
+curl -X GET "http://localhost:8080/posai/api/pos" \
   -H "X-Tenant-ID: PaPos"
 ```
 
@@ -104,7 +104,7 @@ When building a frontend application that uses this endpoint:
 ```javascript
 // Fetch POS login configurations
 async function initializePOSLogin() {
-  const response = await fetch('http://localhost:8080/pos-codex/api/pos', {
+  const response = await fetch('http://localhost:8080/posai/api/pos', {
     headers: {
       'X-Tenant-ID': 'PaPos'
     }
@@ -145,7 +145,7 @@ Administrators can customize these configurations through the admin API:
 
 ```bash
 # Update a single configuration
-curl -X PUT "http://localhost:8080/pos-codex/api/admin/configurations/{id}" \
+curl -X PUT "http://localhost:8080/posai/api/admin/configurations/{id}" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -153,7 +153,7 @@ curl -X PUT "http://localhost:8080/pos-codex/api/admin/configurations/{id}" \
   }'
 
 # Bulk update multiple configurations
-curl -X POST "http://localhost:8080/pos-codex/api/admin/configurations/bulk-update?category=LOGIN" \
+curl -X POST "http://localhost:8080/posai/api/admin/configurations/bulk-update?category=LOGIN" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{

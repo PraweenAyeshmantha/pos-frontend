@@ -1,7 +1,12 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { TenantProvider } from './contexts/TenantContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import TenantRouteGuard from './components/auth/TenantRouteGuard';
+import EnvConfigErrorPage from './components/errors/EnvConfigErrorPage';
+import InvalidUrlErrorPage from './components/errors/InvalidUrlErrorPage';
+import env from './config/env';
 
 // Lazy load pages for better performance
 const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
@@ -14,6 +19,9 @@ const StatisticsPage = lazy(() => import('./pages/admin/statistics/StatisticsPag
 const SettingsPage = lazy(() => import('./pages/admin/settings/SettingsPage'));
 const POSAdminPage = lazy(() => import('./pages/admin/pos-admin/POSAdminPage'));
 const OutletsPage = lazy(() => import('./pages/admin/outlets/OutletsPage'));
+const CashiersPage = lazy(() => import('./pages/admin/cashiers/CashiersPage'));
+const TablesPage = lazy(() => import('./pages/admin/tables/TablesPage'));
+const AssignBarcodesPage = lazy(() => import('./pages/admin/assign-barcodes/AssignBarcodesPage'));
 
 // Loading component
 const LoadingFallback = () => (
@@ -26,70 +34,115 @@ const LoadingFallback = () => (
 );
 
 function App() {
+  // Check if environment is properly configured
+  if (!env.isValid) {
+    return <EnvConfigErrorPage errorMessage={env.errorMessage} />;
+  }
+
   return (
     <Router>
       <AuthProvider>
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
-            {/* Public Routes */}
-            <Route path="/login" element={<LoginPage />} />
-            
-            {/* Protected Routes */}
-            <Route path="/reset-password" element={
-              <ProtectedRoute>
-                <ResetPasswordPage />
-              </ProtectedRoute>
+            {/* Redirect root to error - tenant ID required */}
+            <Route path="/" element={
+              <TenantRouteGuard>
+                <Navigate to="/posai/missing-tenant" replace />
+              </TenantRouteGuard>
             } />
             
-            <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
-            
-            <Route path="/admin/dashboard" element={
-              <ProtectedRoute>
-                <DashboardPage />
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/admin/customers" element={
-              <ProtectedRoute>
-                <CustomersPage />
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/admin/orders" element={
-              <ProtectedRoute>
-                <OrdersPage />
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/admin/pos-admin" element={
-              <ProtectedRoute>
-                <POSAdminPage />
-              </ProtectedRoute>
+            {/* All routes now require /posai/{tenantId} prefix */}
+            <Route path="/posai/:tenantId/*" element={
+              <TenantRouteGuard>
+                <TenantProvider>
+                  <Routes>
+                    {/* Public Routes */}
+                    <Route path="login" element={<LoginPage />} />
+                    
+                    {/* Protected Routes */}
+                    <Route path="reset-password" element={
+                      <ProtectedRoute>
+                        <ResetPasswordPage />
+                      </ProtectedRoute>
+                    } />
+                    
+                    <Route path="/" element={<Navigate to="admin/dashboard" replace />} />
+                    
+                    <Route path="admin/dashboard" element={
+                      <ProtectedRoute>
+                        <DashboardPage />
+                      </ProtectedRoute>
+                    } />
+                    
+                    <Route path="admin/customers" element={
+                      <ProtectedRoute>
+                        <CustomersPage />
+                      </ProtectedRoute>
+                    } />
+
+                    <Route path="admin/cashiers" element={
+                      <ProtectedRoute>
+                        <CashiersPage />
+                      </ProtectedRoute>
+                    } />
+                    
+                    <Route path="admin/orders" element={
+                      <ProtectedRoute>
+                        <OrdersPage />
+                      </ProtectedRoute>
+                    } />
+                    
+                    <Route path="admin/pos-admin" element={
+                      <ProtectedRoute>
+                        <POSAdminPage />
+                      </ProtectedRoute>
+                    } />
+
+                    <Route path="admin/outlets" element={
+                      <ProtectedRoute>
+                        <OutletsPage />
+                      </ProtectedRoute>
+                    } />
+
+                    <Route path="admin/tables" element={
+                      <ProtectedRoute>
+                        <TablesPage />
+                      </ProtectedRoute>
+                    } />
+
+                    <Route path="admin/assign-barcodes" element={
+                      <ProtectedRoute>
+                        <AssignBarcodesPage />
+                      </ProtectedRoute>
+                    } />
+
+                    <Route path="admin/statistics" element={
+                      <ProtectedRoute>
+                        <StatisticsPage />
+                      </ProtectedRoute>
+                    } />
+                    
+                    <Route path="admin/configuration/general" element={
+                      <ProtectedRoute>
+                        <AdminPage />
+                      </ProtectedRoute>
+                    } />
+                    
+                    <Route path="admin/settings" element={
+                      <ProtectedRoute>
+                        <SettingsPage />
+                      </ProtectedRoute>
+                    } />
+
+                    {/* Catch-all for invalid URLs within tenant scope */}
+                    <Route path="*" element={<InvalidUrlErrorPage />} />
+                  </Routes>
+                </TenantProvider>
+              </TenantRouteGuard>
             } />
 
-            <Route path="/admin/outlets" element={
-              <ProtectedRoute>
-                <OutletsPage />
-              </ProtectedRoute>
-            } />
-
-            <Route path="/admin/statistics" element={
-              <ProtectedRoute>
-                <StatisticsPage />
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/admin/configuration/general" element={
-              <ProtectedRoute>
-                <AdminPage />
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/admin/settings" element={
-              <ProtectedRoute>
-                <SettingsPage />
-              </ProtectedRoute>
-            } />
+            {/* Catch-all for any other invalid URLs */}
+            <Route path="*" element={<InvalidUrlErrorPage />} />
           </Routes>
         </Suspense>
       </AuthProvider>

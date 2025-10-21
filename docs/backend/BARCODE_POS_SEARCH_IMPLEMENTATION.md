@@ -23,7 +23,7 @@ GET /api/pos/products/barcode/{code}
 
 **Example Request:**
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/pos/products/barcode/BC-APPLE-001" \
+curl -X GET "http://localhost:8080/posai/api/pos/products/barcode/BC-APPLE-001" \
   -H "X-Tenant-ID: PaPos"
 ```
 
@@ -67,19 +67,19 @@ The search now matches products by:
 **Example Searches:**
 ```bash
 # Search by name
-curl -X GET "http://localhost:8080/pos-codex/api/pos/products?search=apple" \
+curl -X GET "http://localhost:8080/posai/api/pos/products?search=apple" \
   -H "X-Tenant-ID: PaPos"
 
 # Search by barcode
-curl -X GET "http://localhost:8080/pos-codex/api/pos/products?search=BC-APPLE-001" \
+curl -X GET "http://localhost:8080/posai/api/pos/products?search=BC-APPLE-001" \
   -H "X-Tenant-ID: PaPos"
 
 # Search by SKU
-curl -X GET "http://localhost:8080/pos-codex/api/pos/products?search=APPLE-SKU" \
+curl -X GET "http://localhost:8080/posai/api/pos/products?search=APPLE-SKU" \
   -H "X-Tenant-ID: PaPos"
 
 # Search by ID
-curl -X GET "http://localhost:8080/pos-codex/api/pos/products?search=123" \
+curl -X GET "http://localhost:8080/posai/api/pos/products?search=123" \
   -H "X-Tenant-ID: PaPos"
 ```
 
@@ -188,7 +188,7 @@ The frontend can now implement a single search box that works for all search typ
 // When user enters text in search box
 async function searchProducts(searchTerm) {
   const response = await fetch(
-    `http://localhost:8080/pos-codex/api/pos/products?search=${encodeURIComponent(searchTerm)}`,
+    `http://localhost:8080/posai/api/pos/products?search=${encodeURIComponent(searchTerm)}`,
     {
       headers: {
         'X-Tenant-ID': 'PaPos'
@@ -203,7 +203,7 @@ async function searchProducts(searchTerm) {
 // When user scans/enters a barcode and wants exact match
 async function getProductByBarcode(barcodeCode) {
   const response = await fetch(
-    `http://localhost:8080/pos-codex/api/pos/products/barcode/${encodeURIComponent(barcodeCode)}`,
+    `http://localhost:8080/posai/api/pos/products/barcode/${encodeURIComponent(barcodeCode)}`,
     {
       headers: {
         'X-Tenant-ID': 'PaPos'
@@ -320,7 +320,7 @@ cd /home/runner/work/pos-backend/pos-backend
 #### Test 1: Get Product by Barcode
 ```bash
 # First, assign a barcode to a product
-curl -X POST "http://localhost:8080/pos-codex/api/admin/barcodes/assign" \
+curl -X POST "http://localhost:8080/posai/api/admin/barcodes/assign" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -330,18 +330,18 @@ curl -X POST "http://localhost:8080/pos-codex/api/admin/barcodes/assign" \
   }'
 
 # Then, retrieve product by barcode
-curl -X GET "http://localhost:8080/pos-codex/api/pos/products/barcode/BC-APPLE-001" \
+curl -X GET "http://localhost:8080/posai/api/pos/products/barcode/BC-APPLE-001" \
   -H "X-Tenant-ID: PaPos"
 ```
 
 #### Test 2: Search Products with Barcode
 ```bash
 # Search by barcode
-curl -X GET "http://localhost:8080/pos-codex/api/pos/products?search=BC-APPLE-001" \
+curl -X GET "http://localhost:8080/posai/api/pos/products?search=BC-APPLE-001" \
   -H "X-Tenant-ID: PaPos"
 
 # Search by product name
-curl -X GET "http://localhost:8080/pos-codex/api/pos/products?search=apple" \
+curl -X GET "http://localhost:8080/posai/api/pos/products?search=apple" \
   -H "X-Tenant-ID: PaPos"
 ```
 

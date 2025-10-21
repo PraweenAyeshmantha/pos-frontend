@@ -287,7 +287,7 @@ multitenancy:
 ### API Testing
 ```bash
 # Test endpoint
-curl -H "X-Tenant-ID: PaPos" http://localhost:8080/pos-codex/api/admin/outlets
+curl -H "X-Tenant-ID: PaPos" http://localhost:8080/posai/api/admin/outlets
 ```
 
 ## Documentation

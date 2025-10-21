@@ -105,7 +105,7 @@ GET /api/admin/configurations/printer
 
 **Example**:
 ```bash
-curl -X GET http://localhost:8080/pos-codex/api/admin/configurations/printer \
+curl -X GET http://localhost:8080/posai/api/admin/configurations/printer \
   -H "X-Tenant-ID: PaPos"
 ```
 
@@ -137,7 +137,7 @@ GET /api/admin/configurations/by-key?key=barcode_page_width&category=PRINTER
 
 **Example**:
 ```bash
-curl -X GET 'http://localhost:8080/pos-codex/api/admin/configurations/by-key?key=barcode_page_width&category=PRINTER' \
+curl -X GET 'http://localhost:8080/posai/api/admin/configurations/by-key?key=barcode_page_width&category=PRINTER' \
   -H "X-Tenant-ID: PaPos"
 ```
 
@@ -231,7 +231,7 @@ POST /api/admin/configurations/bulk-update?category=PRINTER
 
 **Example**:
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/admin/configurations/bulk-update?category=PRINTER" \
+curl -X POST "http://localhost:8080/posai/api/admin/configurations/bulk-update?category=PRINTER" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -316,13 +316,13 @@ public class PrinterService {
 
 **Get all printer configurations:**
 ```bash
-curl -X GET http://localhost:8080/pos-codex/api/admin/configurations/printer \
+curl -X GET http://localhost:8080/posai/api/admin/configurations/printer \
   -H "X-Tenant-ID: PaPos"
 ```
 
 **Update barcode settings:**
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/admin/configurations/bulk-update?category=PRINTER" \
+curl -X POST "http://localhost:8080/posai/api/admin/configurations/bulk-update?category=PRINTER" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -336,7 +336,7 @@ curl -X POST "http://localhost:8080/pos-codex/api/admin/configurations/bulk-upda
 
 **Update invoice settings:**
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/admin/configurations/bulk-update?category=PRINTER" \
+curl -X POST "http://localhost:8080/posai/api/admin/configurations/bulk-update?category=PRINTER" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -352,7 +352,7 @@ curl -X POST "http://localhost:8080/pos-codex/api/admin/configurations/bulk-upda
 
 ### Configuring Thermal Receipt Printer (80mm)
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/admin/configurations/bulk-update?category=PRINTER" \
+curl -X POST "http://localhost:8080/posai/api/admin/configurations/bulk-update?category=PRINTER" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -366,7 +366,7 @@ curl -X POST "http://localhost:8080/pos-codex/api/admin/configurations/bulk-upda
 
 ### Configuring A4 Paper Invoice Printing
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/admin/configurations/bulk-update?category=PRINTER" \
+curl -X POST "http://localhost:8080/posai/api/admin/configurations/bulk-update?category=PRINTER" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -380,7 +380,7 @@ curl -X POST "http://localhost:8080/pos-codex/api/admin/configurations/bulk-upda
 
 ### Configuring Barcode Label Printer
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/admin/configurations/bulk-update?category=PRINTER" \
+curl -X POST "http://localhost:8080/posai/api/admin/configurations/bulk-update?category=PRINTER" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -396,7 +396,7 @@ curl -X POST "http://localhost:8080/pos-codex/api/admin/configurations/bulk-upda
 
 ### Switching Barcode Orientation
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/admin/configurations/bulk-update?category=PRINTER" \
+curl -X POST "http://localhost:8080/posai/api/admin/configurations/bulk-update?category=PRINTER" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{

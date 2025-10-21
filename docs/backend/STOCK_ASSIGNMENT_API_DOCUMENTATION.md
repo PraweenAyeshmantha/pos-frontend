@@ -6,7 +6,7 @@ The Stock Assignment API provides comprehensive functionality for assigning and 
 
 ## Base URL
 ```
-http://localhost:8080/pos-codex/api/admin/stocks
+http://localhost:8080/posai/api/admin/stocks
 ```
 
 ## Features
@@ -94,7 +94,7 @@ Content-Type: application/json
 
 **cURL Example:**
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/admin/stocks/assign" \
+curl -X POST "http://localhost:8080/posai/api/admin/stocks/assign" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -183,7 +183,7 @@ Content-Type: application/json
 
 **cURL Example:**
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/admin/stocks/assign/bulk" \
+curl -X POST "http://localhost:8080/posai/api/admin/stocks/assign/bulk" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -235,7 +235,7 @@ X-Tenant-ID: PaPos
 
 **cURL Example:**
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/admin/stocks/1" \
+curl -X GET "http://localhost:8080/posai/api/admin/stocks/1" \
   -H "X-Tenant-ID: PaPos"
 ```
 
@@ -280,7 +280,7 @@ X-Tenant-ID: PaPos
 
 **cURL Example:**
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/admin/stocks/product/1/outlet/2" \
+curl -X GET "http://localhost:8080/posai/api/admin/stocks/product/1/outlet/2" \
   -H "X-Tenant-ID: PaPos"
 ```
 
@@ -336,7 +336,7 @@ X-Tenant-ID: PaPos
 
 **cURL Example:**
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/admin/stocks/outlet/2" \
+curl -X GET "http://localhost:8080/posai/api/admin/stocks/outlet/2" \
   -H "X-Tenant-ID: PaPos"
 ```
 
@@ -382,7 +382,7 @@ X-Tenant-ID: PaPos
 
 **cURL Example:**
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/admin/stocks/outlet/2/low" \
+curl -X GET "http://localhost:8080/posai/api/admin/stocks/outlet/2/low" \
   -H "X-Tenant-ID: PaPos"
 ```
 
@@ -436,7 +436,7 @@ Content-Type: application/json
 
 **cURL Example:**
 ```bash
-curl -X PUT "http://localhost:8080/pos-codex/api/admin/stocks/1" \
+curl -X PUT "http://localhost:8080/posai/api/admin/stocks/1" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -477,7 +477,7 @@ X-Tenant-ID: PaPos
 
 **cURL Example:**
 ```bash
-curl -X DELETE "http://localhost:8080/pos-codex/api/admin/stocks/1" \
+curl -X DELETE "http://localhost:8080/posai/api/admin/stocks/1" \
   -H "X-Tenant-ID: PaPos"
 ```
 
@@ -509,7 +509,7 @@ ID,Name,Price,Meta: _ddwcpos_outlet_stock_1,Meta: _ddwcpos_outlet_stock_2,Meta: 
 After importing products via WooCommerce CSV, you can sync the stock data:
 
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/admin/stocks/assign/bulk" \
+curl -X POST "http://localhost:8080/posai/api/admin/stocks/assign/bulk" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -536,7 +536,7 @@ curl -X POST "http://localhost:8080/pos-codex/api/admin/stocks/assign/bulk" \
 When you need to set stock for one product at one outlet:
 
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/admin/stocks/assign" \
+curl -X POST "http://localhost:8080/posai/api/admin/stocks/assign" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -553,7 +553,7 @@ curl -X POST "http://localhost:8080/pos-codex/api/admin/stocks/assign" \
 After processing a CSV file with columns: `product_id,outlet_id,quantity`, create a mapping and call:
 
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/admin/stocks/assign/bulk" \
+curl -X POST "http://localhost:8080/posai/api/admin/stocks/assign/bulk" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -575,7 +575,7 @@ curl -X POST "http://localhost:8080/pos-codex/api/admin/stocks/assign/bulk" \
 Distribute the same product across different outlets with custom quantities:
 
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/admin/stocks/assign/bulk" \
+curl -X POST "http://localhost:8080/posai/api/admin/stocks/assign/bulk" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -595,7 +595,7 @@ curl -X POST "http://localhost:8080/pos-codex/api/admin/stocks/assign/bulk" \
 Check which products need restocking at a specific outlet:
 
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/admin/stocks/outlet/2/low" \
+curl -X GET "http://localhost:8080/posai/api/admin/stocks/outlet/2/low" \
   -H "X-Tenant-ID: PaPos"
 ```
 

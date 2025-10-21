@@ -176,11 +176,11 @@ public class OrderService {
 ### REST API (cURL)
 ```bash
 # Get all general configurations
-curl -X GET "http://localhost:8080/pos-codex/api/admin/configurations/general" \
+curl -X GET "http://localhost:8080/posai/api/admin/configurations/general" \
   -H "X-Tenant-ID: PaPos"
 
 # Update multiple configurations at once
-curl -X POST "http://localhost:8080/pos-codex/api/admin/configurations/bulk-update?category=GENERAL" \
+curl -X POST "http://localhost:8080/posai/api/admin/configurations/bulk-update?category=GENERAL" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{

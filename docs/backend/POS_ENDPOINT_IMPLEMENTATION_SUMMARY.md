@@ -132,7 +132,7 @@ Added link to the new POS Endpoint Guide in the documentation section.
 ### Example Request
 
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/pos" \
+curl -X GET "http://localhost:8080/posai/api/pos" \
   -H "X-Tenant-ID: PaPos"
 ```
 

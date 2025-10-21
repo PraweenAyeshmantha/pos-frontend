@@ -68,7 +68,7 @@ All endpoints are available at `/api/pos/customers` with the following operation
 
 ### Create a Customer
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/pos/customers" \
+curl -X POST "http://localhost:8080/posai/api/pos/customers" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -82,21 +82,21 @@ curl -X POST "http://localhost:8080/pos-codex/api/pos/customers" \
 ### Search Customers
 ```bash
 # Search by name
-curl "http://localhost:8080/pos-codex/api/pos/customers/search?term=John" \
+curl "http://localhost:8080/posai/api/pos/customers/search?term=John" \
   -H "X-Tenant-ID: PaPos"
 
 # Search by email
-curl "http://localhost:8080/pos-codex/api/pos/customers/search?term=john@example.com" \
+curl "http://localhost:8080/posai/api/pos/customers/search?term=john@example.com" \
   -H "X-Tenant-ID: PaPos"
 
 # Search by phone
-curl "http://localhost:8080/pos-codex/api/pos/customers/search?term=1234" \
+curl "http://localhost:8080/posai/api/pos/customers/search?term=1234" \
   -H "X-Tenant-ID: PaPos"
 ```
 
 ### Get Active Customers
 ```bash
-curl "http://localhost:8080/pos-codex/api/pos/customers?active=true" \
+curl "http://localhost:8080/posai/api/pos/customers?active=true" \
   -H "X-Tenant-ID: PaPos"
 ```
 
@@ -213,7 +213,7 @@ export PATH=$JAVA_HOME/bin:$PATH
 
 ### API returns 404
 - Check that the server is running
-- Verify the base URL includes context path: `/pos-codex/api/pos/customers`
+- Verify the base URL includes context path: `/posai/api/pos/customers`
 - Ensure `X-Tenant-ID` header is present
 
 ### Search returns empty results

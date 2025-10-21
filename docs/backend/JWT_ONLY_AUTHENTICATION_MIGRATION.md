@@ -24,7 +24,7 @@ As of this update, the POS Backend system **only supports JWT token authenticati
 **Before (No longer works):**
 ```bash
 # This will now return 401 Unauthorized
-curl -X GET http://localhost:8080/pos-codex/api/admin/outlets \
+curl -X GET http://localhost:8080/posai/api/admin/outlets \
   -H "X-Tenant-ID: default" \
   -H "X-User: john" \
   -H "X-Password: password123"
@@ -33,7 +33,7 @@ curl -X GET http://localhost:8080/pos-codex/api/admin/outlets \
 **After (Required):**
 ```bash
 # Step 1: Login to get JWT token
-curl -X POST http://localhost:8080/pos-codex/api/auth/login \
+curl -X POST http://localhost:8080/posai/api/auth/login \
   -H "X-Tenant-ID: default" \
   -H "Content-Type: application/json" \
   -d '{
@@ -45,7 +45,7 @@ curl -X POST http://localhost:8080/pos-codex/api/auth/login \
 # {"data": {"token": "eyJhbGci...", ...}}
 
 # Step 2: Use token for API requests
-curl -X GET http://localhost:8080/pos-codex/api/admin/outlets \
+curl -X GET http://localhost:8080/posai/api/admin/outlets \
   -H "X-Tenant-ID: default" \
   -H "Authorization: Bearer eyJhbGci..."
 ```
@@ -55,7 +55,7 @@ curl -X GET http://localhost:8080/pos-codex/api/admin/outlets \
 ```javascript
 // Step 1: Login and store token
 async function login(username, password) {
-  const response = await fetch('/pos-codex/api/auth/login', {
+  const response = await fetch('/posai/api/auth/login', {
     method: 'POST',
     headers: {
       'X-Tenant-ID': 'default',
@@ -77,7 +77,7 @@ async function login(username, password) {
 async function fetchData(endpoint) {
   const token = sessionStorage.getItem('authToken');
   
-  const response = await fetch(`/pos-codex${endpoint}`, {
+  const response = await fetch(`/posai${endpoint}`, {
     headers: {
       'X-Tenant-ID': 'default',
       'Authorization': `Bearer ${token}`

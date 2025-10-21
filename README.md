@@ -29,6 +29,30 @@ Modern React-based frontend application for the Point of Sale (POS) system backe
 
 ## Getting Started
 
+> **⚠️ Important:** Before running the application, you must configure environment variables. If you encounter a "VITE_API_BASE_URL is not set!" error, see [SETUP_TROUBLESHOOTING.md](./SETUP_TROUBLESHOOTING.md).
+
+### Quick Setup (Recommended)
+
+Run the setup script to automatically create the `.env` file:
+
+**Linux/Mac:**
+```bash
+./setup.sh
+```
+
+**Windows:**
+```bash
+setup.bat
+```
+
+Then install dependencies and start the development server:
+```bash
+npm install
+npm run dev
+```
+
+### Manual Setup
+
 ### 1. Install Dependencies
 
 ```bash
@@ -46,7 +70,7 @@ cp .env.example .env
 Edit `.env` file:
 
 ```env
-VITE_API_BASE_URL=http://localhost:8080/pos-codex/api
+VITE_API_BASE_URL=http://localhost:8080/posai/api
 VITE_TENANT_ID=PaPos
 ```
 

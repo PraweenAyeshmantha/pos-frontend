@@ -1,5 +1,5 @@
 import React, { memo, useCallback, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import ConfirmationDialog from '../common/ConfirmationDialog';
 
@@ -22,20 +22,26 @@ const SideNavigation: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { logout } = useAuth();
+  const { tenantId } = useParams<{ tenantId: string }>();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const handleNavigation = useCallback((path: string) => {
-    navigate(path);
-  }, [navigate]);
+    // Prepend tenant ID to the path
+    const fullPath = tenantId ? `/posai/${tenantId}${path}` : path;
+    navigate(fullPath);
+  }, [navigate, tenantId]);
 
   const isActive = useCallback((path: string) => {
-    return location.pathname === path || location.pathname.startsWith(path);
-  }, [location.pathname]);
+    // Check if current path matches, accounting for tenant ID prefix
+    const fullPath = tenantId ? `/posai/${tenantId}${path}` : path;
+    return location.pathname === fullPath || location.pathname.startsWith(fullPath);
+  }, [location.pathname, tenantId]);
 
   const handleLogout = useCallback(() => {
     logout();
-    navigate('/login');
-  }, [logout, navigate]);
+    const loginPath = tenantId ? `/posai/${tenantId}/login` : '/';
+    navigate(loginPath);
+  }, [logout, navigate, tenantId]);
 
   const handleLogoutClick = useCallback(() => {
     setShowLogoutConfirm(true);
@@ -80,7 +86,7 @@ const SideNavigation: React.FC = () => {
         onClick={handleLogoutClick}
         className="flex flex-col items-center justify-center w-full py-4 text-gray-600 hover:bg-gray-100 transition-all mt-2"
       >
-        <span className="text-2xl mb-1">🚪</span>
+        <span className="text-2xl mb-1">🔓</span>
         <span className="text-[10px] font-medium">Logout</span>
       </button>
 

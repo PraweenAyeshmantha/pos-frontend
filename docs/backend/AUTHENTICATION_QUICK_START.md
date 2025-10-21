@@ -181,14 +181,14 @@ Response (200 OK):
 
 ### Get Outlets (Protected)
 ```bash
-curl -X GET http://localhost:8080/pos-codex/api/admin/outlets \
+curl -X GET http://localhost:8080/posai/api/admin/outlets \
   -H "X-Tenant-ID: default" \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 ```
 
 ### Create Product (Protected)
 ```bash
-curl -X POST http://localhost:8080/pos-codex/api/admin/products \
+curl -X POST http://localhost:8080/posai/api/admin/products \
   -H "X-Tenant-ID: default" \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
   -H "Content-Type: application/json" \

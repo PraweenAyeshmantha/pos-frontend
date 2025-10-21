@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import AdminLayout from '../../../components/layout/AdminLayout';
 
 interface AdminTile {
@@ -13,6 +13,7 @@ interface AdminTile {
 
 const POSAdminPage: React.FC = () => {
   const navigate = useNavigate();
+  const { tenantId } = useParams<{ tenantId: string }>();
 
   const tiles = useMemo<AdminTile[]>(
     () => [
@@ -40,15 +41,40 @@ const POSAdminPage: React.FC = () => {
         icon: '🏪',
         accentClass: 'bg-amber-100 text-amber-600',
       },
+      {
+        id: 'cashiers',
+        title: 'Cashiers',
+        description: 'Manage cashier accounts, credentials, and outlet assignments.',
+        path: '/admin/cashiers',
+        icon: '👥',
+        accentClass: 'bg-sky-100 text-sky-600',
+      },
+      {
+        id: 'tables',
+        title: 'Tables',
+        description: 'Configure dining tables, seating capacity, and availability per outlet.',
+        path: '/admin/tables',
+        icon: '🍽️',
+        accentClass: 'bg-rose-100 text-rose-600',
+      },
+      {
+        id: 'assign-barcodes',
+        title: 'Assign Barcodes',
+        description: 'Assign and manage barcodes for products. Update barcodes and print labels.',
+        path: '/admin/assign-barcodes',
+        icon: '📊',
+        accentClass: 'bg-purple-100 text-purple-600',
+      },
     ],
     [],
   );
 
   const handleTileClick = useCallback(
     (path: string) => {
-      navigate(path);
+      const fullPath = tenantId ? `/posai/${tenantId}${path}` : path;
+      navigate(fullPath);
     },
-    [navigate],
+    [navigate, tenantId],
   );
 
   return (

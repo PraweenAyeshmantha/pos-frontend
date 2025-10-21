@@ -178,17 +178,17 @@ public class MyService {
 
 ```bash
 # Get all PWA configurations
-curl -X GET http://localhost:8080/pos-codex/api/admin/configurations/pwa \
+curl -X GET http://localhost:8080/posai/api/admin/configurations/pwa \
   -H "X-Tenant-ID: PaPos"
 
 # Update PWA name
-curl -X PUT http://localhost:8080/pos-codex/api/admin/configurations/1 \
+curl -X PUT http://localhost:8080/posai/api/admin/configurations/1 \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{"configValue": "My Custom POS"}'
 
 # Bulk update PWA settings
-curl -X POST "http://localhost:8080/pos-codex/api/admin/configurations/bulk-update?category=PWA" \
+curl -X POST "http://localhost:8080/posai/api/admin/configurations/bulk-update?category=PWA" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{

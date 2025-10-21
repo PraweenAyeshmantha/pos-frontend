@@ -134,7 +134,7 @@ Returns the updated order item with recalculated totals.
 ### Using cURL
 ```bash
 # Update an order item quantity and price
-curl -X PUT "http://localhost:8080/pos-codex/api/pos/orders/1/items/1" \
+curl -X PUT "http://localhost:8080/posai/api/pos/orders/1/items/1" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -147,7 +147,7 @@ curl -X PUT "http://localhost:8080/pos-codex/api/pos/orders/1/items/1" \
 ```javascript
 async function updateCartItem(orderId, itemId, quantity, unitPrice) {
   const response = await fetch(
-    `http://localhost:8080/pos-codex/api/pos/orders/${orderId}/items/${itemId}`,
+    `http://localhost:8080/posai/api/pos/orders/${orderId}/items/${itemId}`,
     {
       method: 'PUT',
       headers: {

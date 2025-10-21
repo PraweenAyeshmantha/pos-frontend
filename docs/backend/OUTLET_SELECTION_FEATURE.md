@@ -100,7 +100,7 @@ Added comprehensive tests for both service and controller layers:
 
 ### Using curl:
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/pos/cashier/johndoe/outlets" \
+curl -X GET "http://localhost:8080/posai/api/pos/cashier/johndoe/outlets" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json"
 ```
@@ -172,7 +172,7 @@ Before a cashier can see outlets in the selection screen, an admin must:
 Example admin workflow:
 ```bash
 # 1. Create outlet
-curl -X POST "http://localhost:8080/pos-codex/api/admin/outlets" \
+curl -X POST "http://localhost:8080/posai/api/admin/outlets" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -185,7 +185,7 @@ curl -X POST "http://localhost:8080/pos-codex/api/admin/outlets" \
   }'
 
 # 2. Create cashier
-curl -X POST "http://localhost:8080/pos-codex/api/admin/cashiers" \
+curl -X POST "http://localhost:8080/posai/api/admin/cashiers" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -196,7 +196,7 @@ curl -X POST "http://localhost:8080/pos-codex/api/admin/cashiers" \
   }'
 
 # 3. Assign outlet to cashier
-curl -X POST "http://localhost:8080/pos-codex/api/admin/cashiers/1/outlets/1" \
+curl -X POST "http://localhost:8080/posai/api/admin/cashiers/1/outlets/1" \
   -H "X-Tenant-ID: PaPos"
 ```
 

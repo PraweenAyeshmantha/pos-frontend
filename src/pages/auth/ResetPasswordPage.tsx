@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import Alert, { type AlertType } from '../../components/common/Alert';
 import ToastContainer from '../../components/common/ToastContainer';
@@ -12,6 +12,7 @@ const ResetPasswordPage: React.FC = () => {
   const [toast, setToast] = useState<{ type: AlertType; text: string } | null>(null);
   const { resetPassword, logout, user } = useAuth();
   const navigate = useNavigate();
+  const { tenantId } = useParams<{ tenantId: string }>();
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const showToast = useCallback((type: AlertType, text: string) => {
@@ -61,7 +62,8 @@ const ResetPasswordPage: React.FC = () => {
       // Password reset successful - logout and redirect to login
       // User needs to login again with new password to authenticate
       logout();
-      navigate('/login', { replace: true, state: { passwordResetSuccess: true } });
+      const loginPath = tenantId ? `/posai/${tenantId}/login` : '/';
+      navigate(loginPath, { replace: true, state: { passwordResetSuccess: true } });
     } catch (err) {
       console.error('Password reset error:', err);
       const error = err as { response?: { data?: { message?: string }; status?: number } };

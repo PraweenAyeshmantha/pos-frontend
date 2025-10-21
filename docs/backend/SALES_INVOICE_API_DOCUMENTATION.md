@@ -215,7 +215,7 @@ The API automatically selects the appropriate invoice template using the followi
 When an order is completed, fetch the invoice data and print it:
 
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/admin/orders/123/invoice" \
+curl -X GET "http://localhost:8080/posai/api/admin/orders/123/invoice" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json"
 ```
@@ -225,7 +225,7 @@ curl -X GET "http://localhost:8080/pos-codex/api/admin/orders/123/invoice" \
 From the orders menu, select a previous order and reprint its invoice:
 
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/admin/orders/456/invoice" \
+curl -X GET "http://localhost:8080/posai/api/admin/orders/456/invoice" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json"
 ```
@@ -402,19 +402,19 @@ Test the endpoint with different scenarios:
 
 ```bash
 # Standard completed order
-curl -X GET "http://localhost:8080/pos-codex/api/admin/orders/1/invoice" \
+curl -X GET "http://localhost:8080/posai/api/admin/orders/1/invoice" \
   -H "X-Tenant-ID: PaPos"
 
 # Order with dining table
-curl -X GET "http://localhost:8080/pos-codex/api/admin/orders/2/invoice" \
+curl -X GET "http://localhost:8080/posai/api/admin/orders/2/invoice" \
   -H "X-Tenant-ID: PaPos"
 
 # Order without customer
-curl -X GET "http://localhost:8080/pos-codex/api/admin/orders/3/invoice" \
+curl -X GET "http://localhost:8080/posai/api/admin/orders/3/invoice" \
   -H "X-Tenant-ID: PaPos"
 
 # Order with discount and coupon
-curl -X GET "http://localhost:8080/pos-codex/api/admin/orders/4/invoice" \
+curl -X GET "http://localhost:8080/posai/api/admin/orders/4/invoice" \
   -H "X-Tenant-ID: PaPos"
 ```
 

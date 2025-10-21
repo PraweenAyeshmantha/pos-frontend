@@ -180,7 +180,7 @@ class PayScreen {
 
 ### Test 1: Single Payment
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/pos/orders" \
+curl -X POST "http://localhost:8080/posai/api/pos/orders" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -201,7 +201,7 @@ curl -X POST "http://localhost:8080/pos-codex/api/pos/orders" \
 
 ### Test 2: Split Payment
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/pos/orders" \
+curl -X POST "http://localhost:8080/posai/api/pos/orders" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -226,12 +226,12 @@ curl -X POST "http://localhost:8080/pos-codex/api/pos/orders" \
 
 ```bash
 # Check if order notes enabled
-curl -X GET "http://localhost:8080/pos-codex/api/admin/configurations?category=GENERAL" \
+curl -X GET "http://localhost:8080/posai/api/admin/configurations?category=GENERAL" \
   -H "X-Tenant-ID: PaPos" | \
   jq '.data[] | select(.configKey=="enable_order_note") | .configValue'
 
 # Check if split payment enabled
-curl -X GET "http://localhost:8080/pos-codex/api/admin/configurations?category=GENERAL" \
+curl -X GET "http://localhost:8080/posai/api/admin/configurations?category=GENERAL" \
   -H "X-Tenant-ID: PaPos" | \
   jq '.data[] | select(.configKey=="enable_split_payment") | .configValue'
 ```

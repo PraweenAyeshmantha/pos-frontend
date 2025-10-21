@@ -183,7 +183,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 **Example - Get All Outlets (Protected Endpoint):**
 ```bash
-curl -X GET http://localhost:8080/pos-codex/api/admin/outlets \
+curl -X GET http://localhost:8080/posai/api/admin/outlets \
   -H "X-Tenant-ID: your-tenant-id" \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 ```

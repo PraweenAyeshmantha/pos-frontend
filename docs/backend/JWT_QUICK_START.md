@@ -14,7 +14,7 @@ The POS Backend now supports **two authentication methods**:
 
 ### Request
 ```bash
-curl -X POST http://localhost:8080/pos-codex/api/auth/login \
+curl -X POST http://localhost:8080/posai/api/auth/login \
   -H "X-Tenant-ID: default" \
   -H "Content-Type: application/json" \
   -d '{
@@ -45,7 +45,7 @@ curl -X POST http://localhost:8080/pos-codex/api/auth/login \
 
 ### With JWT Token (Recommended)
 ```bash
-curl -X GET http://localhost:8080/pos-codex/api/admin/outlets \
+curl -X GET http://localhost:8080/posai/api/admin/outlets \
   -H "X-Tenant-ID: default" \
   -H "Authorization: Bearer YOUR_TOKEN_HERE"
 ```
@@ -54,7 +54,7 @@ Replace `YOUR_TOKEN_HERE` with the actual token from the login response.
 
 ### With Legacy Headers (Still Supported)
 ```bash
-curl -X GET http://localhost:8080/pos-codex/api/admin/outlets \
+curl -X GET http://localhost:8080/posai/api/admin/outlets \
   -H "X-Tenant-ID: default" \
   -H "X-User: your-username" \
   -H "X-Password: your-password"
@@ -66,7 +66,7 @@ curl -X GET http://localhost:8080/pos-codex/api/admin/outlets \
 ```javascript
 // Login and get token
 async function login(username, password) {
-  const response = await fetch('http://localhost:8080/pos-codex/api/auth/login', {
+  const response = await fetch('http://localhost:8080/posai/api/auth/login', {
     method: 'POST',
     headers: {
       'X-Tenant-ID': 'default',
@@ -84,7 +84,7 @@ async function login(username, password) {
 
 // Use token for API calls
 async function getOutlets(token) {
-  const response = await fetch('http://localhost:8080/pos-codex/api/admin/outlets', {
+  const response = await fetch('http://localhost:8080/posai/api/admin/outlets', {
     headers: {
       'X-Tenant-ID': 'default',
       'Authorization': `Bearer ${token}`
@@ -102,7 +102,7 @@ import requests
 # Login and get token
 def login(username, password):
     response = requests.post(
-        'http://localhost:8080/pos-codex/api/auth/login',
+        'http://localhost:8080/posai/api/auth/login',
         headers={
             'X-Tenant-ID': 'default',
             'Content-Type': 'application/json'
@@ -119,7 +119,7 @@ def login(username, password):
 # Use token for API calls
 def get_outlets(token):
     response = requests.get(
-        'http://localhost:8080/pos-codex/api/admin/outlets',
+        'http://localhost:8080/posai/api/admin/outlets',
         headers={
             'X-Tenant-ID': 'default',
             'Authorization': f'Bearer {token}'
@@ -141,7 +141,7 @@ public String login(String username, String password) throws IOException {
     );
     
     HttpRequest request = HttpRequest.newBuilder()
-        .uri(URI.create("http://localhost:8080/pos-codex/api/auth/login"))
+        .uri(URI.create("http://localhost:8080/posai/api/auth/login"))
         .header("X-Tenant-ID", "default")
         .header("Content-Type", "application/json")
         .POST(HttpRequest.BodyPublishers.ofString(requestBody))
@@ -160,7 +160,7 @@ public String getOutlets(String token) throws IOException {
     HttpClient client = HttpClient.newHttpClient();
     
     HttpRequest request = HttpRequest.newBuilder()
-        .uri(URI.create("http://localhost:8080/pos-codex/api/admin/outlets"))
+        .uri(URI.create("http://localhost:8080/posai/api/admin/outlets"))
         .header("X-Tenant-ID", "default")
         .header("Authorization", "Bearer " + token)
         .GET()

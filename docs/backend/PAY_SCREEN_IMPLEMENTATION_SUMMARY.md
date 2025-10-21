@@ -391,21 +391,21 @@ If upgrading from an older version:
 **Issue**: Payment methods not showing
 ```bash
 # Check if payment methods exist
-curl -X GET "http://localhost:8080/pos-codex/api/pos/payment-methods" \
+curl -X GET "http://localhost:8080/posai/api/pos/payment-methods" \
   -H "X-Tenant-ID: PaPos"
 ```
 
 **Issue**: Order notes field not showing
 ```bash
 # Check configuration
-curl -X GET "http://localhost:8080/pos-codex/api/admin/configurations?category=GENERAL" \
+curl -X GET "http://localhost:8080/posai/api/admin/configurations?category=GENERAL" \
   -H "X-Tenant-ID: PaPos" | jq '.data[] | select(.configKey=="enable_order_note")'
 ```
 
 **Issue**: Split payment not working
 ```bash
 # Check configuration
-curl -X GET "http://localhost:8080/pos-codex/api/admin/configurations?category=GENERAL" \
+curl -X GET "http://localhost:8080/posai/api/admin/configurations?category=GENERAL" \
   -H "X-Tenant-ID: PaPos" | jq '.data[] | select(.configKey=="enable_split_payment")'
 ```
 

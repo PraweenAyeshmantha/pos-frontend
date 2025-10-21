@@ -200,7 +200,7 @@ export JWT_ISSUER="pos-backend-production"
 
 #### 1. Login and Get Token
 ```bash
-curl -X POST http://localhost:8080/pos-codex/api/auth/login \
+curl -X POST http://localhost:8080/posai/api/auth/login \
   -H "X-Tenant-ID: default" \
   -H "Content-Type: application/json" \
   -d '{"username":"john","password":"password123"}'
@@ -217,7 +217,7 @@ curl -X POST http://localhost:8080/pos-codex/api/auth/login \
 
 #### 3. Use Token for API Calls
 ```bash
-curl -X GET http://localhost:8080/pos-codex/api/admin/outlets \
+curl -X GET http://localhost:8080/posai/api/admin/outlets \
   -H "X-Tenant-ID: default" \
   -H "Authorization: Bearer YOUR_TOKEN_HERE"
 ```

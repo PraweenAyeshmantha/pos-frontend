@@ -56,7 +56,7 @@ The system uses **JWT Token Authentication**:
 
 #### Step 1: Login to Get Token
 ```bash
-curl -X POST http://localhost:8080/pos-codex/api/auth/login \
+curl -X POST http://localhost:8080/posai/api/auth/login \
   -H "X-Tenant-ID: default" \
   -H "Content-Type: application/json" \
   -d '{
@@ -84,7 +84,7 @@ curl -X POST http://localhost:8080/pos-codex/api/auth/login \
 
 #### Step 2: Use Token for API Requests
 ```bash
-curl -X GET http://localhost:8080/pos-codex/api/admin/outlets \
+curl -X GET http://localhost:8080/posai/api/admin/outlets \
   -H "X-Tenant-ID: default" \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 ```

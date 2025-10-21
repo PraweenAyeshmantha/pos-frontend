@@ -9,7 +9,7 @@ A complete frontend application for the Point of Sale (POS) system has been crea
 ### Prerequisites
 - Node.js 18+ 
 - npm 9+
-- Backend API running on `http://localhost:8080/pos-codex`
+- Backend API running on `http://localhost:8080/posai`
 
 ### Installation
 
@@ -73,7 +73,7 @@ The frontend connects to the backend API endpoints:
 
 Configure the API URL in `.env`:
 ```env
-VITE_API_BASE_URL=http://localhost:8080/pos-codex
+VITE_API_BASE_URL=http://localhost:8080/posai
 ```
 
 ## Documentation

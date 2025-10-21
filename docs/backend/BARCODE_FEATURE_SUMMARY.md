@@ -145,7 +145,7 @@ Implemented 12 comprehensive unit tests covering:
 
 ### Assign Single Barcode
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/admin/barcodes/assign" \
+curl -X POST "http://localhost:8080/posai/api/admin/barcodes/assign" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -157,7 +157,7 @@ curl -X POST "http://localhost:8080/pos-codex/api/admin/barcodes/assign" \
 
 ### Bulk Assign Barcodes
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/admin/barcodes/assign/bulk" \
+curl -X POST "http://localhost:8080/posai/api/admin/barcodes/assign/bulk" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -171,7 +171,7 @@ curl -X POST "http://localhost:8080/pos-codex/api/admin/barcodes/assign/bulk" \
 
 ### Print Barcodes
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/admin/barcodes/print" \
+curl -X POST "http://localhost:8080/posai/api/admin/barcodes/print" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{

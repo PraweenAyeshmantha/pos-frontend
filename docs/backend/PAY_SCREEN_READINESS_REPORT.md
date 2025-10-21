@@ -169,7 +169,7 @@ alert(`Order complete! Change: $${order.changeAmount}`);
 
 ```bash
 # Test single payment
-curl -X POST "http://localhost:8080/pos-codex/api/pos/orders" \
+curl -X POST "http://localhost:8080/posai/api/pos/orders" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -185,7 +185,7 @@ curl -X POST "http://localhost:8080/pos-codex/api/pos/orders" \
   }'
 
 # Test split payment
-curl -X POST "http://localhost:8080/pos-codex/api/pos/orders" \
+curl -X POST "http://localhost:8080/posai/api/pos/orders" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{

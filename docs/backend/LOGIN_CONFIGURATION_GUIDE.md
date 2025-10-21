@@ -226,14 +226,14 @@ POST /api/admin/configurations/bulk-update?category=LOGIN
 ### Example 1: Get All Login Configurations
 
 ```bash
-curl -X GET "http://localhost:8080/pos-codex/api/admin/configurations/login" \
+curl -X GET "http://localhost:8080/posai/api/admin/configurations/login" \
   -H "X-Tenant-ID: PaPos"
 ```
 
 ### Example 2: Update Login Heading Text
 
 ```bash
-curl -X PUT "http://localhost:8080/pos-codex/api/admin/configurations/1" \
+curl -X PUT "http://localhost:8080/posai/api/admin/configurations/1" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -246,7 +246,7 @@ curl -X PUT "http://localhost:8080/pos-codex/api/admin/configurations/1" \
 ### Example 3: Customize Login Colors (Bulk Update)
 
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/admin/configurations/bulk-update?category=LOGIN" \
+curl -X POST "http://localhost:8080/posai/api/admin/configurations/bulk-update?category=LOGIN" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
@@ -261,7 +261,7 @@ curl -X POST "http://localhost:8080/pos-codex/api/admin/configurations/bulk-upda
 ### Example 4: Disable Remember Me and Forgot Password Features
 
 ```bash
-curl -X POST "http://localhost:8080/pos-codex/api/admin/configurations/bulk-update?category=LOGIN" \
+curl -X POST "http://localhost:8080/posai/api/admin/configurations/bulk-update?category=LOGIN" \
   -H "X-Tenant-ID: PaPos" \
   -H "Content-Type: application/json" \
   -d '{
