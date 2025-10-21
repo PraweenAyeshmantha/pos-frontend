@@ -2,7 +2,9 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import AdminLayout from '../../../components/layout/AdminLayout';
 import Alert, { type AlertType } from '../../../components/common/Alert';
 import ToastContainer from '../../../components/common/ToastContainer';
+import ConfirmationDialog from '../../../components/common/ConfirmationDialog';
 import AddProductModal from '../../../components/admin/products/AddProductModal';
+import EditProductModal from '../../../components/admin/products/EditProductModal';
 import { productService } from '../../../services/productService';
 import type { Product } from '../../../types/product';
 
@@ -38,6 +40,11 @@ const ProductsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [alert, setAlert] = useState<{ type: AlertType; title: string; message: string } | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; product: Product | null }>({
+    show: false,
+    product: null,
+  });
   const alertTimeoutRef = useRef<number | null>(null);
 
   const showToast = useCallback((type: AlertType, title: string, message: string) => {
@@ -86,6 +93,48 @@ const ProductsPage: React.FC = () => {
     },
     [showToast],
   );
+
+  const handleEdit = useCallback((product: Product) => {
+    setEditingProduct(product);
+  }, []);
+
+  const handleEditClose = useCallback(() => {
+    setEditingProduct(null);
+  }, []);
+
+  const handleProductUpdated = useCallback(
+    (product: Product) => {
+      setProducts((prev) =>
+        prev.map((p) => (p.id === product.id ? product : p))
+      );
+      setEditingProduct(null);
+      showToast('success', 'Product Updated', `${product.name} updated successfully`);
+    },
+    [showToast],
+  );
+
+  const handleDeleteRequest = useCallback((product: Product) => {
+    setDeleteConfirm({ show: true, product });
+  }, []);
+
+  const handleDeleteCancel = useCallback(() => {
+    setDeleteConfirm({ show: false, product: null });
+  }, []);
+
+  const handleDeleteConfirm = useCallback(async () => {
+    if (!deleteConfirm.product) return;
+
+    try {
+      await productService.delete(deleteConfirm.product.id);
+      setProducts((prev) => prev.filter((p) => p.id !== deleteConfirm.product!.id));
+      showToast('success', 'Product Deleted', `${deleteConfirm.product.name} deleted successfully`);
+    } catch (err) {
+      console.error('Failed to delete product', err);
+      showToast('error', 'Delete Failed', 'Unable to delete product. Please try again.');
+    } finally {
+      setDeleteConfirm({ show: false, product: null });
+    }
+  }, [deleteConfirm.product, showToast]);
 
   const filteredProducts = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -182,12 +231,15 @@ const ProductsPage: React.FC = () => {
                       <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
                         Updated At
                       </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
                     {filteredProducts.length === 0 ? (
                       <tr>
-                        <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                        <td colSpan={8} className="px-6 py-12 text-center text-gray-500">
                           {searchQuery
                             ? 'No products found matching your search.'
                             : 'No products available.'}
@@ -215,6 +267,26 @@ const ProductsPage: React.FC = () => {
                           <td className="px-6 py-4 text-sm text-gray-600">
                             {formatDateTime(product.updatedAt)}
                           </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleEdit(product)}
+                                className="rounded-lg border border-blue-600 bg-white px-3 py-1.5 text-xs font-semibold text-blue-600 transition hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                                aria-label={`Edit ${product.name}`}
+                              >
+                                Edit
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteRequest(product)}
+                                className="rounded-lg border border-red-600 bg-white px-3 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1"
+                                aria-label={`Delete ${product.name}`}
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </td>
                         </tr>
                       ))
                     )}
@@ -230,9 +302,29 @@ const ProductsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Alert Toast */}
+      {/* Modals and Dialogs */}
       {showAddModal && (
         <AddProductModal onClose={() => setShowAddModal(false)} onSuccess={handleProductCreated} />
+      )}
+
+      {editingProduct && (
+        <EditProductModal 
+          product={editingProduct} 
+          onClose={handleEditClose} 
+          onSuccess={handleProductUpdated} 
+        />
+      )}
+
+      {deleteConfirm.show && deleteConfirm.product && (
+        <ConfirmationDialog
+          open={deleteConfirm.show}
+          title="Delete Product"
+          message={`Are you sure you want to delete "${deleteConfirm.product.name}"? This action cannot be undone.`}
+          confirmLabel="Delete"
+          cancelLabel="Cancel"
+          onConfirm={handleDeleteConfirm}
+          onCancel={handleDeleteCancel}
+        />
       )}
 
       {(alert || error) && (

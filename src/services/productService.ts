@@ -36,4 +36,16 @@ export const productService = {
     }
     return response.data.data;
   },
+
+  async update(id: number, data: CreateProductRequest): Promise<Product> {
+    const response = await apiClient.put<ApiResponse<Product>>(`/admin/products/${id}`, data);
+    if (!response.data.data) {
+      throw new Error(response.data.message ?? 'Failed to update product');
+    }
+    return response.data.data;
+  },
+
+  async delete(id: number): Promise<void> {
+    await apiClient.delete(`/admin/products/${id}`);
+  },
 };
