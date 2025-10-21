@@ -13,6 +13,8 @@ const AssignBarcodesPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [editingBarcodes, setEditingBarcodes] = useState<Map<number, string>>(new Map());
   const [printQuantities, setPrintQuantities] = useState<Map<number, string>>(new Map());
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [itemsPerPage] = useState<number>(25);
 
   const showAlert = useCallback((type: AlertType, title: string, message: string) => {
     setAlert({ type, title, message });
@@ -211,6 +213,18 @@ const AssignBarcodesPage: React.FC = () => {
     );
   });
 
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentProducts = filteredProducts.slice(startIndex, endIndex);
+
+  // Reset to first page when search changes
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchQuery(value);
+    setCurrentPage(1);
+  }, []);
+
   const renderContent = () => {
     if (loading) {
       return (
@@ -238,6 +252,9 @@ const AssignBarcodesPage: React.FC = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                  <input type="checkbox" className="h-4 w-4 rounded border-gray-300" />
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
                   Name
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
@@ -257,20 +274,27 @@ const AssignBarcodesPage: React.FC = () => {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filteredProducts.length === 0 ? (
+            <tbody className="divide-y divide-gray-200 bg-white">
+              {currentProducts.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
                     No products match your search criteria.
                   </td>
                 </tr>
               ) : (
-                filteredProducts.map((product) => {
+                currentProducts.map((product) => {
                   const currentBarcode = editingBarcodes.get(product.id) ?? product.barcode ?? '';
                   const currentQuantity = printQuantities.get(product.id) || '';
                   
                   return (
                     <tr key={product.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100">
+                          <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                          </svg>
+                        </div>
+                      </td>
                       <td className="px-6 py-4">
                         <div className="text-sm font-medium text-gray-900">{product.name}</div>
                       </td>
@@ -349,10 +373,17 @@ const AssignBarcodesPage: React.FC = () => {
         <div className="mx-auto max-w-7xl px-6 py-8">
           {/* Header */}
           <header className="mb-8">
-            <h1 className="text-3xl font-semibold text-gray-800">Assign Barcodes</h1>
-            <p className="mt-2 text-gray-600 max-w-2xl">
-              Assign and manage barcodes for your products. Update barcode numbers and print barcode labels for inventory management.
-            </p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-semibold text-gray-800">Products</h1>
+              </div>
+              <button
+                type="button"
+                className="rounded-md border border-blue-600 bg-white px-4 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50"
+              >
+                Add New
+              </button>
+            </div>
           </header>
 
           {/* Alert */}
@@ -369,19 +400,71 @@ const AssignBarcodesPage: React.FC = () => {
             </div>
           )}
 
-          {/* Search Bar */}
-          <div className="mb-6 flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-            <div className="text-sm text-gray-600">
-              {filteredProducts.length === products.length
-                ? `Showing ${products.length} product${products.length !== 1 ? 's' : ''}`
-                : `Showing ${filteredProducts.length} of ${products.length} product${products.length !== 1 ? 's' : ''}`}
+          {/* Search and Pagination Bar */}
+          <div className="mb-6 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-gray-600">
+                {filteredProducts.length} items
+              </span>
+              {totalPages > 1 && (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage(1)}
+                    disabled={currentPage === 1}
+                    className="rounded px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+                  >
+                    «
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="rounded px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+                  >
+                    ‹
+                  </button>
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="number"
+                      min="1"
+                      max={totalPages}
+                      value={currentPage}
+                      onChange={(e) => {
+                        const page = parseInt(e.target.value, 10);
+                        if (page >= 1 && page <= totalPages) {
+                          setCurrentPage(page);
+                        }
+                      }}
+                      className="w-16 rounded border border-gray-300 px-2 py-1 text-center text-sm"
+                    />
+                    <span className="text-sm text-gray-600">of {totalPages}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="rounded px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+                  >
+                    ›
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage(totalPages)}
+                    disabled={currentPage === totalPages}
+                    className="rounded px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+                  >
+                    »
+                  </button>
+                </div>
+              )}
             </div>
             <input
               type="text"
-              placeholder="Search by name, type, barcode, or price..."
+              placeholder="Search"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-10 w-96 rounded-lg border border-gray-200 px-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              onChange={(e) => handleSearchChange(e.target.value)}
+              className="h-10 w-64 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
             />
           </div>
 
