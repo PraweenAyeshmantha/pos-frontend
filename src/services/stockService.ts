@@ -4,7 +4,7 @@ import type { ProductStock, UpdateStockRequest } from '../types/stock';
 
 export const stockService = {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async getProductStocks(outletId?: number): Promise<ProductStock[]> {
+  async getProductStocks(_outletId?: number): Promise<ProductStock[]> {
     // Fetch all stocks without outlet filter - backend may not support outlet filtering
     const response = await apiClient.get<ApiResponse<ProductStock[]>>('/admin/stocks');
     return response.data.data ?? [];
