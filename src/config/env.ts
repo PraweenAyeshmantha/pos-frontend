@@ -16,20 +16,24 @@ function validateEnv(): EnvConfig {
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
   const mode = import.meta.env.MODE;
 
-  // Provide defaults for development
+  // Validate that VITE_API_BASE_URL is set
+  if (!apiBaseUrl) {
+    const errorMessage = 
+      '❌ VITE_API_BASE_URL is not set!\n\n' +
+      'Please create a .env file in the root directory with:\n' +
+      'VITE_API_BASE_URL=your_api_url_here\n\n' +
+      'Example: VITE_API_BASE_URL=http://localhost:8080/posai/api\n' +
+      'You can copy .env.example to .env and update the values.';
+    
+    console.error(errorMessage);
+    throw new Error('VITE_API_BASE_URL environment variable is required');
+  }
+
   const config: EnvConfig = {
-    apiBaseUrl: apiBaseUrl || 'http://localhost:8080/posai/api',
+    apiBaseUrl: apiBaseUrl,
     isDevelopment: mode === 'development',
     isProduction: mode === 'production',
   };
-
-  // Warn in development if using defaults
-  if (!apiBaseUrl && mode === 'development') {
-    console.warn(
-      '⚠️ VITE_API_BASE_URL not set, using default:',
-      config.apiBaseUrl
-    );
-  }
 
   return config;
 }
