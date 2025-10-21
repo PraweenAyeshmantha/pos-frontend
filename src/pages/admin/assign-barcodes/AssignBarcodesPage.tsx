@@ -252,7 +252,7 @@ const AssignBarcodesPage: React.FC = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
-                  <input type="checkbox" className="h-4 w-4 rounded border-gray-300" />
+                  {/* Icon column - no header text */}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
                   Name
@@ -374,15 +374,15 @@ const AssignBarcodesPage: React.FC = () => {
           {/* Header */}
           <header className="mb-8">
             <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-semibold text-gray-800">Products</h1>
+              <h1 className="text-3xl font-semibold text-gray-800">Products</h1>
+              <div className="flex items-center gap-4">
+                <button
+                  type="button"
+                  className="rounded-md border border-blue-600 bg-white px-4 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50"
+                >
+                  Add New
+                </button>
               </div>
-              <button
-                type="button"
-                className="rounded-md border border-blue-600 bg-white px-4 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50"
-              >
-                Add New
-              </button>
             </div>
           </header>
 
