@@ -9,6 +9,18 @@ export interface Product {
   price: number;
   barcode?: string;
   barcodeImage?: string;
+  sku?: string;
+  description?: string;
+  cost?: number;
+  taxRate?: number;
+  category?: string;
+  unit?: string;
+  isWeightBased?: boolean;
+  imageUrl?: string;
+  isActive?: boolean;
+  stockStatus?: 'IN_STOCK' | 'OUT_OF_STOCK' | 'LOW_STOCK';
+  tags?: string[];
+  brands?: string[];
   createdAt?: string;
   updatedAt?: string;
 }
@@ -30,6 +42,13 @@ export interface CreateProductRequest {
   barcode?: string;
   sku?: string;
   description?: string;
+  cost?: number;
+  taxRate?: number;
+  category?: string;
+  unit?: string;
+  isWeightBased?: boolean;
+  imageUrl?: string;
+  isActive?: boolean;
   recordStatus?: RecordStatus;
 }
 
@@ -40,5 +59,12 @@ export interface ProductFormValues {
   barcode: string;
   sku: string;
   description: string;
+  cost: string;
+  taxRate: string;
+  category: string;
+  unit: string;
+  isWeightBased: boolean;
+  imageUrl: string;
+  isActive: boolean;
   recordStatus: RecordStatus;
 }

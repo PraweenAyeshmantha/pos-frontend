@@ -31,6 +31,13 @@ const DEFAULT_FORM_VALUES: ProductFormValues = {
   barcode: '',
   sku: '',
   description: '',
+  cost: '',
+  taxRate: '',
+  category: '',
+  unit: '',
+  isWeightBased: false,
+  imageUrl: '',
+  isActive: true,
   recordStatus: 'ACTIVE',
 };
 
@@ -74,6 +81,13 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ onClose, onSuccess })
       ...(formData.barcode.trim() ? { barcode: formData.barcode.trim() } : {}),
       ...(formData.sku.trim() ? { sku: formData.sku.trim() } : {}),
       ...(formData.description.trim() ? { description: formData.description.trim() } : {}),
+      ...(formData.cost.trim() ? { cost: Number.parseFloat(formData.cost) } : {}),
+      ...(formData.taxRate.trim() ? { taxRate: Number.parseFloat(formData.taxRate) } : {}),
+      ...(formData.category.trim() ? { category: formData.category.trim() } : {}),
+      ...(formData.unit.trim() ? { unit: formData.unit.trim() } : {}),
+      isWeightBased: formData.isWeightBased,
+      ...(formData.imageUrl.trim() ? { imageUrl: formData.imageUrl.trim() } : {}),
+      isActive: formData.isActive,
       recordStatus: formData.recordStatus,
     };
   }, [formData]);
