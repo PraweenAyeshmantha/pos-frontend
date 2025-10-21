@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import AdminLayout from '../../../components/layout/AdminLayout';
 import Alert, { type AlertType } from '../../../components/common/Alert';
+import ToastContainer from '../../../components/common/ToastContainer';
 import ConfirmationDialog from '../../../components/common/ConfirmationDialog';
 import { outletService } from '../../../services/outletService';
 import type { Outlet, OutletMode } from '../../../types/outlet';
@@ -327,9 +328,9 @@ const OutletsPage: React.FC = () => {
 
       {/* Alert Toast */}
       {alert && (
-        <div className="fixed bottom-6 right-6 z-50">
+        <ToastContainer>
           <Alert type={alert.type} title={alert.title} message={alert.message} />
-        </div>
+        </ToastContainer>
       )}
     </AdminLayout>
   );

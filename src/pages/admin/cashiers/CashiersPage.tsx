@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import AdminLayout from '../../../components/layout/AdminLayout';
 import Alert, { type AlertType } from '../../../components/common/Alert';
+import ToastContainer from '../../../components/common/ToastContainer';
 import ConfirmationDialog from '../../../components/common/ConfirmationDialog';
 import AddCashierModal from '../../../components/admin/cashiers/AddCashierModal';
 import { cashierService } from '../../../services/cashierService';
@@ -306,9 +307,9 @@ const CashiersPage: React.FC = () => {
       />
 
       {alert && (
-        <div className="fixed bottom-6 right-6 z-50">
+        <ToastContainer>
           <Alert type={alert.type} title={alert.title} message={alert.message} />
-        </div>
+        </ToastContainer>
       )}
     </AdminLayout>
   );

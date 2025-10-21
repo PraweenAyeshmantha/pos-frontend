@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import AdminLayout from '../../../components/layout/AdminLayout';
 import Alert, { type AlertType } from '../../../components/common/Alert';
+import ToastContainer from '../../../components/common/ToastContainer';
 import { outletService } from '../../../services/outletService';
 import { tableService } from '../../../services/tableService';
 import type { Outlet } from '../../../types/outlet';
@@ -457,9 +458,9 @@ const TablesPage: React.FC = () => {
           </header>
 
           {alert && (
-            <div className="mb-6">
+            <ToastContainer>
               <Alert type={alert.type} title={alert.title} message={alert.message} />
-            </div>
+            </ToastContainer>
           )}
 
           {error && (

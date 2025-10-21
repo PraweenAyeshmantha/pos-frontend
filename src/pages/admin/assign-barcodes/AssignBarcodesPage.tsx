@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import AdminLayout from '../../../components/layout/AdminLayout';
 import Alert, { type AlertType } from '../../../components/common/Alert';
+import ToastContainer from '../../../components/common/ToastContainer';
 import { productService } from '../../../services/productService';
 import type { Product } from '../../../types/product';
 
@@ -356,9 +357,9 @@ const AssignBarcodesPage: React.FC = () => {
 
           {/* Alert */}
           {alert && (
-            <div className="mb-6">
+            <ToastContainer>
               <Alert type={alert.type} title={alert.title} message={alert.message} />
-            </div>
+            </ToastContainer>
           )}
 
           {/* Error */}
