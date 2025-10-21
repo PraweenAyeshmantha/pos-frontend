@@ -4,11 +4,11 @@ import Alert, { type AlertType } from '../../../components/common/Alert';
 import ToastContainer from '../../../components/common/ToastContainer';
 import { stockService } from '../../../services/stockService';
 import { outletService } from '../../../services/outletService';
-import type { ProductStock } from '../../../types/stock';
+import type { ProductWithStock } from '../../../types/stock';
 import type { Outlet } from '../../../types/outlet';
 
 const AssignStocksPage: React.FC = () => {
-  const [stocks, setStocks] = useState<ProductStock[]>([]);
+  const [stocks, setStocks] = useState<ProductWithStock[]>([]);
   const [outlets, setOutlets] = useState<Outlet[]>([]);
   const [selectedOutlet, setSelectedOutlet] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
@@ -73,7 +73,7 @@ const AssignStocksPage: React.FC = () => {
   }, []);
 
   const handleUpdateStock = useCallback(
-    async (stock: ProductStock) => {
+    async (stock: ProductWithStock) => {
       const newStockValue = editingStocks.get(stock.productId);
       
       if (!newStockValue || !newStockValue.trim()) {
@@ -104,7 +104,7 @@ const AssignStocksPage: React.FC = () => {
         
         // Update the stock in the list
         setStocks((prev) =>
-          prev.map((s) => (s.productId === stock.productId ? { ...s, customStock: stockLevel } : s))
+          prev.map((s) => (s.productId === stock.productId ? { ...s, customStock: stockLevel, isInStock: stockLevel > 0 } : s))
         );
         
         // Clear editing state
@@ -180,14 +180,8 @@ const AssignStocksPage: React.FC = () => {
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
                   <div className="flex items-center">
-                    Centralized Stock
-                    <span className="ml-1 cursor-help" title="Centralized stock managed across all outlets">ⓘ</span>
-                  </div>
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
-                  <div className="flex items-center">
                     Custom Stock
-                    <span className="ml-1 cursor-help" title="Custom stock per outlet">ⓘ</span>
+                    <span className="ml-1 cursor-help" title="Custom stock for this outlet">ⓘ</span>
                   </div>
                 </th>
               </tr>
@@ -195,7 +189,7 @@ const AssignStocksPage: React.FC = () => {
             <tbody className="divide-y divide-gray-200">
               {filteredStocks.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
                     No products match your search criteria.
                   </td>
                 </tr>
@@ -223,17 +217,8 @@ const AssignStocksPage: React.FC = () => {
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm text-gray-600">
-                          <span className="line-through text-gray-400">${stock.price.toFixed(2)}</span>
-                          <br />
                           <span className="font-semibold text-gray-900">${stock.price.toFixed(2)}</span>
                         </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold ${
-                          stock.isInStock ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'
-                        }`}>
-                          {stock.isInStock ? '✓ In Stock' : 'Out of Stock'}
-                        </span>
                       </td>
                       <td className="px-6 py-4 align-top">
                         <div className="flex items-center gap-2">
@@ -334,7 +319,7 @@ const AssignStocksPage: React.FC = () => {
           {renderContent()}
 
           <p className="mt-6 text-sm text-gray-500">
-            Update custom stock levels for the selected outlet. Centralized stock is managed across all outlets automatically.
+            Update stock levels for products at the selected outlet. Stock quantities are managed per outlet.
           </p>
         </div>
       </div>
