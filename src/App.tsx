@@ -21,6 +21,7 @@ const POSAdminPage = lazy(() => import('./pages/admin/pos-admin/POSAdminPage'));
 const OutletsPage = lazy(() => import('./pages/admin/outlets/OutletsPage'));
 const CashiersPage = lazy(() => import('./pages/admin/cashiers/CashiersPage'));
 const TablesPage = lazy(() => import('./pages/admin/tables/TablesPage'));
+const ProductsPage = lazy(() => import('./pages/admin/products/ProductsPage'));
 const AssignBarcodesPage = lazy(() => import('./pages/admin/assign-barcodes/AssignBarcodesPage'));
 const AssignStocksPage = lazy(() => import('./pages/admin/assign-stocks/AssignStocksPage'));
 
@@ -108,6 +109,12 @@ function App() {
                     <Route path="admin/tables" element={
                       <ProtectedRoute>
                         <TablesPage />
+                      </ProtectedRoute>
+                    } />
+
+                    <Route path="admin/products" element={
+                      <ProtectedRoute>
+                        <ProductsPage />
                       </ProtectedRoute>
                     } />
 
