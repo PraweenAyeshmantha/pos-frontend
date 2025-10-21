@@ -41,6 +41,14 @@ const POSAdminPage: React.FC = () => {
         icon: '🏪',
         accentClass: 'bg-amber-100 text-amber-600',
       },
+      {
+        id: 'cashiers',
+        title: 'Cashiers',
+        description: 'Manage cashier accounts, credentials, and outlet assignments.',
+        path: '/admin/cashiers',
+        icon: '👥',
+        accentClass: 'bg-sky-100 text-sky-600',
+      },
     ],
     [],
   );

@@ -19,6 +19,7 @@ const StatisticsPage = lazy(() => import('./pages/admin/statistics/StatisticsPag
 const SettingsPage = lazy(() => import('./pages/admin/settings/SettingsPage'));
 const POSAdminPage = lazy(() => import('./pages/admin/pos-admin/POSAdminPage'));
 const OutletsPage = lazy(() => import('./pages/admin/outlets/OutletsPage'));
+const CashiersPage = lazy(() => import('./pages/admin/cashiers/CashiersPage'));
 
 // Loading component
 const LoadingFallback = () => (
@@ -74,6 +75,12 @@ function App() {
                     <Route path="admin/customers" element={
                       <ProtectedRoute>
                         <CustomersPage />
+                      </ProtectedRoute>
+                    } />
+
+                    <Route path="admin/cashiers" element={
+                      <ProtectedRoute>
+                        <CashiersPage />
                       </ProtectedRoute>
                     } />
                     
