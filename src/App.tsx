@@ -4,6 +4,9 @@ import { AuthProvider } from './contexts/AuthContext';
 import { TenantProvider } from './contexts/TenantContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import TenantRouteGuard from './components/auth/TenantRouteGuard';
+import EnvConfigErrorPage from './components/errors/EnvConfigErrorPage';
+import InvalidUrlErrorPage from './components/errors/InvalidUrlErrorPage';
+import env from './config/env';
 
 // Lazy load pages for better performance
 const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
@@ -28,6 +31,11 @@ const LoadingFallback = () => (
 );
 
 function App() {
+  // Check if environment is properly configured
+  if (!env.isValid) {
+    return <EnvConfigErrorPage errorMessage={env.errorMessage} />;
+  }
+
   return (
     <Router>
       <AuthProvider>
@@ -104,10 +112,16 @@ function App() {
                         <SettingsPage />
                       </ProtectedRoute>
                     } />
+
+                    {/* Catch-all for invalid URLs within tenant scope */}
+                    <Route path="*" element={<InvalidUrlErrorPage />} />
                   </Routes>
                 </TenantProvider>
               </TenantRouteGuard>
             } />
+
+            {/* Catch-all for any other invalid URLs */}
+            <Route path="*" element={<InvalidUrlErrorPage />} />
           </Routes>
         </Suspense>
       </AuthProvider>
