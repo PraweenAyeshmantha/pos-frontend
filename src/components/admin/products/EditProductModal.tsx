@@ -31,8 +31,15 @@ const EditProductModal: React.FC<EditProductModalProps> = ({ product, onClose, o
     price: product.price.toString(),
     productType: product.productType,
     barcode: product.barcode ?? '',
-    sku: '',
-    description: '',
+    sku: product.sku ?? '',
+    description: product.description ?? '',
+    cost: product.cost?.toString() ?? '',
+    taxRate: product.taxRate?.toString() ?? '',
+    category: product.category ?? '',
+    unit: product.unit ?? '',
+    isWeightBased: product.isWeightBased ?? false,
+    imageUrl: product.imageUrl ?? '',
+    isActive: product.isActive ?? true,
     recordStatus: 'ACTIVE',
   }));
   const [saving, setSaving] = useState(false);
@@ -68,6 +75,13 @@ const EditProductModal: React.FC<EditProductModalProps> = ({ product, onClose, o
       ...(formData.barcode.trim() ? { barcode: formData.barcode.trim() } : {}),
       ...(formData.sku.trim() ? { sku: formData.sku.trim() } : {}),
       ...(formData.description.trim() ? { description: formData.description.trim() } : {}),
+      ...(formData.cost.trim() ? { cost: Number.parseFloat(formData.cost) } : {}),
+      ...(formData.taxRate.trim() ? { taxRate: Number.parseFloat(formData.taxRate) } : {}),
+      ...(formData.category.trim() ? { category: formData.category.trim() } : {}),
+      ...(formData.unit.trim() ? { unit: formData.unit.trim() } : {}),
+      isWeightBased: formData.isWeightBased,
+      ...(formData.imageUrl.trim() ? { imageUrl: formData.imageUrl.trim() } : {}),
+      isActive: formData.isActive,
       recordStatus: formData.recordStatus,
     };
   }, [formData]);
