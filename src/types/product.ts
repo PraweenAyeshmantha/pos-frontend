@@ -20,3 +20,23 @@ export interface PrintBarcodeRequest {
   productId: number;
   quantity: number;
 }
+
+export interface CreateProductRequest {
+  name: string;
+  price: number;
+  productType?: ProductType;
+  barcode?: string;
+  sku?: string;
+  description?: string;
+  isActive?: boolean;
+}
+
+export interface ProductFormValues {
+  name: string;
+  price: string;
+  productType: ProductType;
+  barcode: string;
+  sku: string;
+  description: string;
+  isActive: boolean;
+}

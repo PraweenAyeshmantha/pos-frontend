@@ -1,6 +1,6 @@
 import apiClient from './apiClient';
 import type { ApiResponse } from '../types/configuration';
-import type { Product, UpdateProductBarcodeRequest } from '../types/product';
+import type { CreateProductRequest, Product, UpdateProductBarcodeRequest } from '../types/product';
 
 export const productService = {
   async getAll(): Promise<Product[]> {
@@ -27,5 +27,13 @@ export const productService = {
       throw new Error('Failed to generate barcode image');
     }
     return response.data.data.barcodeImage;
+  },
+
+  async create(data: CreateProductRequest): Promise<Product> {
+    const response = await apiClient.post<ApiResponse<Product>>('/admin/products', data);
+    if (!response.data.data) {
+      throw new Error(response.data.message ?? 'Failed to create product');
+    }
+    return response.data.data;
   },
 };

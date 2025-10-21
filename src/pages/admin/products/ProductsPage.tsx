@@ -1,7 +1,8 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import AdminLayout from '../../../components/layout/AdminLayout';
 import Alert, { type AlertType } from '../../../components/common/Alert';
 import ToastContainer from '../../../components/common/ToastContainer';
+import AddProductModal from '../../../components/admin/products/AddProductModal';
 import { productService } from '../../../services/productService';
 import type { Product } from '../../../types/product';
 
@@ -35,7 +36,25 @@ const ProductsPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [alert] = useState<{ type: AlertType; title: string; message: string } | null>(null);
+  const [alert, setAlert] = useState<{ type: AlertType; title: string; message: string } | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const alertTimeoutRef = useRef<number | null>(null);
+
+  const showToast = useCallback((type: AlertType, title: string, message: string) => {
+    if (alertTimeoutRef.current) {
+      window.clearTimeout(alertTimeoutRef.current);
+    }
+    setAlert({ type, title, message });
+    alertTimeoutRef.current = window.setTimeout(() => setAlert(null), 3000);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (alertTimeoutRef.current) {
+        window.clearTimeout(alertTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const fetchProducts = useCallback(async () => {
     try {
@@ -54,6 +73,19 @@ const ProductsPage: React.FC = () => {
   useEffect(() => {
     void fetchProducts();
   }, [fetchProducts]);
+
+  const handleProductCreated = useCallback(
+    (product: Product) => {
+      setProducts((prev) => {
+        const remaining = prev.filter((existing) => existing.id !== product.id);
+        return [product, ...remaining];
+      });
+      setError(null);
+      setShowAddModal(false);
+      showToast('success', 'Product Created', `${product.name} added successfully`);
+    },
+    [showToast],
+  );
 
   const filteredProducts = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -85,6 +117,13 @@ const ProductsPage: React.FC = () => {
                   View and manage your product catalog, prices, and barcodes.
                 </p>
               </div>
+              <button
+                type="button"
+                onClick={() => setShowAddModal(true)}
+                className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              >
+                Add Product
+              </button>
             </div>
 
             {/* Search Bar */}
@@ -103,13 +142,6 @@ const ProductsPage: React.FC = () => {
               />
             </div>
           </div>
-
-          {/* Error Alert */}
-          {error && (
-            <div className="mb-6">
-              <Alert type="error" title="Error" message={error} />
-            </div>
-          )}
 
           {/* Loading State */}
           {loading && (
@@ -199,9 +231,14 @@ const ProductsPage: React.FC = () => {
       </div>
 
       {/* Alert Toast */}
-      {alert && (
+      {showAddModal && (
+        <AddProductModal onClose={() => setShowAddModal(false)} onSuccess={handleProductCreated} />
+      )}
+
+      {(alert || error) && (
         <ToastContainer>
-          <Alert type={alert.type} title={alert.title} message={alert.message} />
+          {error && <Alert type="error" title="Error" message={error} />}
+          {alert && <Alert type={alert.type} title={alert.title} message={alert.message} />}
         </ToastContainer>
       )}
     </AdminLayout>
