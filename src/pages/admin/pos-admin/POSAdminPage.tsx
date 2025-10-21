@@ -65,6 +65,14 @@ const POSAdminPage: React.FC = () => {
         icon: '📊',
         accentClass: 'bg-purple-100 text-purple-600',
       },
+      {
+        id: 'assign-stocks',
+        title: 'Assign Stocks',
+        description: 'Manage product stock levels for your outlets. Update custom stock quantities.',
+        path: '/admin/assign-stocks',
+        icon: '📦',
+        accentClass: 'bg-teal-100 text-teal-600',
+      },
     ],
     [],
   );
