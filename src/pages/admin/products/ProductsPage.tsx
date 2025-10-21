@@ -258,7 +258,7 @@ const ProductsPage: React.FC = () => {
     setCurrentPage(1);
   }, []);
 
-  const handleDuplicate = useCallback((_product: Product) => {
+  const handleDuplicate = useCallback(() => {
     // TODO: Implement duplicate functionality
     showToast('info', 'Coming Soon', 'Duplicate functionality will be implemented soon');
   }, [showToast]);
@@ -534,7 +534,7 @@ const ProductsPage: React.FC = () => {
                                 |{' '}
                                 <button
                                   type="button"
-                                  onClick={() => handleDuplicate(product)}
+                                  onClick={() => handleDuplicate()}
                                   className="text-blue-600 hover:underline"
                                 >
                                   Duplicate
