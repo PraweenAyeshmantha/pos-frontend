@@ -6,17 +6,19 @@ interface EnvConfig {
   apiBaseUrl: string;
   isDevelopment: boolean;
   isProduction: boolean;
+  isValid: boolean;
+  errorMessage?: string;
 }
 
 /**
  * Validates and returns environment configuration
- * Throws error if required variables are missing
+ * Instead of throwing, marks config as invalid if required variables are missing
  */
 function validateEnv(): EnvConfig {
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
   const mode = import.meta.env.MODE;
 
-  // Validate that VITE_API_BASE_URL is set
+  // Check if VITE_API_BASE_URL is set
   if (!apiBaseUrl) {
     const errorMessage = 
       '❌ VITE_API_BASE_URL is not set!\n\n' +
@@ -26,13 +28,22 @@ function validateEnv(): EnvConfig {
       'You can copy .env.example to .env and update the values.';
     
     console.error(errorMessage);
-    throw new Error('VITE_API_BASE_URL environment variable is required');
+    
+    // Return invalid config instead of throwing
+    return {
+      apiBaseUrl: '',
+      isDevelopment: mode === 'development',
+      isProduction: mode === 'production',
+      isValid: false,
+      errorMessage,
+    };
   }
 
   const config: EnvConfig = {
     apiBaseUrl: apiBaseUrl,
     isDevelopment: mode === 'development',
     isProduction: mode === 'production',
+    isValid: true,
   };
 
   return config;
