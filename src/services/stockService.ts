@@ -3,17 +3,22 @@ import type { ApiResponse } from '../types/configuration';
 import type { ProductStock, UpdateStockRequest } from '../types/stock';
 
 export const stockService = {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async getProductStocks(_outletId?: number): Promise<ProductStock[]> {
-    // Fetch all stocks without outlet filter - backend may not support outlet filtering
-    const response = await apiClient.get<ApiResponse<ProductStock[]>>('/admin/stocks');
+  async getProductStocks(outletId?: number): Promise<ProductStock[]> {
+    // Use outlet-specific endpoint if outlet is provided
+    const endpoint = outletId ? `/admin/stocks/outlet/${outletId}` : '/admin/stocks';
+    const response = await apiClient.get<ApiResponse<ProductStock[]>>(endpoint);
     return response.data.data ?? [];
   },
 
   async updateStock(data: UpdateStockRequest): Promise<ProductStock> {
-    const response = await apiClient.put<ApiResponse<ProductStock>>(
-      `/admin/stocks/${data.productId}`,
-      data
+    // Use the assign endpoint for updating stock
+    const response = await apiClient.post<ApiResponse<ProductStock>>(
+      '/admin/stocks/assign',
+      {
+        productId: data.productId,
+        outletId: data.outletId,
+        quantity: data.stockLevel,
+      }
     );
     if (!response.data.data) {
       throw new Error('Failed to update stock');
