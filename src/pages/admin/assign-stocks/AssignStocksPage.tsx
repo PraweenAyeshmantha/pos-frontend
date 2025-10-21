@@ -11,7 +11,6 @@ const AssignStocksPage: React.FC = () => {
   const [outlets, setOutlets] = useState<Outlet[]>([]);
   const [selectedOutlet, setSelectedOutlet] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
   const [alert, setAlert] = useState<{ type: AlertType; title: string; message: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [editingStocks, setEditingStocks] = useState<Map<number, string>>(new Map());
@@ -31,25 +30,24 @@ const AssignStocksPage: React.FC = () => {
       }
     } catch (err) {
       console.error('Failed to load outlets', err);
-      setError('Failed to load outlets. Please try again.');
+      showAlert('error', 'Error', 'Failed to load outlets. Please try again.');
     }
-  }, [selectedOutlet]);
+  }, [selectedOutlet, showAlert]);
 
   const fetchStocks = useCallback(async () => {
     try {
       setLoading(true);
-      setError(null);
       // Find the outlet ID from the selected outlet name
       const outlet = outlets.find(o => o.name === selectedOutlet);
       const data = await stockService.getProductStocks(outlet?.id);
       setStocks(data);
     } catch (err) {
       console.error('Failed to load stocks', err);
-      setError('Failed to load stocks. Please try again.');
+      showAlert('error', 'Error', 'Failed to load stocks. Please try again.');
     } finally {
       setLoading(false);
     }
-  }, [selectedOutlet, outlets]);
+  }, [selectedOutlet, outlets, showAlert]);
 
   useEffect(() => {
     fetchOutlets();
@@ -282,13 +280,6 @@ const AssignStocksPage: React.FC = () => {
           {alert && (
             <div className="mb-6">
               <Alert type={alert.type} title={alert.title} message={alert.message} />
-            </div>
-          )}
-
-          {/* Error */}
-          {error && (
-            <div className="mb-6">
-              <Alert type="error" title="Error" message={error} />
             </div>
           )}
 
