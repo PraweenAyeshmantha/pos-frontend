@@ -21,7 +21,7 @@ export const tableService = {
       tableNumber: payload.tableNumber,
       capacity: payload.capacity,
       status: payload.status,
-      isActive: payload.isActive,
+      recordStatus: payload.recordStatus,
     });
 
     if (!response.data.data) {
@@ -36,7 +36,7 @@ export const tableService = {
       tableNumber: payload.tableNumber,
       capacity: payload.capacity,
       status: payload.status,
-      isActive: payload.isActive,
+      recordStatus: payload.recordStatus,
     });
 
     if (!response.data.data) {

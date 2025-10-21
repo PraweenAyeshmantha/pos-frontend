@@ -8,6 +8,7 @@ import type {
   CreateOutletRequest,
   UpdateOutletRequest,
 } from '../../../types/outlet';
+import type { RecordStatus } from '../../../types/configuration';
 
 interface AddOutletModalProps {
   outlet: Outlet | null;
@@ -33,7 +34,7 @@ const DEFAULT_FORM_VALUES: OutletFormValues = {
   payments: [...PAYMENT_METHODS],
   invoice: 'Default Invoice',
   tables: '',
-  isActive: true,
+  recordStatus: 'ACTIVE',
 };
 
 const MODE_OPTIONS: Array<{ label: string; value: OutletMode }> = [
@@ -41,9 +42,9 @@ const MODE_OPTIONS: Array<{ label: string; value: OutletMode }> = [
   { label: 'Restaurant / Cafe', value: 'RESTAURANT_CAFE' },
 ];
 
-const STATUS_OPTIONS = [
-  { label: 'Enabled', value: 'enabled' },
-  { label: 'Disabled', value: 'disabled' },
+const STATUS_OPTIONS: Array<{ label: string; value: RecordStatus }> = [
+  { label: 'Enabled', value: 'ACTIVE' },
+  { label: 'Disabled', value: 'INACTIVE' },
 ];
 
 const COUNTRIES = ['United States (US)', 'Canada', 'United Kingdom', 'Australia'];
@@ -88,7 +89,7 @@ const deriveInitialForm = (outlet: Outlet | null): OutletFormValues => {
     addressLine1: outlet.address,
     phone: outlet.phone,
     email: outlet.email,
-    isActive: outlet.isActive,
+    recordStatus: outlet.recordStatus,
   };
 };
 
@@ -101,7 +102,7 @@ const AddOutletModal: React.FC<AddOutletModalProps> = ({ outlet, onClose, onSucc
     setFormData(deriveInitialForm(outlet));
   }, [outlet]);
 
-  const statusValue = formData.isActive ? 'enabled' : 'disabled';
+  const statusValue = formData.recordStatus;
 
   const handleChange = useCallback(
     (field: keyof OutletFormValues, value: string | boolean | string[]) => {
@@ -140,7 +141,7 @@ const AddOutletModal: React.FC<AddOutletModalProps> = ({ outlet, onClose, onSucc
         address: buildAddress(formData),
         phone: formData.phone.trim(),
         email: formData.email.trim(),
-        isActive: formData.isActive,
+        recordStatus: formData.recordStatus,
         ...(outlet ? { id: outlet.id } : {}),
       } as UpdateOutletRequest | CreateOutletRequest;
 
@@ -425,7 +426,7 @@ const AddOutletModal: React.FC<AddOutletModalProps> = ({ outlet, onClose, onSucc
               <select
                 id="status"
                 value={statusValue}
-                onChange={(event) => handleChange('isActive', event.target.value === 'enabled')}
+                onChange={(event) => handleChange('recordStatus', event.target.value as RecordStatus)}
                 className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
               >
                 {STATUS_OPTIONS.map((option) => (

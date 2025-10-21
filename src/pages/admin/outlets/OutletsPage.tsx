@@ -5,6 +5,7 @@ import ToastContainer from '../../../components/common/ToastContainer';
 import ConfirmationDialog from '../../../components/common/ConfirmationDialog';
 import { outletService } from '../../../services/outletService';
 import type { Outlet, OutletMode } from '../../../types/outlet';
+import type { RecordStatus } from '../../../types/configuration';
 import AddOutletModal from '../../../components/admin/outlets/AddOutletModal';
 
 const MODE_LABELS: Record<OutletMode, string> = {
@@ -14,7 +15,7 @@ const MODE_LABELS: Record<OutletMode, string> = {
 
 const formatMode = (mode: OutletMode): string => MODE_LABELS[mode] ?? mode;
 
-const formatStatusLabel = (isActive: boolean): string => (isActive ? 'Enabled' : 'Disabled');
+const formatStatusLabel = (recordStatus: RecordStatus): string => (recordStatus === 'ACTIVE' ? 'Enabled' : 'Disabled');
 
 const OutletsPage: React.FC = () => {
   const [outlets, setOutlets] = useState<Outlet[]>([]);
@@ -247,10 +248,10 @@ const OutletsPage: React.FC = () => {
                           <td className="px-6 py-4">
                             <span
                               className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                                outlet.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                outlet.recordStatus === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                               }`}
                             >
-                              {formatStatusLabel(outlet.isActive)}
+                              {formatStatusLabel(outlet.recordStatus)}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-600">

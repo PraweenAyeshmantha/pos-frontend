@@ -1,3 +1,5 @@
+import type { RecordStatus } from './configuration';
+
 export type TableStatus = 'AVAILABLE' | 'OCCUPIED' | 'RESERVED' | 'CLEANING';
 
 export interface DiningTable {
@@ -5,7 +7,7 @@ export interface DiningTable {
   tableNumber: string;
   capacity: number;
   status: TableStatus;
-  isActive: boolean;
+  recordStatus: RecordStatus;
   outlet: {
     id: number;
     name?: string;
@@ -20,7 +22,7 @@ export interface CreateDiningTableRequest {
   tableNumber: string;
   capacity: number;
   status: TableStatus;
-  isActive: boolean;
+  recordStatus: RecordStatus;
 }
 
 export interface UpdateDiningTableRequest {
@@ -28,5 +30,5 @@ export interface UpdateDiningTableRequest {
   tableNumber: string;
   capacity: number;
   status: TableStatus;
-  isActive: boolean;
+  recordStatus: RecordStatus;
 }

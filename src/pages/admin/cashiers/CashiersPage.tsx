@@ -6,6 +6,7 @@ import ConfirmationDialog from '../../../components/common/ConfirmationDialog';
 import AddCashierModal from '../../../components/admin/cashiers/AddCashierModal';
 import { cashierService } from '../../../services/cashierService';
 import type { Cashier } from '../../../types/cashier';
+import type { RecordStatus } from '../../../types/configuration';
 
 const ROLE_LABELS: Record<string, string> = {
   POS_CASHIER: 'POS Cashier',
@@ -14,7 +15,7 @@ const ROLE_LABELS: Record<string, string> = {
 
 const formatRoleLabel = (role: Cashier['role']): string => ROLE_LABELS[role] ?? role;
 
-const formatStatusLabel = (isActive: boolean): string => (isActive ? 'Active' : 'Inactive');
+const formatStatusLabel = (recordStatus: RecordStatus): string => (recordStatus === 'ACTIVE' ? 'Active' : 'Inactive');
 
 const formatDateTime = (value?: string): string => {
   if (!value) {
@@ -253,10 +254,10 @@ const CashiersPage: React.FC = () => {
                           <td className="px-6 py-4">
                             <span
                               className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                                cashier.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-700'
+                                cashier.recordStatus === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-700'
                               }`}
                             >
-                              {formatStatusLabel(cashier.isActive)}
+                              {formatStatusLabel(cashier.recordStatus)}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-500">{formatDateTime(cashier.createdAt)}</td>

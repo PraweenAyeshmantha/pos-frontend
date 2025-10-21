@@ -6,21 +6,22 @@ import { outletService } from '../../../services/outletService';
 import { tableService } from '../../../services/tableService';
 import type { Outlet } from '../../../types/outlet';
 import type { TableStatus } from '../../../types/table';
+import type { RecordStatus } from '../../../types/configuration';
 
 interface TableRow {
   id?: number;
   name: string;
   slug: string;
   capacity: string;
-  isActive: boolean;
+  recordStatus: RecordStatus;
   status: TableStatus;
   outletId: number;
   slugEdited: boolean;
 }
 
-const statusOptions: Array<{ label: string; value: boolean }> = [
-  { label: 'Enabled', value: true },
-  { label: 'Disabled', value: false },
+const statusOptions: Array<{ label: string; value: RecordStatus }> = [
+  { label: 'Enabled', value: 'ACTIVE' },
+  { label: 'Disabled', value: 'INACTIVE' },
 ];
 
 const defaultTableStatus: TableStatus = 'AVAILABLE';
@@ -93,7 +94,7 @@ const TablesPage: React.FC = () => {
         name: table.tableNumber,
         slug: table.tableNumber,
         capacity: String(table.capacity ?? ''),
-        isActive: table.isActive,
+        recordStatus: table.recordStatus,
         status: table.status ?? defaultTableStatus,
         outletId: table.outlet?.id ?? selectedOutletId,
         slugEdited: false,
@@ -172,12 +173,12 @@ const TablesPage: React.FC = () => {
   }, []);
 
   const handleStatusChange = useCallback((index: number, value: string) => {
-    const isActive = value === 'true';
+    const recordStatus: RecordStatus = value === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE';
     setTables((prev) => {
       const updated = [...prev];
       updated[index] = {
         ...updated[index],
-        isActive,
+        recordStatus,
       };
       return updated;
     });
@@ -209,7 +210,7 @@ const TablesPage: React.FC = () => {
         name: '',
         slug: '',
         capacity: '',
-        isActive: true,
+        recordStatus: 'ACTIVE',
         status: defaultTableStatus,
         outletId: Number(selectedOutletId),
         slugEdited: false,
@@ -256,7 +257,7 @@ const TablesPage: React.FC = () => {
         original.name !== row.name ||
         original.slug !== row.slug ||
         original.capacity !== row.capacity ||
-        original.isActive !== row.isActive
+        original.recordStatus !== row.recordStatus
       ) {
         changed.push(row);
       }
@@ -292,7 +293,7 @@ const TablesPage: React.FC = () => {
             tableNumber: table.slug.trim() || slugify(table.name),
             capacity: Number(table.capacity),
             status: table.status,
-            isActive: table.isActive,
+            recordStatus: table.recordStatus,
           });
         }),
       );
@@ -307,7 +308,7 @@ const TablesPage: React.FC = () => {
             tableNumber: table.slug.trim() || slugify(table.name),
             capacity: Number(table.capacity),
             status: table.status,
-            isActive: table.isActive,
+            recordStatus: table.recordStatus,
           });
         }),
       );
@@ -398,12 +399,12 @@ const TablesPage: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 align-top">
                       <select
-                        value={String(table.isActive)}
+                        value={table.recordStatus}
                         onChange={(event) => handleStatusChange(index, event.target.value)}
                         className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                       >
                         {statusOptions.map((option) => (
-                          <option key={option.label} value={String(option.value)}>
+                          <option key={option.label} value={option.value}>
                             {option.label}
                           </option>
                         ))}
