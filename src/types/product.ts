@@ -1,3 +1,5 @@
+import type { RecordStatus } from './configuration';
+
 export type ProductType = 'Simple' | 'Variation';
 
 export interface Product {
@@ -28,7 +30,7 @@ export interface CreateProductRequest {
   barcode?: string;
   sku?: string;
   description?: string;
-  isActive?: boolean;
+  recordStatus?: RecordStatus;
 }
 
 export interface ProductFormValues {
@@ -38,5 +40,5 @@ export interface ProductFormValues {
   barcode: string;
   sku: string;
   description: string;
-  isActive: boolean;
+  recordStatus: RecordStatus;
 }

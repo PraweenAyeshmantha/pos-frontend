@@ -30,7 +30,7 @@ const DEFAULT_FORM_VALUES: CashierFormValues = {
   phone: '',
   role: 'POS_CASHIER',
   password: '',
-  isActive: true,
+  recordStatus: 'ACTIVE',
   requirePasswordReset: true,
   sendCredentials: true,
   assignedOutletIds: [],
@@ -95,7 +95,7 @@ const deriveInitialFormValues = (cashier: Cashier | null): CashierFormValues => 
     phone: cashier.phone ?? '',
     role: cashier.role,
     password: '',
-    isActive: cashier.isActive,
+    recordStatus: cashier.recordStatus,
     requirePasswordReset: cashier.requirePasswordReset,
     sendCredentials: false,
     assignedOutletIds: cashier.assignedOutlets.map((outlet) => outlet.id),
@@ -198,7 +198,7 @@ const AddCashierModal: React.FC<AddCashierModalProps> = ({ cashier, onClose, onS
         email: formData.email.trim(),
         phone: formData.phone.trim() || undefined,
         role: formData.role,
-        isActive: formData.isActive,
+        recordStatus: formData.recordStatus,
         requirePasswordReset: formData.requirePasswordReset,
         assignedOutletIds: formData.assignedOutletIds,
         sendCredentials: formData.sendCredentials,
@@ -391,8 +391,8 @@ const AddCashierModal: React.FC<AddCashierModalProps> = ({ cashier, onClose, onS
               <label className="flex items-center gap-3 rounded-lg border border-gray-200 p-4 text-sm text-gray-700">
                 <input
                   type="checkbox"
-                  checked={formData.isActive}
-                  onChange={(event) => handleFieldChange('isActive', event.target.checked)}
+                  checked={formData.recordStatus === 'ACTIVE'}
+                  onChange={(event) => handleFieldChange('recordStatus', event.target.checked ? 'ACTIVE' : 'INACTIVE')}
                   className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
                 Active Cashier

@@ -7,6 +7,7 @@ import type {
   ProductFormValues,
   ProductType,
 } from '../../../types/product';
+import type { RecordStatus } from '../../../types/configuration';
 
 interface AddProductModalProps {
   onClose: () => void;
@@ -18,9 +19,9 @@ const PRODUCT_TYPES: Array<{ label: string; value: ProductType }> = [
   { label: 'Variation Product', value: 'Variation' },
 ];
 
-const STATUS_OPTIONS = [
-  { label: 'Active', value: true },
-  { label: 'Inactive', value: false },
+const STATUS_OPTIONS: Array<{ label: string; value: RecordStatus }> = [
+  { label: 'Active', value: 'ACTIVE' },
+  { label: 'Inactive', value: 'INACTIVE' },
 ];
 
 const DEFAULT_FORM_VALUES: ProductFormValues = {
@@ -30,7 +31,7 @@ const DEFAULT_FORM_VALUES: ProductFormValues = {
   barcode: '',
   sku: '',
   description: '',
-  isActive: true,
+  recordStatus: 'ACTIVE',
 };
 
 const AddProductModal: React.FC<AddProductModalProps> = ({ onClose, onSuccess }) => {
@@ -73,7 +74,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ onClose, onSuccess })
       ...(formData.barcode.trim() ? { barcode: formData.barcode.trim() } : {}),
       ...(formData.sku.trim() ? { sku: formData.sku.trim() } : {}),
       ...(formData.description.trim() ? { description: formData.description.trim() } : {}),
-      isActive: formData.isActive,
+      recordStatus: formData.recordStatus,
     };
   }, [formData]);
 
@@ -253,12 +254,12 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ onClose, onSuccess })
               </label>
               <select
                 id="product-status"
-                value={formData.isActive ? 'true' : 'false'}
-                onChange={(event) => handleChange('isActive', event.target.value === 'true')}
+                value={formData.recordStatus}
+                onChange={(event) => handleChange('recordStatus', event.target.value as RecordStatus)}
                 className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
               >
                 {STATUS_OPTIONS.map((option) => (
-                  <option key={String(option.value)} value={String(option.value)}>
+                  <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
                 ))}

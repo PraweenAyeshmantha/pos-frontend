@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { paymentMethodService } from '../../../services/paymentMethodService';
 import type { AlertType } from '../../common/Alert';
+import type { RecordStatus } from '../../../types/configuration';
 import Alert from '../../common/Alert';
 import ToastContainer from '../../common/ToastContainer';
 
@@ -9,7 +10,7 @@ interface PaymentMethodFormState {
   slug: string;
   name: string;
   description?: string;
-  isActive: boolean;
+  recordStatus: RecordStatus;
   isDefault?: boolean;
   tempId: string;
   isNew?: boolean;
@@ -58,7 +59,7 @@ const PaymentsConfiguration: React.FC = () => {
         slug: method.slug,
         name: method.name,
         description: method.description,
-        isActive: method.isActive,
+        recordStatus: method.recordStatus,
         isDefault: method.isDefault,
         tempId: `existing-${method.id}`,
         isNew: false,
@@ -88,7 +89,7 @@ const PaymentsConfiguration: React.FC = () => {
         slug: '',
         name: '',
         description: '',
-        isActive: true,
+        recordStatus: 'ACTIVE',
         isDefault: false,
         isNew: true,
         hasChanges: true,
@@ -96,17 +97,17 @@ const PaymentsConfiguration: React.FC = () => {
     ]);
   };
 
-  const handleFieldChange = (tempId: string, field: 'name' | 'slug' | 'isActive', value: string | boolean) => {
+  const handleFieldChange = (tempId: string, field: 'name' | 'slug' | 'recordStatus', value: string | RecordStatus) => {
     setPaymentMethods((prev) =>
       prev.map((method) => {
         if (method.tempId !== tempId) {
           return method;
         }
 
-        if (field === 'isActive') {
+        if (field === 'recordStatus') {
           return {
             ...method,
-            isActive: Boolean(value),
+            recordStatus: value as RecordStatus,
             hasChanges: true,
           };
         }
@@ -214,7 +215,7 @@ const PaymentsConfiguration: React.FC = () => {
             paymentMethodService.update(method.id!, {
               name: method.name.trim(),
               description: method.description,
-              isActive: method.isActive,
+              recordStatus: method.recordStatus,
             }),
           ),
         );
@@ -227,7 +228,7 @@ const PaymentsConfiguration: React.FC = () => {
               slug: method.slug.trim(),
               name: method.name.trim(),
               description: method.description,
-              isActive: method.isActive,
+              recordStatus: method.recordStatus,
               isDefault: method.isDefault ?? false,
             }),
           ),
@@ -305,12 +306,12 @@ const PaymentsConfiguration: React.FC = () => {
                 />
 
                 <select
-                  value={method.isActive ? 'enabled' : 'disabled'}
-                  onChange={(event) => handleFieldChange(method.tempId, 'isActive', event.target.value === 'enabled')}
+                  value={method.recordStatus}
+                  onChange={(event) => handleFieldChange(method.tempId, 'recordStatus', event.target.value as RecordStatus)}
                   className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                 >
-                  <option value="enabled">Enabled</option>
-                  <option value="disabled">Disabled</option>
+                  <option value="ACTIVE">Enabled</option>
+                  <option value="INACTIVE">Disabled</option>
                 </select>
 
                 <div className="flex justify-end">
