@@ -29,6 +29,28 @@ Modern React-based frontend application for the Point of Sale (POS) system backe
 
 ## Getting Started
 
+### Quick Setup (Recommended)
+
+Run the setup script to automatically create the `.env` file:
+
+**Linux/Mac:**
+```bash
+./setup.sh
+```
+
+**Windows:**
+```bash
+setup.bat
+```
+
+Then install dependencies and start the development server:
+```bash
+npm install
+npm run dev
+```
+
+### Manual Setup
+
 ### 1. Install Dependencies
 
 ```bash
