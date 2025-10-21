@@ -21,6 +21,7 @@ const POSAdminPage = lazy(() => import('./pages/admin/pos-admin/POSAdminPage'));
 const OutletsPage = lazy(() => import('./pages/admin/outlets/OutletsPage'));
 const CashiersPage = lazy(() => import('./pages/admin/cashiers/CashiersPage'));
 const TablesPage = lazy(() => import('./pages/admin/tables/TablesPage'));
+const AssignBarcodesPage = lazy(() => import('./pages/admin/assign-barcodes/AssignBarcodesPage'));
 
 // Loading component
 const LoadingFallback = () => (
@@ -106,6 +107,12 @@ function App() {
                     <Route path="admin/tables" element={
                       <ProtectedRoute>
                         <TablesPage />
+                      </ProtectedRoute>
+                    } />
+
+                    <Route path="admin/assign-barcodes" element={
+                      <ProtectedRoute>
+                        <AssignBarcodesPage />
                       </ProtectedRoute>
                     } />
 

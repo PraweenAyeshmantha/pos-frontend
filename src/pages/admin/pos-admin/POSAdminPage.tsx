@@ -57,6 +57,14 @@ const POSAdminPage: React.FC = () => {
         icon: '🍽️',
         accentClass: 'bg-rose-100 text-rose-600',
       },
+      {
+        id: 'assign-barcodes',
+        title: 'Assign Barcodes',
+        description: 'Assign and manage barcodes for products. Update barcodes and print labels.',
+        path: '/admin/assign-barcodes',
+        icon: '📊',
+        accentClass: 'bg-purple-100 text-purple-600',
+      },
     ],
     [],
   );
