@@ -42,6 +42,14 @@ const POSAdminPage: React.FC = () => {
         accentClass: 'bg-amber-100 text-amber-600',
       },
       {
+        id: 'products',
+        title: 'Products',
+        description: 'View and manage your product catalog, prices, and barcodes.',
+        path: '/admin/products',
+        icon: '🛍️',
+        accentClass: 'bg-cyan-100 text-cyan-600',
+      },
+      {
         id: 'cashiers',
         title: 'Cashiers',
         description: 'Manage cashier accounts, credentials, and outlet assignments.',
