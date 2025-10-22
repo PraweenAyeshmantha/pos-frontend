@@ -7,7 +7,7 @@ This guide explains how to login as the default administrator and access the POS
 When you first start the POS Backend application, a default administrator account is automatically created with the following credentials:
 
 - **Username:** `admin`
-- **Password:** `admin123`
+- **Password:** `admin@123`
 - **Email:** admin@pos.com
 - **Password Reset Required:** Yes (on first login)
 
@@ -24,7 +24,7 @@ curl -X POST http://localhost:8080/posai/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{
     "username": "admin",
-    "password": "admin123"
+    "password": "admin@123"
   }'
 ```
 
@@ -76,7 +76,7 @@ curl -X POST http://localhost:8080/posai/api/auth/reset-password \
   -H "Content-Type: application/json" \
   -d '{
     "username": "admin",
-    "currentPassword": "admin123",
+    "currentPassword": "admin@123",
     "newPassword": "YourNewSecurePassword123!",
     "confirmPassword": "YourNewSecurePassword123!"
   }'
@@ -175,7 +175,7 @@ TENANT_ID="PaPos"
 
 # Default credentials
 DEFAULT_USERNAME="admin"
-DEFAULT_PASSWORD="admin123"
+DEFAULT_PASSWORD="admin@123"
 
 # Your new password
 NEW_PASSWORD="YourNewSecurePassword123!"
@@ -245,7 +245,7 @@ This means the admin user has full access to all features and operations in the 
 ## 🛡️ Security Best Practices
 
 1. **Change the Default Password Immediately**
-   - The default password `admin123` should be changed immediately after first login
+   - The default password `admin@123` should be changed immediately after first login
    - Use a strong password with at least:
      - 8 characters
      - Uppercase and lowercase letters
@@ -279,7 +279,7 @@ This means the admin user has full access to all features and operations in the 
 **Solution:**
 1. Verify the database is running: `mysql -uroot -proot PaPos_posdb -e "SELECT username FROM users WHERE username = 'admin';"`
 2. Make sure you're using the correct tenant ID: `PaPos`
-3. Try the default credentials: username `admin`, password `admin123`
+3. Try the default credentials: username `admin`, password `admin@123`
 
 ### Issue: "Authentication required" when calling login endpoint
 
@@ -292,7 +292,7 @@ This means the admin user has full access to all features and operations in the 
 **Cause:** The reset-password endpoint requires the correct current password.
 
 **Solution:**
-1. Use the default password `admin123` as the current password
+1. Use the default password `admin@123` as the current password
 2. Make sure newPassword and confirmPassword match
 3. Ensure the new password is different from the current password
 

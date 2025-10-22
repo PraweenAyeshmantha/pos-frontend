@@ -47,8 +47,8 @@ curl -X POST http://localhost:8080/posai/api/auth/login \
   -H "X-Tenant-ID: default" \
   -H "Content-Type: application/json" \
   -d '{
-    "username": "john",
-    "password": "password123"
+    "username": "admin",
+    "password": "admin@123"
   }'
 ```
 
@@ -58,7 +58,7 @@ curl -X POST http://localhost:8080/posai/api/auth/login \
   "code": "success.login",
   "data": {
     "cashierId": 1,
-    "username": "john",
+    "username": "admin",
     "requirePasswordReset": false,
     "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
   }
@@ -81,7 +81,7 @@ curl -X POST http://localhost:8080/posai/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{
     "username": "admin",
-    "password": "admin123"
+    "password": "admin@123"
   }'
 ```
 
@@ -94,7 +94,7 @@ curl -X POST http://localhost:8080/posai/api/auth/reset-password \
   -H "Content-Type: application/json" \
   -d '{
     "username": "admin",
-    "currentPassword": "admin123",
+    "currentPassword": "admin@123",
     "newPassword": "newSecurePass123",
     "confirmPassword": "newSecurePass123"
   }'

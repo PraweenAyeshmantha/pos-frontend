@@ -52,7 +52,7 @@ Created repositories for all new entities with query methods for authentication 
 
 Created with:
 - Username: `admin`
-- Password: `admin123` (BCrypt hashed)
+- Password: `admin@123` (BCrypt hashed)
 - Email: `admin@pos.com`
 - Role: ADMIN with full access
 - Requires password reset on first login
@@ -136,7 +136,7 @@ All 321 tests pass, including:
 # Login with default admin
 curl -X POST http://localhost:8080/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username": "admin", "password": "admin123"}'
+  -d '{"username": "admin", "password": "admin@123"}'
 
 # Response includes user access information
 {
@@ -152,7 +152,7 @@ curl -X POST http://localhost:8080/api/auth/reset-password \
   -H "Content-Type: application/json" \
   -d '{
     "username": "admin",
-    "currentPassword": "admin123",
+    "currentPassword": "admin@123",
     "newPassword": "newSecurePassword",
     "confirmPassword": "newSecurePassword"
   }'

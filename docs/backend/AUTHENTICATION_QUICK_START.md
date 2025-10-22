@@ -24,8 +24,8 @@ Headers:
 
 Body:
 {
-  "username": "john",
-  "password": "password123"
+  "username": "admin",
+  "password": "admin@123"
 }
 
 Response (200 OK):
@@ -33,7 +33,7 @@ Response (200 OK):
   "code": "success.login",
   "data": {
     "cashierId": 1,
-    "username": "john",
+    "username": "admin",
     "requirePasswordReset": false,
     "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."  // ⭐ Save this token!
   }
@@ -51,7 +51,7 @@ Headers:
 Body:
 {
   "username": "admin",
-  "currentPassword": "admin123",
+  "currentPassword": "admin@123",
   "newPassword": "newSecurePass123",
   "confirmPassword": "newSecurePass123"
 }
@@ -74,7 +74,7 @@ Response (200 OK):
 │ Step 1: Initial Login                                       │
 ├─────────────────────────────────────────────────────────────┤
 │ POST /api/auth/login                                        │
-│ { "username": "admin", "password": "admin123" }             │
+│ { "username": "admin", "password": "admin@123" }             │
 │                                                             │
 │ Response: {                                                 │
 │   "requirePasswordReset": true,                            │
@@ -88,7 +88,7 @@ Response (200 OK):
 │ POST /api/auth/reset-password                               │
 │ {                                                           │
 │   "username": "admin",                                      │
-│   "currentPassword": "admin123",                            │
+│   "currentPassword": "admin@123",                            │
 │   "newPassword": "newSecurePass123",                        │
 │   "confirmPassword": "newSecurePass123"                     │
 │ }                                                           │
@@ -120,7 +120,7 @@ Response (200 OK):
 │ Step 1: Login                                               │
 ├─────────────────────────────────────────────────────────────┤
 │ POST /api/auth/login                                        │
-│ { "username": "john", "password": "password123" }           │
+│ { "username": "admin", "password": "admin@123" }           │
 │                                                             │
 │ Response: {                                                 │
 │   "requirePasswordReset": false,                           │
