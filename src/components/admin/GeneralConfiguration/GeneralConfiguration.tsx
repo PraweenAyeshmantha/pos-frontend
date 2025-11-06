@@ -97,9 +97,7 @@ const GeneralConfiguration: React.FC = () => {
       }
     } catch (error) {
       console.error('Error fetching configurations:', error);
-      setMessage({ type: 'error', text: 'Failed to load configurations. Using default values.' });
-      // Use default values when backend is not available
-      setTimeout(() => setMessage(null), 3000);
+  setMessage({ type: 'error', text: 'Failed to load configurations. Using default values.' });
     } finally {
       setLoading(false);
     }
@@ -142,10 +140,7 @@ const GeneralConfiguration: React.FC = () => {
       };
 
       await configurationService.bulkUpdateConfigurations(configurations);
-      setMessage({ type: 'success', text: 'Configurations saved successfully!' });
-      
-      // Clear success message after 3 seconds
-      setTimeout(() => setMessage(null), 3000);
+  setMessage({ type: 'success', text: 'Configurations saved successfully!' });
     } catch (error) {
       console.error('Error saving configurations:', error);
       setMessage({ type: 'error', text: 'Failed to save configurations' });
@@ -588,6 +583,7 @@ const GeneralConfiguration: React.FC = () => {
             type={message.type}
             title={message.type.charAt(0).toUpperCase() + message.type.slice(1)}
             message={message.text}
+            onClose={() => setMessage(null)}
           />
         </ToastContainer>
       )}

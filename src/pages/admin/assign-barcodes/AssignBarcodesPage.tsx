@@ -18,7 +18,6 @@ const AssignBarcodesPage: React.FC = () => {
 
   const showAlert = useCallback((type: AlertType, title: string, message: string) => {
     setAlert({ type, title, message });
-    window.setTimeout(() => setAlert(null), 3000);
   }, []);
 
   const fetchProducts = useCallback(async () => {
@@ -386,18 +385,25 @@ const AssignBarcodesPage: React.FC = () => {
             </div>
           </header>
 
-          {/* Alert */}
-          {alert && (
+          {(alert || error) && (
             <ToastContainer>
-              <Alert type={alert.type} title={alert.title} message={alert.message} />
+              {alert ? (
+                <Alert
+                  type={alert.type}
+                  title={alert.title}
+                  message={alert.message}
+                  onClose={() => setAlert(null)}
+                />
+              ) : null}
+              {error ? (
+                <Alert
+                  type="error"
+                  title="Error"
+                  message={error}
+                  onClose={() => setError(null)}
+                />
+              ) : null}
             </ToastContainer>
-          )}
-
-          {/* Error */}
-          {error && (
-            <div className="mb-6">
-              <Alert type="error" title="Error" message={error} />
-            </div>
           )}
 
           {/* Search and Pagination Bar */}

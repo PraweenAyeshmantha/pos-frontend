@@ -184,17 +184,16 @@ const AddOutletModal: React.FC<AddOutletModalProps> = ({ outlet, onClose, onSucc
   const modal = (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
       <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
+      <div className="relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
         <div className="border-b border-gray-200 bg-gray-50 px-6 py-5">
           <h2 className="text-lg font-semibold text-gray-900">{outlet ? 'Edit Outlet' : 'Add Outlet'}</h2>
         </div>
 
         <form
           onSubmit={handleSubmit}
-          className="overflow-y-auto"
-          style={{ maxHeight: 'calc(90vh - 140px)' }}
+          className="flex flex-col overflow-hidden"
         >
-          <div className="space-y-6 px-6 py-6">
+          <div className="flex-1 overflow-y-auto space-y-6 px-6 py-6">
             {error && (
               <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
                 {error}
@@ -482,7 +481,7 @@ const AddOutletModal: React.FC<AddOutletModalProps> = ({ outlet, onClose, onSucc
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-3 border-t border-gray-200 bg-gray-50 px-6 py-4">
+          <div className="flex shrink-0 items-center justify-end gap-3 border-t border-gray-200 bg-gray-50 px-6 py-4">
             <button
               type="button"
               onClick={onClose}

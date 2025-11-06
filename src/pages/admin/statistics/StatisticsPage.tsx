@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import AdminLayout from '../../../components/layout/AdminLayout';
 import Alert from '../../../components/common/Alert';
+import ToastContainer from '../../../components/common/ToastContainer';
 import AdminPageHeader from '../../../components/layout/AdminPageHeader';
 import { analyticsService } from '../../../services/analyticsService';
 import { outletService } from '../../../services/outletService';
@@ -686,26 +687,33 @@ const StatisticsPage: React.FC = () => {
           </div>
         </section>
 
-        {effectiveError && (
-          <Alert type="error" title="Analytics unavailable" message={effectiveError} />
-        )}
-
-        {loading && (
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            {metricConfigs.map((metric) => (
-              <div
-                key={metric.key}
-                className="h-56 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
-              >
-                <div className="h-full animate-pulse rounded-lg bg-slate-100" />
+        {effectiveError ? (
+          <ToastContainer>
+            <Alert
+              type="error"
+              title="Analytics unavailable"
+              message={effectiveError}
+              onClose={() => setFetchError(null)}
+            />
+          </ToastContainer>
+        ) : (
+          <>
+            {loading && (
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                {metricConfigs.map((metric) => (
+                  <div
+                    key={metric.key}
+                    className="h-56 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+                  >
+                    <div className="h-full animate-pulse rounded-lg bg-slate-100" />
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        )}
+            )}
 
-        {!loading && currentAnalytics && (
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            {metricConfigs.map((metric) => {
+            {!loading && currentAnalytics && (
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                {metricConfigs.map((metric) => {
               const currentValue = currentAnalytics[metric.key];
               const previousValue = (previousAnalytics ?? zeroAnalytics)[metric.key];
               const delta = currentValue - previousValue;
@@ -754,14 +762,16 @@ const StatisticsPage: React.FC = () => {
                   <MiniLineChart data={chartDataMap[metric.key] ?? []} />
                 </div>
               );
-            })}
-          </div>
-        )}
+                })}
+              </div>
+            )}
 
-        {!loading && !currentAnalytics && !effectiveError && (
-          <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center text-slate-500">
-            No analytics data available for the selected filters.
-          </div>
+            {!loading && !currentAnalytics && (
+              <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center text-slate-500">
+                No analytics data available for the selected filters.
+              </div>
+            )}
+          </>
         )}
       </div>
     </AdminLayout>

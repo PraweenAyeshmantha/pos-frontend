@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import Alert, { type AlertType } from '../../components/common/Alert';
@@ -14,7 +14,6 @@ const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { tenantId } = useParams<{ tenantId: string }>();
-  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Get the intended destination or default to dashboard
   // Filter out /reset-password from 'from' to avoid redirect loop after password reset
@@ -23,12 +22,7 @@ const LoginPage: React.FC = () => {
   const passwordResetSuccess = (location.state as { passwordResetSuccess?: boolean })?.passwordResetSuccess || false;
 
   const showToast = useCallback((type: AlertType, text: string) => {
-    if (toastTimeoutRef.current) {
-      clearTimeout(toastTimeoutRef.current);
-    }
-
     setToast({ type, text });
-    toastTimeoutRef.current = setTimeout(() => setToast(null), 3000);
   }, []);
 
   // Redirect if already authenticated (e.g., user navigated to /login while logged in)
@@ -50,14 +44,6 @@ const LoginPage: React.FC = () => {
       showToast('success', 'Password reset successful! Please login with your new password.');
     }
   }, [passwordResetSuccess, showToast]);
-
-  useEffect(() => {
-    return () => {
-      if (toastTimeoutRef.current) {
-        clearTimeout(toastTimeoutRef.current);
-      }
-    };
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -175,6 +161,7 @@ const LoginPage: React.FC = () => {
             type={toast.type}
             title={toast.type.charAt(0).toUpperCase() + toast.type.slice(1)}
             message={toast.text}
+            onClose={() => setToast(null)}
           />
         </ToastContainer>
       )}

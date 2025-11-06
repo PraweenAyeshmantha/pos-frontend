@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { paymentMethodService } from '../../../services/paymentMethodService';
 import type { AlertType } from '../../common/Alert';
 import type { RecordStatus } from '../../../types/configuration';
@@ -23,22 +23,9 @@ const PaymentsConfiguration: React.FC = () => {
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethodFormState[]>([]);
   const [deletedIds, setDeletedIds] = useState<number[]>([]);
   const [message, setMessage] = useState<{ type: AlertType; text: string } | null>(null);
-  const messageTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const showMessage = useCallback((type: AlertType, text: string) => {
-    if (messageTimeout.current) {
-      clearTimeout(messageTimeout.current);
-    }
     setMessage({ type, text });
-    messageTimeout.current = setTimeout(() => setMessage(null), 3000);
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (messageTimeout.current) {
-        clearTimeout(messageTimeout.current);
-      }
-    };
   }, []);
 
   const slugify = useCallback((value: string) => {
@@ -374,6 +361,7 @@ const PaymentsConfiguration: React.FC = () => {
             type={message.type}
             title={message.type.charAt(0).toUpperCase() + message.type.slice(1)}
             message={message.text}
+            onClose={() => setMessage(null)}
           />
         </ToastContainer>
       )}

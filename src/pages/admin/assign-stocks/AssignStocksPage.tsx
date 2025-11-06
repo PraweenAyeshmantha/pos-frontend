@@ -18,7 +18,6 @@ const AssignStocksPage: React.FC = () => {
 
   const showAlert = useCallback((type: AlertType, title: string, message: string) => {
     setAlert({ type, title, message });
-    window.setTimeout(() => setAlert(null), 3000);
   }, []);
 
   const fetchOutlets = useCallback(async () => {
@@ -265,7 +264,12 @@ const AssignStocksPage: React.FC = () => {
           {/* Alert */}
           {alert && (
             <ToastContainer>
-              <Alert type={alert.type} title={alert.title} message={alert.message} />
+              <Alert
+                type={alert.type}
+                title={alert.title}
+                message={alert.message}
+                onClose={() => setAlert(null)}
+              />
             </ToastContainer>
           )}
 

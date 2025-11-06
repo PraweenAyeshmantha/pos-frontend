@@ -1,7 +1,8 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import AdminLayout from '../../../components/layout/AdminLayout';
 import AdminPageHeader from '../../../components/layout/AdminPageHeader';
 import Alert, { type AlertType } from '../../../components/common/Alert';
+import ToastContainer from '../../../components/common/ToastContainer';
 import ConfirmationDialog from '../../../components/common/ConfirmationDialog';
 import AddProductModal from '../../../components/admin/products/AddProductModal';
 import EditProductModal from '../../../components/admin/products/EditProductModal';
@@ -87,25 +88,12 @@ const ProductsPage: React.FC = () => {
     open: false,
     product: null,
   });
-  const alertTimeoutRef = useRef<number | null>(null);
   const [categoryOptions, setCategoryOptions] = useState<ProductCategory[]>([]);
   const [tagOptions, setTagOptions] = useState<Tag[]>([]);
   const [brandOptions, setBrandOptions] = useState<Brand[]>([]);
 
   const showToast = useCallback((type: AlertType, title: string, message: string) => {
-    if (alertTimeoutRef.current) {
-      window.clearTimeout(alertTimeoutRef.current);
-    }
     setAlert({ type, title, message });
-    alertTimeoutRef.current = window.setTimeout(() => setAlert(null), 3000);
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (alertTimeoutRef.current) {
-        window.clearTimeout(alertTimeoutRef.current);
-      }
-    };
   }, []);
 
   const fetchProducts = useCallback(async () => {
@@ -400,8 +388,26 @@ const ProductsPage: React.FC = () => {
           description="Manage products available across registers, kitchen displays, and online ordering. Use quick search to stay focused on what your team needs."
         />
 
-        {alert ? <Alert type={alert.type} title={alert.title} message={alert.message} /> : null}
-        {loadError ? <Alert type="error" title="Error" message={loadError} /> : null}
+        {(alert || loadError) && (
+          <ToastContainer>
+            {alert ? (
+              <Alert
+                type={alert.type}
+                title={alert.title}
+                message={alert.message}
+                onClose={() => setAlert(null)}
+              />
+            ) : null}
+            {loadError ? (
+              <Alert
+                type="error"
+                title="Error"
+                message={loadError}
+                onClose={() => setLoadError(null)}
+              />
+            ) : null}
+          </ToastContainer>
+        )}
 
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">

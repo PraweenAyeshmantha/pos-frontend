@@ -102,7 +102,6 @@ const OutletsPage: React.FC = () => {
         message: action === 'update' ? 'Outlet updated successfully' : 'Outlet created successfully',
       });
       fetchOutlets();
-      setTimeout(() => setAlert(null), 3000);
     },
     [fetchOutlets],
   );
@@ -118,7 +117,6 @@ const OutletsPage: React.FC = () => {
         message: 'Outlet deleted successfully',
       });
       fetchOutlets();
-      setTimeout(() => setAlert(null), 3000);
     } catch (err) {
       setAlert({
         type: 'error',
@@ -126,7 +124,6 @@ const OutletsPage: React.FC = () => {
         message: 'Failed to delete outlet',
       });
       console.error('Error deleting outlet:', err);
-      setTimeout(() => setAlert(null), 3000);
     } finally {
       setDeleteConfirm({ show: false, outlet: null });
     }
@@ -275,13 +272,32 @@ const OutletsPage: React.FC = () => {
 
   return (
     <AdminLayout>
-  <div className="flex flex-col gap-8 pb-12">
+      <div className="flex flex-col gap-8 pb-12">
         <AdminPageHeader
           title="Outlets"
           description="Manage your store locations, addresses, and outlet-specific settings."
         />
 
-        {error ? <Alert type="error" title="Error" message={error} /> : null}
+        {(alert || error) && (
+          <ToastContainer>
+            {alert ? (
+              <Alert
+                type={alert.type}
+                title={alert.title}
+                message={alert.message}
+                onClose={() => setAlert(null)}
+              />
+            ) : null}
+            {error ? (
+              <Alert
+                type="error"
+                title="Error"
+                message={error}
+                onClose={() => setError(null)}
+              />
+            ) : null}
+          </ToastContainer>
+        )}
 
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -335,13 +351,6 @@ const OutletsPage: React.FC = () => {
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
       />
-
-      {/* Alert Toast */}
-      {alert && (
-        <ToastContainer>
-          <Alert type={alert.type} title={alert.title} message={alert.message} />
-        </ToastContainer>
-      )}
     </AdminLayout>
   );
 };

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import Alert, { type AlertType } from '../../common/Alert';
+import ToastContainer from '../../common/ToastContainer';
 import ConfirmationDialog from '../../common/ConfirmationDialog';
 import AdminPageHeader from '../../layout/AdminPageHeader';
 import TaxonomyFormModal from './TaxonomyFormModal';
@@ -72,12 +73,10 @@ const TaxonomyManager = <T extends TaxonomyEntity>({
 
   const showAlert = useCallback((nextAlert: { type: AlertType; title: string; message: string }) => {
     setAlert(nextAlert);
-    window.setTimeout(() => setAlert(null), 3200);
   }, []);
 
   const handleFetch = useCallback(async () => {
     setLoading(true);
-    setLoadError(null);
     try {
       const data = await fetchEntities();
       setItems(data);
@@ -223,11 +222,26 @@ const TaxonomyManager = <T extends TaxonomyEntity>({
         }
       />
 
-      {alert ? (
-        <Alert type={alert.type} title={alert.title} message={alert.message} />
-      ) : null}
-
-      {loadError ? <Alert type="error" title="Error" message={loadError} /> : null}
+      {(alert || loadError) && (
+        <ToastContainer>
+          {alert ? (
+            <Alert
+              type={alert.type}
+              title={alert.title}
+              message={alert.message}
+              onClose={() => setAlert(null)}
+            />
+          ) : null}
+          {loadError ? (
+            <Alert
+              type="error"
+              title="Error"
+              message={loadError}
+              onClose={() => setLoadError(null)}
+            />
+          ) : null}
+        </ToastContainer>
+      )}
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">

@@ -13,6 +13,7 @@ import type {
 
 interface AddCashierModalProps {
   cashier: Cashier | null;
+  mode?: 'edit' | 'view';
   onClose: () => void;
   onSuccess: (action: 'create' | 'update') => void;
 }
@@ -102,12 +103,14 @@ const deriveInitialFormValues = (cashier: Cashier | null): CashierFormValues => 
   };
 };
 
-const AddCashierModal: React.FC<AddCashierModalProps> = ({ cashier, onClose, onSuccess }) => {
+const AddCashierModal: React.FC<AddCashierModalProps> = ({ cashier, mode, onClose, onSuccess }) => {
   const [formData, setFormData] = useState<CashierFormValues>(() => deriveInitialFormValues(cashier));
   const [outlets, setOutlets] = useState<Outlet[]>([]);
   const [loadingOutlets, setLoadingOutlets] = useState<boolean>(false);
   const [saving, setSaving] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  const isViewMode = mode === 'view';
 
   useEffect(() => {
     setFormData(deriveInitialFormValues(cashier));
@@ -240,11 +243,17 @@ const AddCashierModal: React.FC<AddCashierModalProps> = ({ cashier, onClose, onS
   const modalContent = (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
       <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-3xl max-h-[92vh] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
+      <div className="relative flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
         <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-6 py-5">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">{cashier ? 'Edit Cashier' : 'Add Cashier'}</h2>
-            <p className="mt-1 text-sm text-gray-600">Manage credentials, status, and outlet assignments.</p>
+            <h2 className="text-lg font-semibold text-gray-900">
+              {isViewMode ? 'View Cashier' : cashier ? 'Edit Cashier' : 'Add Cashier'}
+            </h2>
+            <p className="mt-1 text-sm text-gray-600">
+              {isViewMode
+                ? 'View cashier details and outlet assignments.'
+                : 'Manage credentials, status, and outlet assignments.'}
+            </p>
           </div>
           <button
             type="button"
@@ -265,8 +274,7 @@ const AddCashierModal: React.FC<AddCashierModalProps> = ({ cashier, onClose, onS
         <form
           id="cashier-modal-form"
           onSubmit={handleSubmit}
-          className="overflow-y-auto"
-          style={{ maxHeight: 'calc(92vh - 140px)' }}
+          className="flex-1 overflow-y-auto"
         >
           <div className="space-y-6 px-6 py-6">
             {error && (
@@ -284,9 +292,10 @@ const AddCashierModal: React.FC<AddCashierModalProps> = ({ cashier, onClose, onS
                   id="cashier-username"
                   type="text"
                   required
+                  disabled={isViewMode}
                   value={formData.username}
                   onChange={(event) => handleFieldChange('username', event.target.value)}
-                  className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
                 />
               </div>
               <div className="flex flex-col gap-2">
@@ -297,9 +306,10 @@ const AddCashierModal: React.FC<AddCashierModalProps> = ({ cashier, onClose, onS
                   id="cashier-email"
                   type="email"
                   required
+                  disabled={isViewMode}
                   value={formData.email}
                   onChange={(event) => handleFieldChange('email', event.target.value)}
-                  className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
                 />
               </div>
             </div>
@@ -312,9 +322,10 @@ const AddCashierModal: React.FC<AddCashierModalProps> = ({ cashier, onClose, onS
                 <input
                   id="cashier-first-name"
                   type="text"
+                  disabled={isViewMode}
                   value={formData.firstName}
                   onChange={(event) => handleFieldChange('firstName', event.target.value)}
-                  className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
                 />
               </div>
               <div className="flex flex-col gap-2">
@@ -324,9 +335,10 @@ const AddCashierModal: React.FC<AddCashierModalProps> = ({ cashier, onClose, onS
                 <input
                   id="cashier-last-name"
                   type="text"
+                  disabled={isViewMode}
                   value={formData.lastName}
                   onChange={(event) => handleFieldChange('lastName', event.target.value)}
-                  className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
                 />
               </div>
             </div>
@@ -339,9 +351,10 @@ const AddCashierModal: React.FC<AddCashierModalProps> = ({ cashier, onClose, onS
                 <input
                   id="cashier-phone"
                   type="tel"
+                  disabled={isViewMode}
                   value={formData.phone}
                   onChange={(event) => handleFieldChange('phone', event.target.value)}
-                  className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
                 />
               </div>
               <div className="flex flex-col gap-2">
@@ -350,9 +363,10 @@ const AddCashierModal: React.FC<AddCashierModalProps> = ({ cashier, onClose, onS
                 </label>
                 <select
                   id="cashier-role"
+                  disabled={isViewMode}
                   value={formData.role}
                   onChange={(event) => handleFieldChange('role', event.target.value as CashierRole)}
-                  className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
                 >
                   {ROLE_OPTIONS.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -363,60 +377,66 @@ const AddCashierModal: React.FC<AddCashierModalProps> = ({ cashier, onClose, onS
               </div>
             </div>
 
-            <div className="flex flex-col gap-2">
-              <label htmlFor="cashier-password" className="text-sm font-medium text-gray-700">
-                Password {cashier ? <span className="text-gray-500 text-xs">(leave blank to keep existing)</span> : <span className="text-red-500">*</span>}
-              </label>
-              <div className="flex gap-3">
-                <input
-                  id="cashier-password"
-                  type="text"
-                  value={formData.password}
-                  onChange={(event) => handleFieldChange('password', event.target.value)}
-                  placeholder={cashier ? '••••••••••' : 'Generate or enter a secure password'}
-                  className="h-11 flex-1 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-                />
-                <button
-                  type="button"
-                  onClick={handleGeneratePassword}
-                  className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-700"
-                >
-                  Generate
-                </button>
+            {!isViewMode && (
+              <div className="flex flex-col gap-2">
+                <label htmlFor="cashier-password" className="text-sm font-medium text-gray-700">
+                  Password {cashier ? <span className="text-gray-500 text-xs">(leave blank to keep existing)</span> : <span className="text-red-500">*</span>}
+                </label>
+                <div className="flex gap-3">
+                  <input
+                    id="cashier-password"
+                    type="text"
+                    value={formData.password}
+                    onChange={(event) => handleFieldChange('password', event.target.value)}
+                    placeholder={cashier ? '••••••••••' : 'Generate or enter a secure password'}
+                    className="h-11 flex-1 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleGeneratePassword}
+                    className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-700"
+                  >
+                    Generate
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500">Generated passwords force a reset on first login.</p>
               </div>
-              <p className="text-xs text-gray-500">Generated passwords force a reset on first login.</p>
-            </div>
+            )}
 
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="flex items-center gap-3 rounded-lg border border-gray-200 p-4 text-sm text-gray-700">
                 <input
                   type="checkbox"
+                  disabled={isViewMode}
                   checked={formData.recordStatus === 'ACTIVE'}
                   onChange={(event) => handleFieldChange('recordStatus', event.target.checked ? 'ACTIVE' : 'INACTIVE')}
-                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
                 />
                 Active Cashier
               </label>
               <label className="flex items-center gap-3 rounded-lg border border-gray-200 p-4 text-sm text-gray-700">
                 <input
                   type="checkbox"
+                  disabled={isViewMode}
                   checked={formData.requirePasswordReset}
                   onChange={(event) => handleFieldChange('requirePasswordReset', event.target.checked)}
-                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
                 />
                 Require password reset on next login
               </label>
             </div>
 
-            <label className="flex items-center gap-3 rounded-lg border border-gray-200 p-4 text-sm text-gray-700">
-              <input
-                type="checkbox"
-                checked={formData.sendCredentials}
-                onChange={(event) => handleFieldChange('sendCredentials', event.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
-              Email credentials to cashier
-            </label>
+            {!isViewMode && (
+              <label className="flex items-center gap-3 rounded-lg border border-gray-200 p-4 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={formData.sendCredentials}
+                  onChange={(event) => handleFieldChange('sendCredentials', event.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                Email credentials to cashier
+              </label>
+            )}
 
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between">
@@ -462,14 +482,15 @@ const AddCashierModal: React.FC<AddCashierModalProps> = ({ cashier, onClose, onS
                       return (
                         <label
                           key={outlet.id}
-                          className="flex cursor-pointer items-center justify-between px-4 py-3 text-sm text-gray-700 hover:bg-gray-50"
+                          className={`flex items-center justify-between px-4 py-3 text-sm text-gray-700 ${!isViewMode ? 'cursor-pointer hover:bg-gray-50' : 'cursor-default'}`}
                         >
                           <div className="flex items-center gap-3">
                             <input
                               type="checkbox"
+                              disabled={isViewMode}
                               checked={checked}
                               onChange={() => handleOutletToggle(outlet.id)}
-                              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
                             />
                             <div>
                               <div className="font-medium text-gray-800">{outlet.name}</div>
@@ -488,22 +509,24 @@ const AddCashierModal: React.FC<AddCashierModalProps> = ({ cashier, onClose, onS
           </div>
         </form>
 
-        <div className="flex justify-end gap-3 border-t border-gray-200 bg-gray-50 px-6 py-4">
+        <div className="flex shrink-0 justify-end gap-3 border-t border-gray-200 bg-gray-50 px-6 py-4">
           <button
             type="button"
             onClick={onClose}
             className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-100"
           >
-            Cancel
+            {isViewMode ? 'Close' : 'Cancel'}
           </button>
-          <button
-            type="submit"
-            form="cashier-modal-form"
-            disabled={saving}
-            className={`rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${saving ? 'opacity-70' : ''}`}
-          >
-            {saving ? 'Saving...' : submitLabel}
-          </button>
+          {!isViewMode && (
+            <button
+              type="submit"
+              form="cashier-modal-form"
+              disabled={saving}
+              className={`rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${saving ? 'opacity-70' : ''}`}
+            >
+              {saving ? 'Saving...' : submitLabel}
+            </button>
+          )}
         </div>
       </div>
     </div>

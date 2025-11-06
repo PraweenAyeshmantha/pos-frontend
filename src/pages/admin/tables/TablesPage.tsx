@@ -52,7 +52,6 @@ const TablesPage: React.FC = () => {
 
   const showAlert = useCallback((type: AlertType, title: string, message: string) => {
     setAlert({ type, title, message });
-    window.setTimeout(() => setAlert(null), 3000);
   }, []);
 
   const handleOutletChange = useCallback((event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -458,16 +457,25 @@ const TablesPage: React.FC = () => {
             </p>
           </header>
 
-          {alert && (
+          {(alert || error) && (
             <ToastContainer>
-              <Alert type={alert.type} title={alert.title} message={alert.message} />
+              {alert ? (
+                <Alert
+                  type={alert.type}
+                  title={alert.title}
+                  message={alert.message}
+                  onClose={() => setAlert(null)}
+                />
+              ) : null}
+              {error ? (
+                <Alert
+                  type="error"
+                  title="Error"
+                  message={error}
+                  onClose={() => setError(null)}
+                />
+              ) : null}
             </ToastContainer>
-          )}
-
-          {error && (
-            <div className="mb-6">
-              <Alert type="error" title="Error" message={error} />
-            </div>
           )}
 
           <div className="mb-6 flex flex-col gap-4 rounded-lg border border-gray-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
