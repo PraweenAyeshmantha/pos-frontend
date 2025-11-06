@@ -2,25 +2,31 @@ import type { RecordStatus } from './configuration';
 
 export type ProductType = 'Simple' | 'Variation';
 
+export type StockStatus = 'IN_STOCK' | 'OUT_OF_STOCK' | 'LOW_STOCK';
+
 export interface Product {
   id: number;
   name: string;
-  productType: ProductType;
   price: number;
-  barcode?: string;
-  barcodeImage?: string;
   sku?: string;
   description?: string;
   cost?: number;
   taxRate?: number;
   category?: string;
+  categoryId?: number;
   unit?: string;
   isWeightBased?: boolean;
   imageUrl?: string;
+  barcode?: string;
+  barcodeImage?: string;
+  productType?: ProductType;
+  stockStatus?: StockStatus;
+  tags: string[];
+  tagIds: number[];
+  brands: string[];
+  brandIds: number[];
   isActive?: boolean;
-  stockStatus?: 'IN_STOCK' | 'OUT_OF_STOCK' | 'LOW_STOCK';
-  tags?: string[];
-  brands?: string[];
+  recordStatus?: RecordStatus;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -35,21 +41,20 @@ export interface PrintBarcodeRequest {
   quantity: number;
 }
 
-export interface CreateProductRequest {
+export interface ProductUpsertRequest {
   name: string;
   price: number;
-  productType?: ProductType;
-  barcode?: string;
   sku?: string;
   description?: string;
   cost?: number;
   taxRate?: number;
-  category?: string;
+  categoryId?: number;
   unit?: string;
   isWeightBased?: boolean;
   imageUrl?: string;
-  isActive?: boolean;
   recordStatus?: RecordStatus;
+  tagIds?: number[];
+  brandIds?: number[];
 }
 
 export interface ProductFormValues {
@@ -61,10 +66,11 @@ export interface ProductFormValues {
   description: string;
   cost: string;
   taxRate: string;
-  category: string;
+  categoryId: string;
   unit: string;
   isWeightBased: boolean;
   imageUrl: string;
-  isActive: boolean;
   recordStatus: RecordStatus;
+  tagIds: string[];
+  brandIds: string[];
 }

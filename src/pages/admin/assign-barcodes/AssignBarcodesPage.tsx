@@ -207,7 +207,7 @@ const AssignBarcodesPage: React.FC = () => {
     const query = searchQuery.toLowerCase();
     return (
       product.name.toLowerCase().includes(query) ||
-      product.productType.toLowerCase().includes(query) ||
+      (product.productType ?? 'Simple').toLowerCase().includes(query) ||
       product.barcode?.toLowerCase().includes(query) ||
       product.price.toString().includes(query)
     );

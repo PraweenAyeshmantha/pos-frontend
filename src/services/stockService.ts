@@ -25,7 +25,7 @@ export const stockService = {
         id: stock?.id ?? 0,
         productId: product.id,
         productName: product.name,
-        productType: product.productType,
+        productType: product.productType ?? 'Simple',
         barcode: product.barcode,
         price: product.price,
         customStock: stock?.quantity ?? 0,

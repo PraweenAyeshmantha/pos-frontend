@@ -6,9 +6,16 @@ import ConfirmationDialog from '../../../components/common/ConfirmationDialog';
 import AddProductModal from '../../../components/admin/products/AddProductModal';
 import EditProductModal from '../../../components/admin/products/EditProductModal';
 import { productService } from '../../../services/productService';
+import { productCategoryService } from '../../../services/productCategoryService';
+import { tagService } from '../../../services/tagService';
+import { brandService } from '../../../services/brandService';
 import type { Product } from '../../../types/product';
+import type { Brand, ProductCategory, Tag } from '../../../types/taxonomy';
 
-const formatProductType = (type: string): string => {
+const formatProductType = (type?: string): string => {
+  if (!type) {
+    return 'Simple';
+  }
   const labels: Record<string, string> = {
     Simple: 'Simple',
     Variation: 'Variation',
@@ -63,14 +70,17 @@ const ProductsPage: React.FC = () => {
   
   // New filter states
   const [activeTab, setActiveTab] = useState<'all' | 'published'>('all');
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
   const [selectedProductType, setSelectedProductType] = useState<string>('');
   const [selectedStockStatus, setSelectedStockStatus] = useState<string>('');
-  const [selectedBrand, setSelectedBrand] = useState<string>('');
+  const [selectedBrandId, setSelectedBrandId] = useState<string>('');
   const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [itemsPerPage] = useState<number>(20);
   const [favorites, setFavorites] = useState<Set<number>>(new Set());
+  const [categoryOptions, setCategoryOptions] = useState<ProductCategory[]>([]);
+  const [tagOptions, setTagOptions] = useState<Tag[]>([]);
+  const [brandOptions, setBrandOptions] = useState<Brand[]>([]);
 
   const showToast = useCallback((type: AlertType, title: string, message: string) => {
     if (alertTimeoutRef.current) {
@@ -102,9 +112,29 @@ const ProductsPage: React.FC = () => {
     }
   }, []);
 
+  const fetchTaxonomy = useCallback(async () => {
+    try {
+      const [categories, tags, brands] = await Promise.all([
+        productCategoryService.getAll({ active: true }),
+        tagService.getAll({ active: true }),
+        brandService.getAll({ active: true }),
+      ]);
+      setCategoryOptions(categories);
+      setTagOptions(tags);
+      setBrandOptions(brands);
+    } catch (err) {
+      console.error('Error loading catalog taxonomy', err);
+      showToast('error', 'Catalog Metadata', 'Failed to load categories, tags, or brands.');
+    }
+  }, [showToast]);
+
   useEffect(() => {
     void fetchProducts();
   }, [fetchProducts]);
+
+  useEffect(() => {
+    void fetchTaxonomy();
+  }, [fetchTaxonomy]);
 
   const handleProductCreated = useCallback(
     (product: Product) => {
@@ -185,13 +215,14 @@ const ProductsPage: React.FC = () => {
     }
 
     // Filter by category
-    if (selectedCategory) {
-      filtered = filtered.filter((p) => p.category === selectedCategory);
+    if (selectedCategoryId) {
+      const categoryIdNumber = Number.parseInt(selectedCategoryId, 10);
+      filtered = filtered.filter((p) => (p.categoryId ?? -1) === categoryIdNumber);
     }
 
     // Filter by product type
     if (selectedProductType) {
-      filtered = filtered.filter((p) => p.productType === selectedProductType);
+      filtered = filtered.filter((p) => (p.productType ?? 'Simple') === selectedProductType);
     }
 
     // Filter by stock status
@@ -200,12 +231,13 @@ const ProductsPage: React.FC = () => {
     }
 
     // Filter by brand
-    if (selectedBrand) {
-      filtered = filtered.filter((p) => p.brands?.includes(selectedBrand));
+    if (selectedBrandId) {
+      const brandIdNumber = Number.parseInt(selectedBrandId, 10);
+      filtered = filtered.filter((p) => (p.brandIds ?? []).includes(brandIdNumber));
     }
 
     return filtered;
-  }, [products, searchQuery, activeTab, selectedCategory, selectedProductType, selectedStockStatus, selectedBrand]);
+  }, [products, searchQuery, activeTab, selectedCategoryId, selectedProductType, selectedStockStatus, selectedBrandId]);
 
   // Pagination
   const paginatedProducts = useMemo(() => {
@@ -218,15 +250,6 @@ const ProductsPage: React.FC = () => {
   const publishedCount = products.filter((p) => p.isActive !== false).length;
 
   // Get unique values for filters
-  const categories = useMemo(
-    () => Array.from(new Set(products.map((p) => p.category).filter(Boolean))) as string[],
-    [products]
-  );
-  const brands = useMemo(
-    () => Array.from(new Set(products.flatMap((p) => p.brands ?? []))),
-    [products]
-  );
-
   // Selection handlers
   const handleSelectAll = useCallback(() => {
     if (selectedProducts.length === paginatedProducts.length) {
@@ -331,18 +354,24 @@ const ProductsPage: React.FC = () => {
             </button>
             <select
               className="rounded border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none"
-              value={selectedCategory}
+              value={selectedCategoryId}
               onChange={(e) => {
-                setSelectedCategory(e.target.value);
+                setSelectedCategoryId(e.target.value);
                 handleApplyFilters();
               }}
             >
               <option value="">Select a category</option>
-              {categories.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
+              {categoryOptions.length === 0 ? (
+                <option value="" disabled>
+                  No categories available
                 </option>
-              ))}
+              ) : (
+                categoryOptions.map((category) => (
+                  <option key={category.id} value={category.id.toString()}>
+                    {category.name}
+                  </option>
+                ))
+              )}
             </select>
             <select
               className="rounded border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none"
@@ -371,18 +400,24 @@ const ProductsPage: React.FC = () => {
             </select>
             <select
               className="rounded border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none"
-              value={selectedBrand}
+              value={selectedBrandId}
               onChange={(e) => {
-                setSelectedBrand(e.target.value);
+                setSelectedBrandId(e.target.value);
                 handleApplyFilters();
               }}
             >
               <option value="">Filter by brand</option>
-              {brands.map((brand) => (
-                <option key={brand} value={brand}>
-                  {brand}
+              {brandOptions.length === 0 ? (
+                <option value="" disabled>
+                  No brands available
                 </option>
-              ))}
+              ) : (
+                brandOptions.map((brand) => (
+                  <option key={brand.id} value={brand.id.toString()}>
+                    {brand.name}
+                  </option>
+                ))
+              )}
             </select>
             <button
               type="button"
@@ -647,14 +682,23 @@ const ProductsPage: React.FC = () => {
 
       {/* Modals and Dialogs */}
       {showAddModal && (
-        <AddProductModal onClose={() => setShowAddModal(false)} onSuccess={handleProductCreated} />
+        <AddProductModal
+          categories={categoryOptions}
+          tags={tagOptions}
+          brands={brandOptions}
+          onClose={() => setShowAddModal(false)}
+          onSuccess={handleProductCreated}
+        />
       )}
 
       {editingProduct && (
-        <EditProductModal 
-          product={editingProduct} 
-          onClose={handleEditClose} 
-          onSuccess={handleProductUpdated} 
+        <EditProductModal
+          product={editingProduct}
+          categories={categoryOptions}
+          tags={tagOptions}
+          brands={brandOptions}
+          onClose={handleEditClose}
+          onSuccess={handleProductUpdated}
         />
       )}
 

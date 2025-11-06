@@ -24,6 +24,9 @@ const TablesPage = lazy(() => import('./pages/admin/tables/TablesPage'));
 const ProductsPage = lazy(() => import('./pages/admin/products/ProductsPage'));
 const AssignBarcodesPage = lazy(() => import('./pages/admin/assign-barcodes/AssignBarcodesPage'));
 const AssignStocksPage = lazy(() => import('./pages/admin/assign-stocks/AssignStocksPage'));
+const BrandsPage = lazy(() => import('./pages/admin/taxonomy/BrandsPage'));
+const TagsPage = lazy(() => import('./pages/admin/taxonomy/TagsPage'));
+const ProductCategoriesPage = lazy(() => import('./pages/admin/taxonomy/ProductCategoriesPage'));
 
 // Loading component
 const LoadingFallback = () => (
@@ -127,6 +130,24 @@ function App() {
                     <Route path="admin/assign-stocks" element={
                       <ProtectedRoute>
                         <AssignStocksPage />
+                      </ProtectedRoute>
+                    } />
+
+                    <Route path="admin/pos-admin/brands" element={
+                      <ProtectedRoute>
+                        <BrandsPage />
+                      </ProtectedRoute>
+                    } />
+
+                    <Route path="admin/pos-admin/tags" element={
+                      <ProtectedRoute>
+                        <TagsPage />
+                      </ProtectedRoute>
+                    } />
+
+                    <Route path="admin/pos-admin/categories" element={
+                      <ProtectedRoute>
+                        <ProductCategoriesPage />
                       </ProtectedRoute>
                     } />
 
