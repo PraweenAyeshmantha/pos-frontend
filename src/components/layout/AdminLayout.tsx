@@ -8,17 +8,17 @@ interface AdminLayoutProps {
 
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-slate-100">
       {/* Side Navigation */}
       <SideNavigation />
-      
+
       {/* Top Navigation */}
       <TopNavigation />
-      
+
       {/* Main Content */}
-      <div className="ml-20 pt-14">
-        {children}
-      </div>
+      <main className="ml-20 pt-16">
+        <div className="px-4 pb-12 sm:px-8 lg:px-12">{children}</div>
+      </main>
     </div>
   );
 };

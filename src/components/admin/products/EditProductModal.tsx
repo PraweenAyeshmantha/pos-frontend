@@ -17,6 +17,7 @@ interface EditProductModalProps {
   brands: Brand[];
   onClose: () => void;
   onSuccess: (product: Product) => void;
+  mode?: 'edit' | 'view';
 }
 
 const PRODUCT_TYPES: Array<{ label: string; value: ProductType }> = [
@@ -36,7 +37,11 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
   brands,
   onClose,
   onSuccess,
+  mode = 'edit',
 }) => {
+  const isViewMode = mode === 'view';
+  const readOnlyInputModifiers = isViewMode ? ' cursor-not-allowed bg-gray-100' : '';
+  const readOnlyTextareaModifiers = isViewMode ? ' cursor-not-allowed bg-gray-100' : '';
   const [formData, setFormData] = useState<ProductFormValues>(() => ({
     name: product.name,
     price: product.price.toString(),
@@ -58,20 +63,26 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (isViewMode) {
+      return;
+    }
     const input = document.getElementById('edit-product-name-input');
     if (input instanceof HTMLInputElement) {
       input.focus();
     }
-  }, []);
+  }, [isViewMode]);
 
   const handleChange = useCallback(
     (field: keyof ProductFormValues, value: string | boolean) => {
+      if (isViewMode) {
+        return;
+      }
       setFormData((prev) => ({
         ...prev,
         [field]: value,
       }));
     },
-    [],
+    [isViewMode],
   );
 
   const handleDismiss = useCallback(() => {
@@ -80,20 +91,26 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
   }, [onClose]);
 
   const handleTagsChange = useCallback((event: React.ChangeEvent<HTMLSelectElement>) => {
+    if (isViewMode) {
+      return;
+    }
     const selected = Array.from(event.target.selectedOptions).map((option) => option.value);
     setFormData((prev) => ({
       ...prev,
       tagIds: selected,
     }));
-  }, []);
+  }, [isViewMode]);
 
   const handleBrandsChange = useCallback((event: React.ChangeEvent<HTMLSelectElement>) => {
+    if (isViewMode) {
+      return;
+    }
     const selected = Array.from(event.target.selectedOptions).map((option) => option.value);
     setFormData((prev) => ({
       ...prev,
       brandIds: selected,
     }));
-  }, []);
+  }, [isViewMode]);
 
   const buildPayload = useCallback((): ProductUpsertRequest => {
     const tagIds = formData.tagIds.map((id) => Number.parseInt(id, 10)).filter((id) => !Number.isNaN(id));
@@ -137,6 +154,9 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
   const handleSubmit = useCallback(
     async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
+      if (isViewMode) {
+        return;
+      }
       setError(null);
 
       const validationMessage = validateForm();
@@ -162,7 +182,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
         setSaving(false);
       }
     },
-    [buildPayload, formData.barcode, formData.productType, onSuccess, product.barcode, product.id, validateForm],
+    [buildPayload, formData.barcode, formData.productType, isViewMode, onSuccess, product.barcode, product.id, validateForm],
   );
 
   const modalContent = (
@@ -170,12 +190,12 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
       <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={handleDismiss} />
       <div className="relative w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
         <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-6 py-5">
-          <h2 className="text-lg font-semibold text-gray-900">Edit Product</h2>
+          <h2 className="text-lg font-semibold text-gray-900">{isViewMode ? 'View Product' : 'Edit Product'}</h2>
           <button
             type="button"
             onClick={handleDismiss}
             className="rounded-full p-2 text-gray-500 transition hover:bg-gray-200 hover:text-gray-700 focus:outline-none"
-            aria-label="Close edit product modal"
+            aria-label={isViewMode ? 'Close view product modal' : 'Close edit product modal'}
           >
             <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
               <path
@@ -209,7 +229,8 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                 required
                 value={formData.name}
                 onChange={(event) => handleChange('name', event.target.value)}
-                className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                readOnly={isViewMode}
+                className={`h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100${readOnlyInputModifiers}`}
               />
             </div>
 
@@ -227,7 +248,8 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                   required
                   value={formData.price}
                   onChange={(event) => handleChange('price', event.target.value)}
-                  className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  readOnly={isViewMode}
+                  className={`h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100${readOnlyInputModifiers}`}
                 />
               </div>
 
@@ -239,7 +261,8 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                   id="edit-product-type"
                   value={formData.productType}
                   onChange={(event) => handleChange('productType', event.target.value as ProductType)}
-                  className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  disabled={isViewMode}
+                  className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100"
                 >
                   {PRODUCT_TYPES.map((type) => (
                     <option key={type.value} value={type.value}>
@@ -259,7 +282,8 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                   id="edit-product-category"
                   value={formData.categoryId}
                   onChange={(event) => handleChange('categoryId', event.target.value)}
-                  className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  disabled={isViewMode}
+                  className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100"
                 >
                   <option value="">Select a category</option>
                   {categories.length === 0 ? (
@@ -286,7 +310,8 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                   type="text"
                   value={formData.unit}
                   onChange={(event) => handleChange('unit', event.target.value)}
-                  className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  readOnly={isViewMode}
+                  className={`h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100${readOnlyInputModifiers}`}
                 />
               </div>
             </div>
@@ -301,7 +326,8 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                   type="text"
                   value={formData.sku}
                   onChange={(event) => handleChange('sku', event.target.value)}
-                  className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  readOnly={isViewMode}
+                  className={`h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100${readOnlyInputModifiers}`}
                 />
               </div>
 
@@ -314,7 +340,8 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                   type="text"
                   value={formData.barcode}
                   onChange={(event) => handleChange('barcode', event.target.value)}
-                  className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  readOnly={isViewMode}
+                  className={`h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100${readOnlyInputModifiers}`}
                 />
               </div>
             </div>
@@ -328,7 +355,8 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                 rows={3}
                 value={formData.description}
                 onChange={(event) => handleChange('description', event.target.value)}
-                className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                readOnly={isViewMode}
+                className={`rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100${readOnlyTextareaModifiers}`}
               />
             </div>
 
@@ -342,7 +370,8 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                   multiple
                   value={formData.tagIds}
                   onChange={handleTagsChange}
-                  className="min-h-[6.5rem] rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  disabled={isViewMode}
+                  className="min-h-[7rem] rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100"
                 >
                   {tags.length === 0 ? (
                     <option value="" disabled>
@@ -356,7 +385,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                     ))
                   )}
                 </select>
-                <p className="text-xs text-gray-500">Hold Ctrl or Cmd to multi-select.</p>
+                <p className="text-xs text-gray-500">{isViewMode ? 'View only' : 'Use Ctrl/Cmd click to multi-select.'}</p>
               </div>
 
               <div className="flex flex-col gap-2">
@@ -368,7 +397,8 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                   multiple
                   value={formData.brandIds}
                   onChange={handleBrandsChange}
-                  className="min-h-[6.5rem] rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  disabled={isViewMode}
+                  className="min-h-[7rem] rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100"
                 >
                   {brands.length === 0 ? (
                     <option value="" disabled>
@@ -382,7 +412,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                     ))
                   )}
                 </select>
-                <p className="text-xs text-gray-500">Matches the brand filter options on the listing.</p>
+                <p className="text-xs text-gray-500">{isViewMode ? 'View only' : 'Associate one or more brands.'}</p>
               </div>
             </div>
 
@@ -394,7 +424,8 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                 id="edit-product-status"
                 value={formData.recordStatus}
                 onChange={(event) => handleChange('recordStatus', event.target.value as RecordStatus)}
-                className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                disabled={isViewMode}
+                className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100"
               >
                 {STATUS_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -411,15 +442,17 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
               onClick={handleDismiss}
               className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-600 transition hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200"
             >
-              Cancel
+              {isViewMode ? 'Close' : 'Cancel'}
             </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              {saving ? 'Saving...' : 'Update Product'}
-            </button>
+            {!isViewMode ? (
+              <button
+                type="submit"
+                disabled={saving}
+                className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {saving ? 'Saving...' : 'Update Product'}
+              </button>
+            ) : null}
           </div>
         </form>
       </div>

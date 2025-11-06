@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import AdminLayout from '../../../components/layout/AdminLayout';
+import AdminPageHeader from '../../../components/layout/AdminPageHeader';
 
 interface AdminTile {
   id: string;
@@ -119,13 +120,11 @@ const POSAdminPage: React.FC = () => {
 
   return (
     <AdminLayout>
-      <div className="min-h-screen bg-gray-100 px-6 py-8">
-        <header className="mb-8">
-          <h1 className="text-3xl font-semibold text-gray-800">POS Admin</h1>
-          <p className="mt-2 text-gray-600 max-w-2xl">
-            Centralize your administrative tasks, fine-tune configuration, and keep operations running smoothly.
-          </p>
-        </header>
+      <div className="flex flex-col gap-8">
+        <AdminPageHeader
+          title="POS Admin"
+          description="Centralize your administrative tasks, fine-tune configuration, and keep operations running smoothly."
+        />
 
         <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
           {tiles.map((tile) => (
@@ -133,7 +132,7 @@ const POSAdminPage: React.FC = () => {
               key={tile.id}
               type="button"
               onClick={() => handleTileClick(tile.path)}
-              className="group h-full rounded-xl border border-gray-200 bg-white p-6 text-left shadow-sm transition-transform hover:-translate-y-1 hover:border-blue-400 hover:shadow-lg focus:-translate-y-1 focus:border-blue-500 focus:shadow-lg focus:outline-none"
+              className="group h-full rounded-2xl border border-gray-200 bg-white p-6 text-left shadow-sm transition-all duration-150 hover:-translate-y-1 hover:border-blue-400 hover:shadow-lg focus:-translate-y-1 focus:border-blue-500 focus:shadow-lg focus:outline-none"
             >
               <div className={`flex h-12 w-12 items-center justify-center rounded-lg text-2xl ${tile.accentClass}`}>
                 <span>{tile.icon}</span>

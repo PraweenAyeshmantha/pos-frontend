@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import Alert, { type AlertType } from '../../common/Alert';
 import ConfirmationDialog from '../../common/ConfirmationDialog';
+import AdminPageHeader from '../../layout/AdminPageHeader';
 import TaxonomyFormModal from './TaxonomyFormModal';
 import type { RecordStatus } from '../../../types/configuration';
 import type { TaxonomyEntity, TaxonomyFormValues } from '../../../types/taxonomy';
@@ -207,161 +208,157 @@ const TaxonomyManager = <T extends TaxonomyEntity>({
   );
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="mx-auto max-w-6xl px-6 py-8">
-        <header className="mb-8">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h1 className="text-3xl font-semibold text-gray-800">{title}</h1>
-              <p className="mt-2 max-w-2xl text-gray-600">{description}</p>
-            </div>
-            <button
-              type="button"
-              onClick={handleAddNew}
-              className="self-start rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-            >
-              Add {entityName}
-            </button>
-          </div>
+    <div className="flex flex-col gap-8">
+      <AdminPageHeader
+        title={title}
+        description={description}
+        actions={
+          <button
+            type="button"
+            onClick={handleAddNew}
+            className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white"
+          >
+            Add {entityName}
+          </button>
+        }
+      />
 
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="text-sm text-gray-600">
-              {filteredItems.length === items.length
-                ? `Showing ${items.length} ${entityName.toLowerCase()}${items.length === 1 ? '' : 's'}`
-                : `Showing ${filteredItems.length} of ${items.length} ${entityName.toLowerCase()}s`}
-            </div>
-            <input
-              type="text"
-              placeholder={`Search ${entityName.toLowerCase()}s...`}
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              className="h-10 w-full max-w-md rounded-lg border border-gray-200 px-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-            />
-          </div>
-        </header>
+      {alert ? (
+        <Alert type={alert.type} title={alert.title} message={alert.message} />
+      ) : null}
 
-        {alert && (
-          <div className="mb-6">
-            <Alert type={alert.type} title={alert.title} message={alert.message} />
-          </div>
-        )}
+      {loadError ? <Alert type="error" title="Error" message={loadError} /> : null}
 
-        {loadError && (
-          <div className="mb-6">
-            <Alert type="error" title="Error" message={loadError} />
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="text-sm text-slate-600">
+            {filteredItems.length === items.length
+              ? `Showing ${items.length} ${entityName.toLowerCase()}${items.length === 1 ? '' : 's'}`
+              : `Showing ${filteredItems.length} of ${items.length} ${entityName.toLowerCase()}s`}
           </div>
-        )}
+          <input
+            type="text"
+            placeholder={`Search ${entityName.toLowerCase()}s...`}
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            className="h-10 w-full max-w-xs rounded-lg border border-slate-200 px-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 md:max-w-md"
+          />
+        </div>
+      </section>
 
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="text-center">
-              <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600" />
-              <p className="mt-4 text-gray-600">Loading {entityName.toLowerCase()}s...</p>
-            </div>
+      {loading ? (
+        <div className="flex min-h-[320px] items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white">
+          <div className="text-center">
+            <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600" />
+            <p className="mt-4 text-slate-600">Loading {entityName.toLowerCase()}s...</p>
           </div>
-        ) : filteredItems.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-10 text-center text-gray-600">
-            <div className="text-lg font-medium">No {entityName.toLowerCase()}s yet</div>
-            <p className="mt-2 text-sm text-gray-500">
-              {items.length === 0
-                ? `Start by adding your first ${entityName.toLowerCase()} to keep your catalog organized.`
-                : 'Try adjusting your search or filters to find what you need.'}
-            </p>
-            <button
-              type="button"
-              onClick={handleAddNew}
-              className="mt-5 inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
-            >
-              Add {entityName}
-            </button>
-          </div>
-        ) : (
-          <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                      Name
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                      Description
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                      Status
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                      Updated
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 bg-white">
-                  {filteredItems.map((item) => (
-                    <tr key={item.id}>
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900">{item.name}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">{item.description ?? '-'}</td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${
-                            item.recordStatus === 'ACTIVE'
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-gray-200 text-gray-600'
-                          }`}
+        </div>
+      ) : filteredItems.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center text-slate-600">
+          <div className="text-lg font-semibold">No {entityName.toLowerCase()}s yet</div>
+          <p className="mt-3 text-sm text-slate-500">
+            {items.length === 0
+              ? `Start by adding your first ${entityName.toLowerCase()} to keep your catalog organized.`
+              : 'Try adjusting your search or filters to find what you need.'}
+          </p>
+          <button
+            type="button"
+            onClick={handleAddNew}
+            className="mt-6 inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+          >
+            Add {entityName}
+          </button>
+        </div>
+      ) : (
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-slate-200">
+              <thead className="bg-slate-50">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Name
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Description
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Status
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Updated
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200 bg-white">
+                {filteredItems.map((item) => (
+                  <tr key={item.id} className="hover:bg-slate-50">
+                    <td className="px-6 py-4 text-sm font-medium text-slate-900">{item.name}</td>
+                    <td className="px-6 py-4 text-sm text-slate-600">{item.description ?? '-'}</td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${
+                          item.recordStatus === 'ACTIVE'
+                            ? 'bg-emerald-100 text-emerald-700'
+                            : 'bg-slate-200 text-slate-600'
+                        }`}
+                      >
+                        {formatStatusLabel(item.recordStatus)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-slate-500">{formatDateTime(item.updatedAt ?? item.createdAt)}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-end gap-3">
+                        <button
+                          type="button"
+                          onClick={() => handleEdit(item)}
+                          className="text-sm font-semibold text-blue-600 transition hover:text-blue-800"
                         >
-                          {formatStatusLabel(item.recordStatus)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-500">{formatDateTime(item.updatedAt ?? item.createdAt)}</td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center justify-end gap-3">
+                          Edit
+                        </button>
+                        {item.recordStatus === 'ACTIVE' ? (
                           <button
                             type="button"
-                            onClick={() => handleEdit(item)}
-                            className="text-sm font-medium text-blue-600 hover:text-blue-800"
+                            onClick={() => handleArchiveRequest(item)}
+                            className="text-sm font-semibold text-rose-600 transition hover:text-rose-700"
                           >
-                            Edit
+                            Deactivate
                           </button>
-                          {item.recordStatus === 'ACTIVE' ? (
-                            <button
-                              type="button"
-                              onClick={() => handleArchiveRequest(item)}
-                              className="text-sm font-medium text-red-600 hover:text-red-800"
-                            >
-                              Deactivate
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => handleActivate(item)}
-                              className="text-sm font-medium text-emerald-600 hover:text-emerald-800"
-                            >
-                              Activate
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleActivate(item)}
+                            className="text-sm font-semibold text-emerald-600 transition hover:text-emerald-700"
+                          >
+                            Activate
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       <TaxonomyFormModal
         open={modalOpen}
         mode={editingItem ? 'edit' : 'create'}
         entityName={entityName}
         onClose={handleModalClose}
-        initialValues={editingItem ? {
-          name: editingItem.name,
-          description: editingItem.description,
-          recordStatus: editingItem.recordStatus,
-        } : undefined}
+        initialValues={
+          editingItem
+            ? {
+                name: editingItem.name,
+                description: editingItem.description,
+                recordStatus: editingItem.recordStatus,
+              }
+            : undefined
+        }
         onSubmit={handleModalSubmit}
       />
 

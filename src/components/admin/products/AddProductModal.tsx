@@ -341,7 +341,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ categories, tags, bra
                   multiple
                   value={formData.tagIds}
                   onChange={handleTagsChange}
-                  className="min-h-[6.5rem] rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  className="min-h-[7rem] rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                 >
                   {tags.length === 0 ? (
                     <option value="" disabled>
@@ -355,7 +355,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ categories, tags, bra
                     ))
                   )}
                 </select>
-                <p className="text-xs text-gray-500">Hold Ctrl or Cmd to multi-select.</p>
+                <p className="text-xs text-gray-500">Use Ctrl/Cmd click to select multiple tags.</p>
               </div>
 
               <div className="flex flex-col gap-2">
@@ -367,7 +367,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ categories, tags, bra
                   multiple
                   value={formData.brandIds}
                   onChange={handleBrandsChange}
-                  className="min-h-[6.5rem] rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  className="min-h-[7rem] rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                 >
                   {brands.length === 0 ? (
                     <option value="" disabled>
