@@ -1,0 +1,37 @@
+import apiClient from './apiClient';
+import type { ApiResponse } from '../types/configuration';
+import type { Customer, CreateCustomerRequest } from '../types/customer';
+
+const basePath = '/pos/customers';
+
+export const customerService = {
+  async getAll(options?: { active?: boolean }): Promise<Customer[]> {
+    const query = options?.active !== undefined ? `?active=${options.active}` : '';
+    const response = await apiClient.get<ApiResponse<Customer[]>>(`${basePath}${query}`);
+    return response.data.data;
+  },
+
+  async getById(id: number): Promise<Customer> {
+    const response = await apiClient.get<ApiResponse<Customer>>(`${basePath}/${id}`);
+    return response.data.data;
+  },
+
+  async search(term: string): Promise<Customer[]> {
+    const response = await apiClient.get<ApiResponse<Customer[]>>(`${basePath}/search?term=${encodeURIComponent(term)}`);
+    return response.data.data;
+  },
+
+  async create(data: CreateCustomerRequest): Promise<Customer> {
+    const response = await apiClient.post<ApiResponse<Customer>>(basePath, data);
+    return response.data.data;
+  },
+
+  async update(id: number, data: CreateCustomerRequest): Promise<Customer> {
+    const response = await apiClient.put<ApiResponse<Customer>>(`${basePath}/${id}`, data);
+    return response.data.data;
+  },
+
+  async delete(id: number): Promise<void> {
+    await apiClient.delete(`${basePath}/${id}`);
+  },
+};

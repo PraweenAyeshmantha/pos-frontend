@@ -25,7 +25,7 @@ The system now includes a comprehensive user management structure that separates
 A default administrator account is created during initial setup:
 
 - **Username**: `admin`
-- **Password**: `admin123`
+- **Password**: `admin@123`
 - **Email**: `admin@pos.com`
 - **Status**: Active (password reset required on first login)
 
@@ -96,7 +96,7 @@ POST /api/auth/login
 ```json
 {
   "username": "admin",
-  "password": "admin123"
+  "password": "admin@123"
 }
 ```
 
@@ -143,7 +143,7 @@ POST /api/auth/reset-password
 ```json
 {
   "username": "admin",
-  "currentPassword": "admin123",
+  "currentPassword": "admin@123",
   "newPassword": "newSecurePassword",
   "confirmPassword": "newSecurePassword"
 }

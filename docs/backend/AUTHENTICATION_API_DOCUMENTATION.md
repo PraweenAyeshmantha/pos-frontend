@@ -31,8 +31,8 @@ Content-Type: application/json
 **Request Body:**
 ```json
 {
-  "username": "john",
-  "password": "password123"
+  "username": "admin",
+  "password": "admin@123"
 }
 ```
 
@@ -45,12 +45,12 @@ Content-Type: application/json
   "path": "/api/auth/login",
   "data": {
     "cashierId": 1,
-    "username": "john",
-    "name": "John Doe",
-    "email": "john@example.com",
+    "username": "admin",
+    "name": "Admin User",
+    "email": "admin@example.com",
     "requirePasswordReset": false,
     "message": "Login successful",
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjYXNoaWVySWQiOjEsIm5hbWUiOiJKb2huIERvZSIsInN1YiI6ImpvaG4iLCJpc3MiOiJwb3MtYmFja2VuZCIsImlhdCI6MTcwMDAwMDAwMCwiZXhwIjoxNzAwMDg2NDAwfQ.xxxxx"
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjYXNoaWVySWQiOjEsIm5hbWUiOiJBZG1pbiBVc2VyIiwic3ViIjoiYWRtaW4iLCJpc3MiOiJwb3MtYmFja2VuZCIsImlhdCI6MTcwMDAwMDAwMCwiZXhwIjoxNzAwMDg2NDAwfQ.xxxxx"
   }
 }
 ```

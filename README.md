@@ -29,7 +29,7 @@ Modern React-based frontend application for the Point of Sale (POS) system backe
 
 ## Getting Started
 
-> **⚠️ Important:** Before running the application, you must configure environment variables. If you encounter a "VITE_API_BASE_URL is not set!" error, see [SETUP_TROUBLESHOOTING.md](./SETUP_TROUBLESHOOTING.md).
+> **⚠️ Important:** Before running the application, you must configure environment variables. If you encounter a "VITE_API_BASE_URL is not set!" error, see [docs/setup/SETUP_TROUBLESHOOTING.md](./docs/setup/SETUP_TROUBLESHOOTING.md).
 
 ### Quick Setup (Recommended)
 

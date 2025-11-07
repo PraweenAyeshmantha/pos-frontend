@@ -1,4 +1,5 @@
 import type { OutletMode } from './outlet';
+import type { RecordStatus } from './configuration';
 
 export type CashierRole = 'POS_CASHIER' | 'ADMINISTRATOR';
 
@@ -16,7 +17,7 @@ export interface Cashier {
   email: string;
   phone?: string;
   role: CashierRole;
-  isActive: boolean;
+  recordStatus: RecordStatus;
   requirePasswordReset: boolean;
   assignedOutlets: CashierOutlet[];
   createdAt?: string;
@@ -31,7 +32,7 @@ export interface CashierFormValues {
   phone: string;
   role: CashierRole;
   password: string;
-  isActive: boolean;
+  recordStatus: RecordStatus;
   requirePasswordReset: boolean;
   sendCredentials: boolean;
   assignedOutletIds: number[];
@@ -44,7 +45,7 @@ export interface CreateCashierRequest {
   phone?: string;
   password: string;
   role: CashierRole;
-  isActive: boolean;
+  recordStatus: RecordStatus;
   requirePasswordReset: boolean;
   assignedOutletIds: number[];
   sendCredentials?: boolean;
@@ -58,7 +59,7 @@ export interface UpdateCashierRequest {
   phone?: string;
   password?: string;
   role: CashierRole;
-  isActive: boolean;
+  recordStatus: RecordStatus;
   requirePasswordReset: boolean;
   assignedOutletIds: number[];
   sendCredentials?: boolean;

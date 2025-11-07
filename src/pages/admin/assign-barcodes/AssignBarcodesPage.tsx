@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import AdminLayout from '../../../components/layout/AdminLayout';
+import AdminPageHeader from '../../../components/layout/AdminPageHeader';
 import Alert, { type AlertType } from '../../../components/common/Alert';
+import ToastContainer from '../../../components/common/ToastContainer';
 import { productService } from '../../../services/productService';
 import type { Product } from '../../../types/product';
 
@@ -12,10 +14,11 @@ const AssignBarcodesPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [editingBarcodes, setEditingBarcodes] = useState<Map<number, string>>(new Map());
   const [printQuantities, setPrintQuantities] = useState<Map<number, string>>(new Map());
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [itemsPerPage] = useState<number>(25);
 
   const showAlert = useCallback((type: AlertType, title: string, message: string) => {
     setAlert({ type, title, message });
-    window.setTimeout(() => setAlert(null), 3000);
   }, []);
 
   const fetchProducts = useCallback(async () => {
@@ -204,19 +207,31 @@ const AssignBarcodesPage: React.FC = () => {
     const query = searchQuery.toLowerCase();
     return (
       product.name.toLowerCase().includes(query) ||
-      product.productType.toLowerCase().includes(query) ||
+      (product.productType ?? 'Simple').toLowerCase().includes(query) ||
       product.barcode?.toLowerCase().includes(query) ||
       product.price.toString().includes(query)
     );
   });
 
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentProducts = filteredProducts.slice(startIndex, endIndex);
+
+  // Reset to first page when search changes
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchQuery(value);
+    setCurrentPage(1);
+  }, []);
+
   const renderContent = () => {
     if (loading) {
       return (
-        <div className="flex items-center justify-center py-16">
+        <div className="flex min-h-[320px] items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white">
           <div className="text-center">
-            <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600"></div>
-            <p className="mt-4 text-gray-600">Loading products...</p>
+            <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600" />
+            <p className="mt-4 text-slate-600">Loading products...</p>
           </div>
         </div>
       );
@@ -224,63 +239,76 @@ const AssignBarcodesPage: React.FC = () => {
 
     if (products.length === 0) {
       return (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-6 text-amber-700">
-          No products found. Create products before assigning barcodes.
+        <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center text-slate-600">
+          <div className="text-lg font-semibold">No products found</div>
+          <p className="mt-3 text-sm text-slate-500">
+            Create products before assigning barcodes.
+          </p>
         </div>
       );
     }
 
     return (
-      <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-slate-200">
+            <thead className="bg-slate-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  {/* Icon column - no header text */}
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Name
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Product Type
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Price
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Barcode
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Barcode Image
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Barcode Print
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filteredProducts.length === 0 ? (
+            <tbody className="divide-y divide-slate-200 bg-white">
+              {currentProducts.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={7} className="px-6 py-12 text-center text-slate-500">
                     No products match your search criteria.
                   </td>
                 </tr>
               ) : (
-                filteredProducts.map((product) => {
+                currentProducts.map((product) => {
                   const currentBarcode = editingBarcodes.get(product.id) ?? product.barcode ?? '';
                   const currentQuantity = printQuantities.get(product.id) || '';
                   
                   return (
-                    <tr key={product.id} className="hover:bg-gray-50">
+                    <tr key={product.id} className="hover:bg-slate-50">
                       <td className="px-6 py-4">
-                        <div className="text-sm font-medium text-gray-900">{product.name}</div>
+                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100">
+                          <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                          </svg>
+                        </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm text-gray-600">{product.productType}</div>
+                        <div className="text-sm font-medium text-slate-900">{product.name}</div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm text-gray-600">
-                          <span className="line-through text-gray-400">${product.price.toFixed(2)}</span>
+                        <div className="text-sm text-slate-600">{product.productType}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-slate-600">
+                          <span className="line-through text-slate-400">${product.price.toFixed(2)}</span>
                           <br />
-                          <span className="font-semibold text-gray-900">${product.price.toFixed(2)}</span>
+                          <span className="font-semibold text-slate-900">${product.price.toFixed(2)}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4 align-top">
@@ -290,12 +318,12 @@ const AssignBarcodesPage: React.FC = () => {
                             value={currentBarcode}
                             onChange={(e) => handleBarcodeChange(product.id, e.target.value)}
                             placeholder="Enter barcode"
-                            className="w-40 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                            className="w-40 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                           />
                           <button
                             type="button"
                             onClick={() => handleUpdateBarcode(product)}
-                            className="rounded-md border border-blue-600 bg-white px-3 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50"
+                            className="rounded-lg border border-blue-600 bg-white px-3 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50"
                           >
                             Update
                           </button>
@@ -309,7 +337,7 @@ const AssignBarcodesPage: React.FC = () => {
                             className="h-12 w-auto"
                           />
                         ) : (
-                          <span className="text-sm text-gray-400">No image</span>
+                          <span className="text-sm text-slate-400">No image</span>
                         )}
                       </td>
                       <td className="px-6 py-4">
@@ -320,12 +348,12 @@ const AssignBarcodesPage: React.FC = () => {
                             onChange={(e) => handleQuantityChange(product.id, e.target.value)}
                             placeholder="Quantity"
                             inputMode="numeric"
-                            className="w-24 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                            className="w-24 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                           />
                           <button
                             type="button"
                             onClick={() => handlePrint(product)}
-                            className="rounded-md border border-blue-600 bg-white px-3 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50"
+                            className="rounded-lg border border-blue-600 bg-white px-3 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50"
                           >
                             Print
                           </button>
@@ -344,53 +372,111 @@ const AssignBarcodesPage: React.FC = () => {
 
   return (
     <AdminLayout>
-      <div className="min-h-screen bg-gray-100">
-        <div className="mx-auto max-w-7xl px-6 py-8">
-          {/* Header */}
-          <header className="mb-8">
-            <h1 className="text-3xl font-semibold text-gray-800">Assign Barcodes</h1>
-            <p className="mt-2 text-gray-600 max-w-2xl">
-              Assign and manage barcodes for your products. Update barcode numbers and print barcode labels for inventory management.
-            </p>
-          </header>
+      <div className="flex flex-col gap-8 pb-12">
+        <AdminPageHeader
+          title="Assign Barcodes"
+          description="Assign and manage barcodes for your products. Barcodes are automatically generated as images when updated."
+        />
 
-          {/* Alert */}
-          {alert && (
-            <div className="mb-6">
-              <Alert type={alert.type} title={alert.title} message={alert.message} />
-            </div>
+          {(alert || error) && (
+            <ToastContainer>
+              {alert ? (
+                <Alert
+                  type={alert.type}
+                  title={alert.title}
+                  message={alert.message}
+                  onClose={() => setAlert(null)}
+                />
+              ) : null}
+              {error ? (
+                <Alert
+                  type="error"
+                  title="Error"
+                  message={error}
+                  onClose={() => setError(null)}
+                />
+              ) : null}
+            </ToastContainer>
           )}
 
-          {/* Error */}
-          {error && (
-            <div className="mb-6">
-              <Alert type="error" title="Error" message={error} />
+        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="text-xs text-slate-500 sm:text-sm whitespace-nowrap">
+              Showing {filteredProducts.length} product{filteredProducts.length === 1 ? '' : 's'}
+              {totalPages > 1 && ` • Page ${currentPage} of ${totalPages}`}
             </div>
-          )}
-
-          {/* Search Bar */}
-          <div className="mb-6 flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-            <div className="text-sm text-gray-600">
-              {filteredProducts.length === products.length
-                ? `Showing ${products.length} product${products.length !== 1 ? 's' : ''}`
-                : `Showing ${filteredProducts.length} of ${products.length} product${products.length !== 1 ? 's' : ''}`}
+            <div className="flex w-full flex-col items-stretch gap-3 md:flex-row md:justify-end md:gap-3">
+              <div className="relative w-full md:max-w-xs">
+                <input
+                  type="text"
+                  placeholder="Search products..."
+                  value={searchQuery}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  className="h-10 w-full rounded-lg border border-slate-200 px-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                />
+              </div>
+              {totalPages > 1 && (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage(1)}
+                    disabled={currentPage === 1}
+                    className="rounded px-2 py-1 text-sm text-slate-600 hover:bg-slate-100 disabled:opacity-50"
+                  >
+                    «
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="rounded px-2 py-1 text-sm text-slate-600 hover:bg-slate-100 disabled:opacity-50"
+                  >
+                    ‹
+                  </button>
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="number"
+                      min="1"
+                      max={totalPages}
+                      value={currentPage}
+                      onChange={(e) => {
+                        const page = parseInt(e.target.value, 10);
+                        if (page >= 1 && page <= totalPages) {
+                          setCurrentPage(page);
+                        }
+                      }}
+                      className="w-16 rounded border border-slate-200 px-2 py-1 text-center text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                    />
+                    <span className="text-sm text-slate-600">of {totalPages}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="rounded px-2 py-1 text-sm text-slate-600 hover:bg-slate-100 disabled:opacity-50"
+                  >
+                    ›
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage(totalPages)}
+                    disabled={currentPage === totalPages}
+                    className="rounded px-2 py-1 text-sm text-slate-600 hover:bg-slate-100 disabled:opacity-50"
+                  >
+                    »
+                  </button>
+                </div>
+              )}
             </div>
-            <input
-              type="text"
-              placeholder="Search by name, type, barcode, or price..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-10 w-96 rounded-lg border border-gray-200 px-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-            />
           </div>
+        </section>
 
           {/* Products Table */}
           {renderContent()}
 
-          <p className="mt-6 text-sm text-gray-500">
+          <p className="mt-6 text-sm text-slate-500">
             Barcodes are automatically generated as images when you update the barcode number. Use the Print function to generate physical labels.
           </p>
-        </div>
       </div>
     </AdminLayout>
   );

@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import AdminLayout from '../../../components/layout/AdminLayout';
 import Alert from '../../../components/common/Alert';
+import ToastContainer from '../../../components/common/ToastContainer';
+import AdminPageHeader from '../../../components/layout/AdminPageHeader';
 import { analyticsService } from '../../../services/analyticsService';
 import { outletService } from '../../../services/outletService';
 import type { SalesAnalytics } from '../../../types/analytics';
@@ -580,121 +582,130 @@ const StatisticsPage: React.FC = () => {
 
   return (
     <AdminLayout>
-      <div className="min-h-screen bg-gray-100">
-        <div className="mx-auto max-w-7xl px-6 py-8">
+      <div className="flex flex-col gap-8">
+        <AdminPageHeader
+          title="Analytics"
+          description="Visualize Point of Sale performance by outlet, time period, and key revenue drivers."
+          meta={
+            <span className="whitespace-nowrap text-sm text-slate-500">
+              Showing {rangeLabel}. Comparing against {previousRangeLabel}.
+            </span>
+          }
+        />
+
+        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
           <div className="flex flex-col gap-6">
-            <div className="flex flex-col gap-2">
-              <h1 className="text-3xl font-semibold text-gray-800">Analytics</h1>
-              <p className="text-gray-500">
-                Visualize Point of Sale performance by outlet, time period, and key revenue drivers.
-              </p>
-              <p className="text-sm text-gray-400">
-                Showing {rangeLabel}. Comparing against {previousRangeLabel}.
-              </p>
+            <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-500">
+              <span className="whitespace-nowrap">
+                Range {rangeLabel} • vs {previousRangeLabel}
+              </span>
+              {lastUpdated && (
+                <span className="whitespace-nowrap text-xs text-slate-400">
+                  Updated {timeFormatter.format(lastUpdated)}
+                </span>
+              )}
             </div>
 
-            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
-                <div className="flex flex-col gap-2">
-                  <label htmlFor="analytics-date-range" className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    Date Range
-                  </label>
-                  <select
-                    id="analytics-date-range"
-                    value={filters.preset}
-                    onChange={handlePresetChange}
-                    className="h-11 rounded-lg border border-gray-200 bg-white px-3 text-sm font-medium text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-                  >
-                    <option value="today">Today</option>
-                    <option value="yesterday">Yesterday</option>
-                    <option value="last7Days">Last 7 days</option>
-                    <option value="last30Days">Last 30 days</option>
-                    <option value="thisMonth">This month</option>
-                    <option value="lastMonth">Last month</option>
-                    <option value="custom">Custom range</option>
-                  </select>
-                </div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
+              <div className="flex flex-col gap-2">
+                <label htmlFor="analytics-date-range" className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Date Range
+                </label>
+                <select
+                  id="analytics-date-range"
+                  value={filters.preset}
+                  onChange={handlePresetChange}
+                  className="h-11 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                >
+                  <option value="today">Today</option>
+                  <option value="yesterday">Yesterday</option>
+                  <option value="last7Days">Last 7 days</option>
+                  <option value="last30Days">Last 30 days</option>
+                  <option value="thisMonth">This month</option>
+                  <option value="lastMonth">Last month</option>
+                  <option value="custom">Custom range</option>
+                </select>
+              </div>
 
-                <div className="flex flex-col gap-2">
-                  <label htmlFor="analytics-start-date" className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    Start Date
-                  </label>
-                  <input
-                    id="analytics-start-date"
-                    type="date"
-                    value={filters.startDate}
-                    onChange={handleStartDateChange}
-                    className="h-11 rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-                  />
-                </div>
+              <div className="flex flex-col gap-2">
+                <label htmlFor="analytics-start-date" className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Start Date
+                </label>
+                <input
+                  id="analytics-start-date"
+                  type="date"
+                  value={filters.startDate}
+                  onChange={handleStartDateChange}
+                  className="h-11 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                />
+              </div>
 
-                <div className="flex flex-col gap-2">
-                  <label htmlFor="analytics-end-date" className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    End Date
-                  </label>
-                  <input
-                    id="analytics-end-date"
-                    type="date"
-                    value={filters.endDate}
-                    onChange={handleEndDateChange}
-                    className="h-11 rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-                  />
-                </div>
+              <div className="flex flex-col gap-2">
+                <label htmlFor="analytics-end-date" className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  End Date
+                </label>
+                <input
+                  id="analytics-end-date"
+                  type="date"
+                  value={filters.endDate}
+                  onChange={handleEndDateChange}
+                  className="h-11 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                />
+              </div>
 
-                <div className="flex flex-col gap-2">
-                  <label htmlFor="analytics-outlet" className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    Outlet
-                  </label>
-                  <select
-                    id="analytics-outlet"
-                    value={filters.outletId}
-                    onChange={handleOutletChange}
-                    className="h-11 rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-                  >
-                    <option value="all">All outlets</option>
-                    {outlets.map((outlet) => (
-                      <option key={outlet.id} value={String(outlet.id)}>
-                        {outlet.name}
-                      </option>
-                    ))}
-                  </select>
-                  {outletError && (
-                    <span className="text-xs text-red-500">{outletError}</span>
-                  )}
-                </div>
+              <div className="flex flex-col gap-2">
+                <label htmlFor="analytics-outlet" className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Outlet
+                </label>
+                <select
+                  id="analytics-outlet"
+                  value={filters.outletId}
+                  onChange={handleOutletChange}
+                  className="h-11 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                >
+                  <option value="all">All outlets</option>
+                  {outlets.map((outlet) => (
+                    <option key={outlet.id} value={String(outlet.id)}>
+                      {outlet.name}
+                    </option>
+                  ))}
+                </select>
+                {outletError && <span className="text-xs text-red-500">{outletError}</span>}
+              </div>
 
-                <div className="flex flex-col justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={triggerRefresh}
-                    disabled={loading}
-                    className="inline-flex h-11 items-center justify-center rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-200 disabled:cursor-not-allowed disabled:bg-blue-300"
-                  >
-                    {loading ? 'Refreshing…' : 'Refresh'}
-                  </button>
-                  {lastUpdated && (
-                    <span className="text-xs text-gray-400">
-                      Updated {timeFormatter.format(lastUpdated)}
-                    </span>
-                  )}
-                </div>
+              <div className="flex flex-col justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={triggerRefresh}
+                  disabled={loading}
+                  className="inline-flex h-11 items-center justify-center rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-200 disabled:cursor-not-allowed disabled:bg-blue-300"
+                >
+                  {loading ? 'Refreshing…' : 'Refresh'}
+                </button>
               </div>
             </div>
+          </div>
+        </section>
 
-            {effectiveError && (
-              <div className="flex justify-start">
-                <Alert type="error" title="Analytics unavailable" message={effectiveError} />
-              </div>
-            )}
-
+        {effectiveError ? (
+          <ToastContainer>
+            <Alert
+              type="error"
+              title="Analytics unavailable"
+              message={effectiveError}
+              onClose={() => setFetchError(null)}
+            />
+          </ToastContainer>
+        ) : (
+          <>
             {loading && (
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                 {metricConfigs.map((metric) => (
                   <div
                     key={metric.key}
-                    className="h-56 rounded-xl border border-gray-100 bg-white p-6 shadow-sm"
+                    className="h-56 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
                   >
-                    <div className="h-full animate-pulse rounded-lg bg-gray-100" />
+                    <div className="h-full animate-pulse rounded-lg bg-slate-100" />
                   </div>
                 ))}
               </div>
@@ -703,65 +714,65 @@ const StatisticsPage: React.FC = () => {
             {!loading && currentAnalytics && (
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                 {metricConfigs.map((metric) => {
-                  const currentValue = currentAnalytics[metric.key];
-                  const previousValue = (previousAnalytics ?? zeroAnalytics)[metric.key];
-                  const delta = currentValue - previousValue;
-                  const change = previousValue === 0
-                    ? currentValue === 0
-                      ? { label: '0%', tone: 'neutral' as const }
-                      : { label: 'New', tone: 'positive' as const }
-                    : {
-                        label: `${delta >= 0 ? '+' : ''}${percentFormatter.format(
-                          (delta / previousValue) * 100,
-                        )}%`,
-                        tone: delta >= 0 ? ('positive' as const) : ('negative' as const),
-                      };
+              const currentValue = currentAnalytics[metric.key];
+              const previousValue = (previousAnalytics ?? zeroAnalytics)[metric.key];
+              const delta = currentValue - previousValue;
+              const change = previousValue === 0
+                ? currentValue === 0
+                  ? { label: '0%', tone: 'neutral' as const }
+                  : { label: 'New', tone: 'positive' as const }
+                : {
+                    label: `${delta >= 0 ? '+' : ''}${percentFormatter.format(
+                      (delta / previousValue) * 100,
+                    )}%`,
+                    tone: delta >= 0 ? ('positive' as const) : ('negative' as const),
+                  };
 
-                  const changeClasses = change.tone === 'positive'
-                    ? 'bg-emerald-100 text-emerald-700'
-                    : change.tone === 'negative'
-                      ? 'bg-rose-100 text-rose-600'
-                      : 'bg-gray-100 text-gray-600';
+              const changeClasses = change.tone === 'positive'
+                ? 'bg-emerald-100 text-emerald-700'
+                : change.tone === 'negative'
+                  ? 'bg-rose-100 text-rose-600'
+                  : 'bg-slate-100 text-slate-600';
 
-                  return (
-                    <div
-                      key={metric.key}
-                      className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition hover:border-blue-200"
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <p className="text-sm font-semibold text-gray-500">{metric.label}</p>
-                          <p className="mt-2 text-3xl font-semibold text-gray-900">
-                            {formatMetricValue(currentValue, metric.format)}
-                          </p>
-                        </div>
-                        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${changeClasses}`}>
-                          {change.label}
-                        </span>
-                      </div>
-                      <p className="text-xs text-gray-400">{metric.description}</p>
-                      <div className="flex items-center justify-between text-xs text-gray-500">
-                        <span>
-                          Prev: {formatMetricValue(previousValue, metric.format)}
-                        </span>
-                        <span>
-                          vs {previousRangeLabel}
-                        </span>
-                      </div>
-                      <MiniLineChart data={chartDataMap[metric.key] ?? []} />
+              return (
+                <div
+                  key={metric.key}
+                  className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-blue-200"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-semibold text-slate-500">{metric.label}</p>
+                      <p className="mt-2 text-3xl font-semibold text-slate-900">
+                        {formatMetricValue(currentValue, metric.format)}
+                      </p>
                     </div>
-                  );
+                    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${changeClasses}`}>
+                      {change.label}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400">{metric.description}</p>
+                  <div className="flex items-center justify-between text-xs text-slate-500">
+                    <span>
+                      Prev: {formatMetricValue(previousValue, metric.format)}
+                    </span>
+                    <span>
+                      vs {previousRangeLabel}
+                    </span>
+                  </div>
+                  <MiniLineChart data={chartDataMap[metric.key] ?? []} />
+                </div>
+              );
                 })}
               </div>
             )}
 
-            {!loading && !currentAnalytics && !effectiveError && (
-              <div className="rounded-xl border border-gray-200 bg-white p-12 text-center text-gray-500">
+            {!loading && !currentAnalytics && (
+              <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center text-slate-500">
                 No analytics data available for the selected filters.
               </div>
             )}
-          </div>
-        </div>
+          </>
+        )}
       </div>
     </AdminLayout>
   );

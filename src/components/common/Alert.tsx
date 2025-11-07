@@ -1,4 +1,4 @@
-import React, { memo, useMemo } from 'react';
+import React, { memo, useEffect, useMemo, useState } from 'react';
 
 export type AlertType = 'info' | 'success' | 'warning' | 'error';
 
@@ -7,9 +7,13 @@ export interface AlertProps {
   title: string;
   message: string;
   onClose?: () => void;
+  autoHideDuration?: number;
 }
+const DEFAULT_AUTO_HIDE_MS = 4000;
 
-const Alert: React.FC<AlertProps> = ({ type, title, message }) => {
+const Alert: React.FC<AlertProps> = ({ type, title, message, onClose, autoHideDuration = DEFAULT_AUTO_HIDE_MS }) => {
+  const [visible, setVisible] = useState(true);
+
   const alertStyles = useMemo(() => {
     switch (type) {
       case 'info':
@@ -54,6 +58,29 @@ const Alert: React.FC<AlertProps> = ({ type, title, message }) => {
         };
     }
   }, [type]);
+
+  useEffect(() => {
+    setVisible(true);
+  }, [type, title, message]);
+
+  useEffect(() => {
+    if (autoHideDuration == null) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setVisible(false);
+      onClose?.();
+    }, autoHideDuration);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [autoHideDuration, onClose, type, title, message]);
+
+  if (!visible) {
+    return null;
+  }
 
   return (
     <div className={`${alertStyles.bgColor} text-white rounded-lg shadow-lg p-4 flex items-start space-x-4 min-w-[300px] max-w-[500px] animate-slide-in`}>

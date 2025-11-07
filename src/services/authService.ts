@@ -1,5 +1,10 @@
 import apiClient from './apiClient';
-import type { LoginRequest, LoginResponse, ResetPasswordRequest, ResetPasswordResponse } from '../types/auth';
+import type {
+  LoginRequest,
+  LoginResponse,
+  ResetPasswordRequest,
+  ResetPasswordResponse,
+} from '../types/auth';
 
 // Authentication service for login and password management
 class AuthService {
@@ -10,17 +15,20 @@ class AuthService {
    */
   async login(credentials: LoginRequest): Promise<LoginResponse> {
     const response = await apiClient.post<LoginResponse>('/auth/login', credentials);
-    
+    const payload = response.data.data;
+
     // Store token in sessionStorage if login successful (expires when browser closes)
-    if (response.data.data.token) {
-      sessionStorage.setItem('authToken', response.data.data.token);
+    if (payload?.token) {
+      sessionStorage.setItem('authToken', payload.token);
       sessionStorage.setItem('user', JSON.stringify({
-        cashierId: response.data.data.cashierId,
-        username: response.data.data.username,
-        name: response.data.data.name,
-        email: response.data.data.email,
-        // Explicitly convert to boolean to avoid any truthy/falsy issues
-        requirePasswordReset: response.data.data.requirePasswordReset === true,
+        cashierId: payload.cashierId ?? null,
+        userId: payload.userId ?? null,
+        username: payload.username,
+        name: payload.name,
+        email: payload.email,
+        requirePasswordReset: payload.requirePasswordReset === true,
+        categories: payload.userCategories ?? [],
+        access: payload.userAccess ?? [],
       }));
     }
     

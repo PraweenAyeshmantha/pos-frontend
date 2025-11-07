@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import AdminLayout from '../../../components/layout/AdminLayout';
+import AdminPageHeader from '../../../components/layout/AdminPageHeader';
 import Alert, { type AlertType } from '../../../components/common/Alert';
+import ToastContainer from '../../../components/common/ToastContainer';
 import ConfirmationDialog from '../../../components/common/ConfirmationDialog';
 import AddCashierModal from '../../../components/admin/cashiers/AddCashierModal';
 import { cashierService } from '../../../services/cashierService';
@@ -12,8 +14,6 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 const formatRoleLabel = (role: Cashier['role']): string => ROLE_LABELS[role] ?? role;
-
-const formatStatusLabel = (isActive: boolean): string => (isActive ? 'Active' : 'Inactive');
 
 const formatDateTime = (value?: string): string => {
   if (!value) {
@@ -39,6 +39,7 @@ const CashiersPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
   const [editingCashier, setEditingCashier] = useState<Cashier | null>(null);
+  const [modalMode, setModalMode] = useState<'edit' | 'view' | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; cashier: Cashier | null }>({
     show: false,
     cashier: null,
@@ -85,17 +86,26 @@ const CashiersPage: React.FC = () => {
 
   const handleAddNew = useCallback(() => {
     setEditingCashier(null);
+    setModalMode(null);
     setShowAddModal(true);
   }, []);
 
   const handleEdit = useCallback((cashier: Cashier) => {
     setEditingCashier(cashier);
+    setModalMode('edit');
+    setShowAddModal(true);
+  }, []);
+
+  const handleView = useCallback((cashier: Cashier) => {
+    setEditingCashier(cashier);
+    setModalMode('view');
     setShowAddModal(true);
   }, []);
 
   const handleCloseModal = useCallback(() => {
     setShowAddModal(false);
     setEditingCashier(null);
+    setModalMode(null);
   }, []);
 
   const handleSaveSuccess = useCallback(
@@ -108,7 +118,6 @@ const CashiersPage: React.FC = () => {
         message: action === 'create' ? 'Cashier created successfully.' : 'Cashier updated successfully.',
       });
       void fetchCashiers();
-      setTimeout(() => setAlert(null), 3000);
     },
     [fetchCashiers],
   );
@@ -134,7 +143,6 @@ const CashiersPage: React.FC = () => {
       });
     } finally {
       setDeleteConfirm({ show: false, cashier: null });
-      setTimeout(() => setAlert(null), 3000);
     }
   }, [deleteConfirm.cashier, fetchCashiers]);
 
@@ -146,151 +154,203 @@ const CashiersPage: React.FC = () => {
     setDeleteConfirm({ show: false, cashier: null });
   }, []);
 
+  const totalCashiers = cashiers.length;
+  const activeCashiers = useMemo(
+    () => cashiers.filter((cashier) => cashier.recordStatus === 'ACTIVE').length,
+    [cashiers],
+  );
+
+  const renderLoadState = () => (
+    <div className="flex min-h-[320px] items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white">
+      <div className="text-center">
+        <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600" />
+        <p className="mt-4 text-slate-600">Loading cashiers...</p>
+      </div>
+    </div>
+  );
+
+  const renderEmptyState = () => (
+    <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center text-slate-600">
+      <div className="text-lg font-semibold">No cashiers yet</div>
+      <p className="mt-3 text-sm text-slate-500">
+        {totalCashiers === 0
+          ? 'Add your first cashier to grant POS access and manage outlet assignments.'
+          : 'Try a different search term to find the cashier you are looking for.'}
+      </p>
+      <button
+        type="button"
+        onClick={handleAddNew}
+        className="mt-6 inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+      >
+        Add cashier
+      </button>
+    </div>
+  );
+
+  const renderTable = () => (
+    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-slate-200">
+          <thead className="bg-slate-50">
+            <tr>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Cashier
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Username
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Email
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Phone
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Role
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Outlets
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Status
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Updated
+              </th>
+              <th scope="col" className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-200 bg-white">
+            {filteredCashiers.map((cashier) => {
+              const isActive = cashier.recordStatus === 'ACTIVE';
+              const statusClass = isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600';
+              const statusLabel = isActive ? 'Active' : 'Inactive';
+
+              return (
+                <tr key={cashier.id} className="hover:bg-slate-50">
+                  <td className="px-6 py-4 align-top">
+                    <div className="space-y-1">
+                      <span className="block text-sm font-semibold text-slate-900">{cashier.name || '—'}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 align-top text-sm text-slate-600">{cashier.username}</td>
+                  <td className="px-6 py-4 align-top text-sm text-slate-600">{cashier.email || '—'}</td>
+                  <td className="px-6 py-4 align-top text-sm text-slate-600">{cashier.phone || '—'}</td>
+                  <td className="px-6 py-4 align-top text-sm text-slate-600">{formatRoleLabel(cashier.role)}</td>
+                  <td className="px-6 py-4 align-top text-sm text-slate-600">
+                    {cashier.assignedOutlets.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {cashier.assignedOutlets.map((outlet) => (
+                          <span
+                            key={outlet.id}
+                            className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600"
+                          >
+                            {outlet.name}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-xs text-slate-400">—</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 align-top">
+                    <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${statusClass}`}>
+                      {statusLabel}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 align-top text-sm text-slate-600">{formatDateTime(cashier.updatedAt)}</td>
+                  <td className="px-6 py-4 align-top">
+                    <div className="flex items-center justify-end gap-3 text-sm font-semibold">
+                      <button
+                        type="button"
+                        onClick={() => handleView(cashier)}
+                        className="text-slate-600 transition hover:text-slate-800"
+                      >
+                        View
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleEdit(cashier)}
+                        className="text-blue-600 transition hover:text-blue-800"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteRequest(cashier)}
+                        className="text-rose-600 transition hover:text-rose-700"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
   return (
     <AdminLayout>
-      <div className="min-h-screen bg-gray-100">
-        <div className="mx-auto max-w-7xl px-6 py-8">
-          <header className="mb-8">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h1 className="text-3xl font-semibold text-gray-800">Cashiers</h1>
-                <p className="mt-2 max-w-2xl text-gray-600">
-                  Manage POS cashier accounts, access levels, and outlet assignments.
-                </p>
+      <div className="flex flex-col gap-8 pb-12">
+        <AdminPageHeader
+          title="Cashiers"
+          description="Manage POS cashier accounts, access levels, and outlet assignments. Create user profiles to control register access and track activity."
+        />
+
+        {(alert || error) && (
+          <ToastContainer>
+            {alert ? (
+              <Alert type={alert.type} title={alert.title} message={alert.message} onClose={() => setAlert(null)} />
+            ) : null}
+            {error ? <Alert type="error" title="Error" message={error} onClose={() => setError(null)} /> : null}
+          </ToastContainer>
+        )}
+
+        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="text-xs text-slate-500 sm:text-sm whitespace-nowrap">
+              {filteredCashiers.length === totalCashiers
+                ? `Showing ${totalCashiers} cashier${totalCashiers === 1 ? '' : 's'}`
+                : `Showing ${filteredCashiers.length} of ${totalCashiers} cashiers`}
+              {` • ${activeCashiers} active`}
+            </div>
+            <div className="flex w-full flex-col items-stretch gap-3 md:flex-row md:justify-end md:gap-3">
+              <div className="relative w-full md:max-w-xs">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  placeholder="Search cashiers..."
+                  className="h-10 w-full rounded-lg border border-slate-200 px-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                />
               </div>
               <button
                 type="button"
                 onClick={handleAddNew}
-                className="self-start rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="inline-flex h-10 items-center justify-center rounded-lg bg-blue-600 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white md:w-auto"
               >
-                Add Cashier
+                Add cashier
               </button>
             </div>
+          </div>
+        </section>
 
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="text-sm text-gray-600">
-                {filteredCashiers.length === cashiers.length
-                  ? `Showing ${cashiers.length} cashier${cashiers.length === 1 ? '' : 's'}`
-                  : `Showing ${filteredCashiers.length} of ${cashiers.length} cashiers`}
-              </div>
-              <input
-                type="text"
-                placeholder="Search by name, username, email, phone, role, or outlet..."
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                className="h-10 w-full max-w-md rounded-lg border border-gray-200 px-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-              />
-            </div>
-          </header>
-
-          {error && (
-            <div className="mb-6">
-              <Alert type="error" title="Error" message={error} />
-            </div>
-          )}
-
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="text-center">
-                <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600" />
-                <p className="mt-4 text-gray-600">Loading cashiers...</p>
-              </div>
-            </div>
-          ) : (
-            <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead className="border-b border-gray-200 bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">ID</th>
-                      <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Username</th>
-                      <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Name</th>
-                      <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Email</th>
-                      <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Phone</th>
-                      <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Role</th>
-                      <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Assigned Outlets</th>
-                      <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Status</th>
-                      <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Created</th>
-                      <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Updated</th>
-                      <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {filteredCashiers.length === 0 ? (
-                      <tr>
-                        <td colSpan={11} className="px-6 py-12 text-center text-sm text-gray-500">
-                          No cashiers found. Click "Add Cashier" to create one.
-                        </td>
-                      </tr>
-                    ) : (
-                      filteredCashiers.map((cashier) => (
-                        <tr key={cashier.id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 text-sm text-gray-900">{cashier.id}</td>
-                          <td className="px-6 py-4 text-sm font-medium text-gray-900">{cashier.username}</td>
-                          <td className="px-6 py-4 text-sm text-gray-700">{cashier.name || '-'}</td>
-                          <td className="px-6 py-4 text-sm text-gray-600">{cashier.email || '-'}</td>
-                          <td className="px-6 py-4 text-sm text-gray-600">{cashier.phone || '-'}</td>
-                          <td className="px-6 py-4 text-sm text-gray-600">{formatRoleLabel(cashier.role)}</td>
-                          <td className="px-6 py-4 text-sm text-gray-600">
-                            <div className="flex flex-wrap gap-2">
-                              {cashier.assignedOutlets.length === 0 ? (
-                                <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-500">
-                                  No outlets
-                                </span>
-                              ) : (
-                                cashier.assignedOutlets.map((outlet) => (
-                                  <span
-                                    key={outlet.id}
-                                    className="rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700"
-                                  >
-                                    {outlet.name}
-                                  </span>
-                                ))
-                              )}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span
-                              className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                                cashier.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-700'
-                              }`}
-                            >
-                              {formatStatusLabel(cashier.isActive)}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-500">{formatDateTime(cashier.createdAt)}</td>
-                          <td className="px-6 py-4 text-sm text-gray-500">{formatDateTime(cashier.updatedAt)}</td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-3">
-                              <button
-                                type="button"
-                                onClick={() => handleEdit(cashier)}
-                                className="text-sm font-semibold text-blue-600 transition hover:text-blue-700"
-                              >
-                                Edit
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteRequest(cashier)}
-                                className="text-sm font-semibold text-red-600 transition hover:text-red-700"
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-        </div>
+        {loading ? renderLoadState() : filteredCashiers.length === 0 ? renderEmptyState() : renderTable()}
       </div>
 
       {showAddModal && (
-        <AddCashierModal cashier={editingCashier} onClose={handleCloseModal} onSuccess={handleSaveSuccess} />
+        <AddCashierModal
+          cashier={editingCashier}
+          mode={modalMode ?? undefined}
+          onClose={handleCloseModal}
+          onSuccess={handleSaveSuccess}
+        />
       )}
 
       <ConfirmationDialog
@@ -298,18 +358,12 @@ const CashiersPage: React.FC = () => {
         title="Delete Cashier"
         message={`Are you sure you want to delete "${
           deleteConfirm.cashier?.name || deleteConfirm.cashier?.username || 'this cashier'
-        }"?`}
+        }"? This action cannot be undone.`}
         confirmLabel="Delete"
         cancelLabel="Cancel"
         onConfirm={handleDelete}
         onCancel={handleDeleteCancel}
       />
-
-      {alert && (
-        <div className="fixed bottom-6 right-6 z-50">
-          <Alert type={alert.type} title={alert.title} message={alert.message} />
-        </div>
-      )}
     </AdminLayout>
   );
 };

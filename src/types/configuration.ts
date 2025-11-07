@@ -1,3 +1,5 @@
+export type RecordStatus = 'ACTIVE' | 'INACTIVE';
+
 export interface Configuration {
   id: number;
   configKey: string;

@@ -19,6 +19,8 @@ Documentation related to authentication, login, and password management:
 General implementation documentation and summaries:
 - [Implementation Complete](./implementation/IMPLEMENTATION_COMPLETE.md)
 - [Implementation Summary](./implementation/IMPLEMENTATION_SUMMARY.md)
+- [Products Implementation Summary](./implementation/PRODUCTS_IMPLEMENTATION_SUMMARY.md)
+- [Tenant ID Implementation](./implementation/TENANT_ID_IMPLEMENTATION.md)
 - [Solution Implementation](./implementation/SOLUTION_IMPLEMENTATION.md)
 - [Solution Summary](./implementation/SOLUTION_SUMMARY.md)
 - [Fixes Applied](./implementation/FIXES_APPLIED.md)
@@ -30,6 +32,7 @@ General implementation documentation and summaries:
 Testing guides and instructions:
 - [Testing Guide](./testing/TESTING_GUIDE.md)
 - [Testing Instructions](./testing/TESTING_INSTRUCTIONS.md)
+- [Testing Tenant ID](./testing/TESTING_TENANT_ID.md)
 
 ### 🔧 Backend Integration
 Comprehensive backend API documentation and integration guides (107+ documents):
@@ -172,6 +175,31 @@ Comprehensive backend API documentation and integration guides (107+ documents):
 - [Implementation Summary](./backend/IMPLEMENTATION_SUMMARY.md)
 - [Implementation Complete](./backend/IMPLEMENTATION_COMPLETE.md)
 
+### 📁 Project Management
+Project status, optimization, and overall project documentation:
+- [Project Status](./project/PROJECT_STATUS.md)
+- [Optimization Summary](./project/OPTIMIZATION_SUMMARY.md)
+
+### 🔧 Setup & Configuration
+Setup guides and troubleshooting:
+- [Setup Troubleshooting](./setup/SETUP_TROUBLESHOOTING.md)
+
+### 📦 Products
+Product-related features and implementations:
+- [Products Page Revamp](./products/PRODUCTS_PAGE_REVAMP.md)
+
+### 📋 Reports
+Implementation reports and completion summaries:
+- [Completion Report](./reports/COMPLETION_REPORT.md)
+
+### 🎨 UI/UX
+User interface changes and visual guides:
+- [UI Changes Guide](./ui/UI_CHANGES_GUIDE.md)
+
+### 🔄 Pull Requests
+Pull request documentation and implementation details:
+- [PR Readme](./prs/PR_README.md)
+
 ## 🔍 Quick Access
 
 ### For Developers
@@ -196,6 +224,12 @@ Comprehensive backend API documentation and integration guides (107+ documents):
 - Authentication-related docs are in `docs/authentication/`
 - Implementation guides and summaries are in `docs/implementation/`
 - Testing documentation is in `docs/testing/`
+- Project management docs are in `docs/project/`
+- Setup and configuration guides are in `docs/setup/`
+- Product-specific documentation is in `docs/products/`
+- Reports and completion summaries are in `docs/reports/`
+- UI/UX guides are in `docs/ui/`
+- Pull request documentation is in `docs/prs/`
 
 ## 🤝 Contributing
 

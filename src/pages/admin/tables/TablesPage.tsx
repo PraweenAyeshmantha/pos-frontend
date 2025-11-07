@@ -1,25 +1,28 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import AdminLayout from '../../../components/layout/AdminLayout';
+import AdminPageHeader from '../../../components/layout/AdminPageHeader';
 import Alert, { type AlertType } from '../../../components/common/Alert';
+import ToastContainer from '../../../components/common/ToastContainer';
 import { outletService } from '../../../services/outletService';
 import { tableService } from '../../../services/tableService';
 import type { Outlet } from '../../../types/outlet';
 import type { TableStatus } from '../../../types/table';
+import type { RecordStatus } from '../../../types/configuration';
 
 interface TableRow {
   id?: number;
   name: string;
   slug: string;
   capacity: string;
-  isActive: boolean;
+  recordStatus: RecordStatus;
   status: TableStatus;
   outletId: number;
   slugEdited: boolean;
 }
 
-const statusOptions: Array<{ label: string; value: boolean }> = [
-  { label: 'Enabled', value: true },
-  { label: 'Disabled', value: false },
+const statusOptions: Array<{ label: string; value: RecordStatus }> = [
+  { label: 'Enabled', value: 'ACTIVE' },
+  { label: 'Disabled', value: 'INACTIVE' },
 ];
 
 const defaultTableStatus: TableStatus = 'AVAILABLE';
@@ -34,6 +37,9 @@ const TablesPage: React.FC = () => {
   const [saving, setSaving] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [alert, setAlert] = useState<{ type: AlertType; title: string; message: string } | null>(null);
+
+  const totalTables = tables.length;
+  const activeTables = useMemo(() => tables.filter((table) => table.recordStatus === 'ACTIVE').length, [tables]);
 
   const restaurantOutlets = useMemo(
     () => outlets.filter((outlet) => outlet.mode === 'RESTAURANT_CAFE'),
@@ -50,7 +56,6 @@ const TablesPage: React.FC = () => {
 
   const showAlert = useCallback((type: AlertType, title: string, message: string) => {
     setAlert({ type, title, message });
-    window.setTimeout(() => setAlert(null), 3000);
   }, []);
 
   const handleOutletChange = useCallback((event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -67,10 +72,6 @@ const TablesPage: React.FC = () => {
       setLoading(true);
       const data = await outletService.getAll();
       setOutlets(data);
-      const firstRestaurant = data.find((outlet) => outlet.mode === 'RESTAURANT_CAFE');
-      if (firstRestaurant) {
-        setSelectedOutletId(firstRestaurant.id);
-      }
     } catch (err) {
       console.error('Failed to load outlets', err);
       setError('Failed to load outlets. Please try again.');
@@ -92,7 +93,7 @@ const TablesPage: React.FC = () => {
         name: table.tableNumber,
         slug: table.tableNumber,
         capacity: String(table.capacity ?? ''),
-        isActive: table.isActive,
+        recordStatus: table.recordStatus,
         status: table.status ?? defaultTableStatus,
         outletId: table.outlet?.id ?? selectedOutletId,
         slugEdited: false,
@@ -171,12 +172,12 @@ const TablesPage: React.FC = () => {
   }, []);
 
   const handleStatusChange = useCallback((index: number, value: string) => {
-    const isActive = value === 'true';
+    const recordStatus: RecordStatus = value === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE';
     setTables((prev) => {
       const updated = [...prev];
       updated[index] = {
         ...updated[index],
-        isActive,
+        recordStatus,
       };
       return updated;
     });
@@ -208,7 +209,7 @@ const TablesPage: React.FC = () => {
         name: '',
         slug: '',
         capacity: '',
-        isActive: true,
+        recordStatus: 'ACTIVE',
         status: defaultTableStatus,
         outletId: Number(selectedOutletId),
         slugEdited: false,
@@ -255,7 +256,7 @@ const TablesPage: React.FC = () => {
         original.name !== row.name ||
         original.slug !== row.slug ||
         original.capacity !== row.capacity ||
-        original.isActive !== row.isActive
+        original.recordStatus !== row.recordStatus
       ) {
         changed.push(row);
       }
@@ -291,7 +292,7 @@ const TablesPage: React.FC = () => {
             tableNumber: table.slug.trim() || slugify(table.name),
             capacity: Number(table.capacity),
             status: table.status,
-            isActive: table.isActive,
+            recordStatus: table.recordStatus,
           });
         }),
       );
@@ -306,7 +307,7 @@ const TablesPage: React.FC = () => {
             tableNumber: table.slug.trim() || slugify(table.name),
             capacity: Number(table.capacity),
             status: table.status,
-            isActive: table.isActive,
+            recordStatus: table.recordStatus,
           });
         }),
       );
@@ -325,10 +326,10 @@ const TablesPage: React.FC = () => {
   const renderContent = () => {
     if (loading) {
       return (
-        <div className="flex items-center justify-center py-16">
+        <div className="flex min-h-[320px] items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white">
           <div className="text-center">
-            <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600"></div>
-            <p className="mt-4 text-gray-600">Loading tables...</p>
+            <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600" />
+            <p className="mt-4 text-slate-600">Loading tables...</p>
           </div>
         </div>
       );
@@ -336,44 +337,47 @@ const TablesPage: React.FC = () => {
 
     if (!restaurantOutlets.length) {
       return (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-6 text-amber-700">
-          No restaurant or cafe outlets were found. Create a restaurant outlet before configuring tables.
+        <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center text-slate-600">
+          <div className="text-lg font-semibold">No restaurant outlets found</div>
+          <p className="mt-3 text-sm text-slate-500">
+            Create a restaurant outlet before configuring tables.
+          </p>
         </div>
       );
     }
 
     return (
-      <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
+      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-slate-200">
+            <thead className="bg-slate-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Slug</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Name</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Slug</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Number of Seats
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Status</th>
-                <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-600">Action</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
+                <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-slate-200 bg-white">
               {tables.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
                     No tables yet. Use "Add Row" to create your first table.
                   </td>
                 </tr>
               ) : (
                 tables.map((table, index) => (
-                  <tr key={table.id ?? `new-${index}`} className="hover:bg-gray-50">
+                  <tr key={table.id ?? `new-${index}`} className="hover:bg-slate-50">
                     <td className="px-6 py-4 align-top">
                       <input
                         type="text"
                         value={table.name}
                         onChange={(event) => handleNameChange(index, event.target.value)}
                         placeholder="Table 1"
-                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                        className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                       />
                     </td>
                     <td className="px-6 py-4 align-top">
@@ -382,7 +386,7 @@ const TablesPage: React.FC = () => {
                         value={table.slug}
                         onChange={(event) => handleSlugChange(index, event.target.value)}
                         placeholder="table-1"
-                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                        className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                       />
                     </td>
                     <td className="px-6 py-4 align-top">
@@ -392,17 +396,17 @@ const TablesPage: React.FC = () => {
                         onChange={(event) => handleCapacityChange(index, event.target.value)}
                         placeholder="4"
                         inputMode="numeric"
-                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                        className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                       />
                     </td>
                     <td className="px-6 py-4 align-top">
                       <select
-                        value={String(table.isActive)}
+                        value={table.recordStatus}
                         onChange={(event) => handleStatusChange(index, event.target.value)}
-                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                        className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                       >
                         {statusOptions.map((option) => (
-                          <option key={option.label} value={String(option.value)}>
+                          <option key={option.label} value={option.value}>
                             {option.label}
                           </option>
                         ))}
@@ -423,11 +427,11 @@ const TablesPage: React.FC = () => {
             </tbody>
           </table>
         </div>
-        <div className="flex items-center justify-between border-t border-gray-200 px-6 py-4">
+        <div className="flex items-center justify-between border-t border-slate-200 px-6 py-4">
           <button
             type="button"
             onClick={handleAddRow}
-            className="inline-flex items-center rounded-md border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:border-blue-500 hover:text-blue-600"
+            className="inline-flex items-center rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-500 hover:text-blue-600"
           >
             Add Row
           </button>
@@ -435,7 +439,7 @@ const TablesPage: React.FC = () => {
             type="button"
             onClick={handleSaveChanges}
             disabled={saving}
-            className="inline-flex items-center rounded-md bg-blue-600 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
+            className="inline-flex items-center rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
           >
             {saving ? 'Saving...' : 'Save Changes'}
           </button>
@@ -446,53 +450,64 @@ const TablesPage: React.FC = () => {
 
   return (
     <AdminLayout>
-      <div className="min-h-screen bg-gray-100">
-        <div className="mx-auto max-w-6xl px-6 py-8">
-          <header className="mb-8">
-            <h1 className="text-3xl font-semibold text-gray-800">Tables</h1>
-            <p className="mt-2 text-gray-600 max-w-2xl">
-              Configure dining tables for your restaurant outlets. Table numbers must be unique per outlet, and each table
-              should reflect its seating capacity.
-            </p>
-          </header>
+      <div className="flex flex-col gap-8 pb-12">
+        <AdminPageHeader
+          title="Tables"
+          description="Configure dining tables for your restaurant outlets. Table numbers must be unique per outlet, and each table should reflect its seating capacity."
+        />
 
-          {alert && (
-            <div className="mb-6">
-              <Alert type={alert.type} title={alert.title} message={alert.message} />
-            </div>
+          {(alert || error) && (
+            <ToastContainer>
+              {alert ? (
+                <Alert
+                  type={alert.type}
+                  title={alert.title}
+                  message={alert.message}
+                  onClose={() => setAlert(null)}
+                />
+              ) : null}
+              {error ? (
+                <Alert
+                  type="error"
+                  title="Error"
+                  message={error}
+                  onClose={() => setError(null)}
+                />
+              ) : null}
+            </ToastContainer>
           )}
 
-          {error && (
-            <div className="mb-6">
-              <Alert type="error" title="Error" message={error} />
+          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div className="text-xs text-slate-500 sm:text-sm whitespace-nowrap">
+                {selectedOutletId && totalTables > 0
+                  ? `Showing ${totalTables} table${totalTables === 1 ? '' : 's'} • ${activeTables} active`
+                  : selectedOutletId
+                  ? 'No tables yet'
+                  : 'Select an outlet to view tables'}
+              </div>
+              <div className="flex w-full flex-col items-stretch gap-3 md:flex-row md:justify-end md:gap-3">
+                <select
+                  value={selectedOutletId}
+                  onChange={handleOutletChange}
+                  className="h-10 w-full max-w-xs rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                >
+                  <option value="">Select Outlet</option>
+                  {restaurantOutlets.map((outlet) => (
+                    <option key={outlet.id} value={outlet.id}>
+                      {outlet.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-          )}
-
-          <div className="mb-6 flex flex-col gap-4 rounded-lg border border-gray-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">Outlet</h2>
-              <p className="mt-1 text-sm text-gray-600">Select a restaurant outlet to manage its tables.</p>
-            </div>
-            <select
-              value={selectedOutletId}
-              onChange={handleOutletChange}
-              className="w-full max-w-xs rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-            >
-              <option value="">Select outlet</option>
-              {restaurantOutlets.map((outlet) => (
-                <option key={outlet.id} value={outlet.id}>
-                  {outlet.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          </section>
 
           {renderContent()}
 
-          <p className="mt-6 text-sm text-gray-500">
+          <p className="mt-6 text-sm text-slate-500">
             If you enjoy using our POS, please consider leaving us a 5-star review. Your feedback keeps us motivated!
           </p>
-        </div>
       </div>
     </AdminLayout>
   );

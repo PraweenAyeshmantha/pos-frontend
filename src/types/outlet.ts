@@ -1,3 +1,5 @@
+import type { RecordStatus } from './configuration';
+
 export type OutletMode = 'GROCERY_RETAIL' | 'RESTAURANT_CAFE';
 
 export interface Outlet {
@@ -8,7 +10,7 @@ export interface Outlet {
   address: string;
   phone: string;
   email: string;
-  isActive: boolean;
+  recordStatus: RecordStatus;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -20,7 +22,7 @@ export interface CreateOutletRequest {
   address: string;
   phone: string;
   email: string;
-  isActive: boolean;
+  recordStatus: RecordStatus;
 }
 
 export interface UpdateOutletRequest extends CreateOutletRequest {
@@ -43,5 +45,5 @@ export interface OutletFormValues {
   payments: string[];
   invoice: string;
   tables: string;
-  isActive: boolean;
+  recordStatus: RecordStatus;
 }

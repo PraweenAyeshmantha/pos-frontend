@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import AdminLayout from '../../../components/layout/AdminLayout';
+import AdminPageHeader from '../../../components/layout/AdminPageHeader';
 
 interface AdminTile {
   id: string;
@@ -42,6 +43,38 @@ const POSAdminPage: React.FC = () => {
         accentClass: 'bg-amber-100 text-amber-600',
       },
       {
+        id: 'products',
+        title: 'Products',
+        description: 'View and manage your product catalog, prices, and barcodes.',
+        path: '/admin/products',
+        icon: '🛍️',
+        accentClass: 'bg-cyan-100 text-cyan-600',
+      },
+      {
+        id: 'brands',
+        title: 'Brands',
+        description: 'Standardize product branding to streamline filters and reporting.',
+        path: '/admin/pos-admin/brands',
+        icon: '🏷️',
+        accentClass: 'bg-fuchsia-100 text-fuchsia-600',
+      },
+      {
+        id: 'tags',
+        title: 'Tags',
+        description: 'Create reusable tags for quick search, promotions, and product groupings.',
+        path: '/admin/pos-admin/tags',
+        icon: '🔖',
+        accentClass: 'bg-lime-100 text-lime-600',
+      },
+      {
+        id: 'categories',
+        title: 'Categories',
+        description: 'Maintain product categories to organize menus and analytics.',
+        path: '/admin/pos-admin/categories',
+        icon: '📂',
+        accentClass: 'bg-slate-100 text-slate-600',
+      },
+      {
         id: 'cashiers',
         title: 'Cashiers',
         description: 'Manage cashier accounts, credentials, and outlet assignments.',
@@ -65,6 +98,14 @@ const POSAdminPage: React.FC = () => {
         icon: '📊',
         accentClass: 'bg-purple-100 text-purple-600',
       },
+      {
+        id: 'assign-stocks',
+        title: 'Assign Stocks',
+        description: 'Manage product stock levels for your outlets. Update custom stock quantities.',
+        path: '/admin/assign-stocks',
+        icon: '📦',
+        accentClass: 'bg-teal-100 text-teal-600',
+      },
     ],
     [],
   );
@@ -79,13 +120,11 @@ const POSAdminPage: React.FC = () => {
 
   return (
     <AdminLayout>
-      <div className="min-h-screen bg-gray-100 px-6 py-8">
-        <header className="mb-8">
-          <h1 className="text-3xl font-semibold text-gray-800">POS Admin</h1>
-          <p className="mt-2 text-gray-600 max-w-2xl">
-            Centralize your administrative tasks, fine-tune configuration, and keep operations running smoothly.
-          </p>
-        </header>
+      <div className="flex flex-col gap-8">
+        <AdminPageHeader
+          title="POS Admin"
+          description="Centralize your administrative tasks, fine-tune configuration, and keep operations running smoothly."
+        />
 
         <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
           {tiles.map((tile) => (
@@ -93,7 +132,7 @@ const POSAdminPage: React.FC = () => {
               key={tile.id}
               type="button"
               onClick={() => handleTileClick(tile.path)}
-              className="group h-full rounded-xl border border-gray-200 bg-white p-6 text-left shadow-sm transition-transform hover:-translate-y-1 hover:border-blue-400 hover:shadow-lg focus:-translate-y-1 focus:border-blue-500 focus:shadow-lg focus:outline-none"
+              className="group h-full rounded-2xl border border-gray-200 bg-white p-6 text-left shadow-sm transition-all duration-150 hover:-translate-y-1 hover:border-blue-400 hover:shadow-lg focus:-translate-y-1 focus:border-blue-500 focus:shadow-lg focus:outline-none"
             >
               <div className={`flex h-12 w-12 items-center justify-center rounded-lg text-2xl ${tile.accentClass}`}>
                 <span>{tile.icon}</span>

@@ -8,11 +8,13 @@ import type {
   CreateOutletRequest,
   UpdateOutletRequest,
 } from '../../../types/outlet';
+import type { RecordStatus } from '../../../types/configuration';
 
 interface AddOutletModalProps {
   outlet: Outlet | null;
   onClose: () => void;
   onSuccess: (action: 'create' | 'update') => void;
+  mode?: 'create' | 'edit' | 'view';
 }
 
 const PAYMENT_METHODS = ['Cash', 'Card', 'Chip & Pin', 'PayPal', 'Bank Transfer'];
@@ -33,7 +35,7 @@ const DEFAULT_FORM_VALUES: OutletFormValues = {
   payments: [...PAYMENT_METHODS],
   invoice: 'Default Invoice',
   tables: '',
-  isActive: true,
+  recordStatus: 'ACTIVE',
 };
 
 const MODE_OPTIONS: Array<{ label: string; value: OutletMode }> = [
@@ -41,9 +43,9 @@ const MODE_OPTIONS: Array<{ label: string; value: OutletMode }> = [
   { label: 'Restaurant / Cafe', value: 'RESTAURANT_CAFE' },
 ];
 
-const STATUS_OPTIONS = [
-  { label: 'Enabled', value: 'enabled' },
-  { label: 'Disabled', value: 'disabled' },
+const STATUS_OPTIONS: Array<{ label: string; value: RecordStatus }> = [
+  { label: 'Enabled', value: 'ACTIVE' },
+  { label: 'Disabled', value: 'INACTIVE' },
 ];
 
 const COUNTRIES = ['United States (US)', 'Canada', 'United Kingdom', 'Australia'];
@@ -88,11 +90,13 @@ const deriveInitialForm = (outlet: Outlet | null): OutletFormValues => {
     addressLine1: outlet.address,
     phone: outlet.phone,
     email: outlet.email,
-    isActive: outlet.isActive,
+    recordStatus: outlet.recordStatus,
   };
 };
 
-const AddOutletModal: React.FC<AddOutletModalProps> = ({ outlet, onClose, onSuccess }) => {
+const AddOutletModal: React.FC<AddOutletModalProps> = ({ outlet, onClose, onSuccess, mode }) => {
+  const resolvedMode: 'create' | 'edit' | 'view' = mode ?? (outlet ? 'edit' : 'create');
+  const isViewMode = resolvedMode === 'view';
   const [formData, setFormData] = useState<OutletFormValues>(() => deriveInitialForm(outlet));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -101,19 +105,27 @@ const AddOutletModal: React.FC<AddOutletModalProps> = ({ outlet, onClose, onSucc
     setFormData(deriveInitialForm(outlet));
   }, [outlet]);
 
-  const statusValue = formData.isActive ? 'enabled' : 'disabled';
+  const statusValue = formData.recordStatus;
+  const fieldDisabled = isViewMode || saving;
+  const inputDisabledClasses = isViewMode ? ' cursor-not-allowed bg-gray-100' : '';
 
   const handleChange = useCallback(
     (field: keyof OutletFormValues, value: string | boolean | string[]) => {
+      if (isViewMode) {
+        return;
+      }
       setFormData((prev) => ({
         ...prev,
         [field]: value,
       }));
     },
-    [],
+    [isViewMode],
   );
 
   const handlePaymentToggle = useCallback((payment: string) => {
+    if (isViewMode) {
+      return;
+    }
     setFormData((prev) => {
       const exists = prev.payments.includes(payment);
       return {
@@ -123,13 +135,21 @@ const AddOutletModal: React.FC<AddOutletModalProps> = ({ outlet, onClose, onSucc
           : [...prev.payments, payment],
       };
     });
-  }, []);
+  }, [isViewMode]);
 
-  const submitLabel = useMemo(() => (outlet ? 'Save Changes' : 'Create Outlet'), [outlet]);
+  const submitLabel = useMemo(() => {
+    if (resolvedMode === 'edit') {
+      return 'Save Changes';
+    }
+    return 'Create Outlet';
+  }, [resolvedMode]);
 
   const handleSubmit = useCallback(
     async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
+      if (isViewMode) {
+        return;
+      }
       setError(null);
       setSaving(true);
 
@@ -140,7 +160,7 @@ const AddOutletModal: React.FC<AddOutletModalProps> = ({ outlet, onClose, onSucc
         address: buildAddress(formData),
         phone: formData.phone.trim(),
         email: formData.email.trim(),
-        isActive: formData.isActive,
+        recordStatus: formData.recordStatus,
         ...(outlet ? { id: outlet.id } : {}),
       } as UpdateOutletRequest | CreateOutletRequest;
 
@@ -158,23 +178,22 @@ const AddOutletModal: React.FC<AddOutletModalProps> = ({ outlet, onClose, onSucc
         setSaving(false);
       }
     },
-    [formData, outlet, onSuccess],
+    [formData, isViewMode, outlet, onSuccess],
   );
 
   const modal = (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
       <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
+      <div className="relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
         <div className="border-b border-gray-200 bg-gray-50 px-6 py-5">
           <h2 className="text-lg font-semibold text-gray-900">{outlet ? 'Edit Outlet' : 'Add Outlet'}</h2>
         </div>
 
         <form
           onSubmit={handleSubmit}
-          className="overflow-y-auto"
-          style={{ maxHeight: 'calc(90vh - 140px)' }}
+          className="flex flex-col overflow-hidden"
         >
-          <div className="space-y-6 px-6 py-6">
+          <div className="flex-1 overflow-y-auto space-y-6 px-6 py-6">
             {error && (
               <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
                 {error}
@@ -191,7 +210,9 @@ const AddOutletModal: React.FC<AddOutletModalProps> = ({ outlet, onClose, onSucc
                 required
                 value={formData.name}
                 onChange={(event) => handleChange('name', event.target.value)}
-                className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                className={`h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100${inputDisabledClasses}`}
+                disabled={fieldDisabled}
+                readOnly={isViewMode}
               />
             </div>
 
@@ -205,7 +226,9 @@ const AddOutletModal: React.FC<AddOutletModalProps> = ({ outlet, onClose, onSucc
                 value={formData.code}
                 onChange={(event) => handleChange('code', event.target.value)}
                 placeholder="AUTO"
-                className="h-11 rounded-lg border border-gray-200 px-3 text-sm uppercase tracking-wide focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                className={`h-11 rounded-lg border border-gray-200 px-3 text-sm uppercase tracking-wide focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100${inputDisabledClasses}`}
+                disabled={fieldDisabled}
+                readOnly={isViewMode}
               />
               <p className="text-xs text-gray-500">Leave blank to auto-generate a unique code.</p>
             </div>
@@ -219,7 +242,8 @@ const AddOutletModal: React.FC<AddOutletModalProps> = ({ outlet, onClose, onSucc
                 required
                 value={formData.mode}
                 onChange={(event) => handleChange('mode', event.target.value as OutletMode)}
-                className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                className={`h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100${inputDisabledClasses}`}
+                disabled={fieldDisabled}
               >
                 {MODE_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -237,7 +261,8 @@ const AddOutletModal: React.FC<AddOutletModalProps> = ({ outlet, onClose, onSucc
                 id="inventory-type"
                 value={formData.inventoryType}
                 onChange={(event) => handleChange('inventoryType', event.target.value)}
-                className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                className={`h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100${inputDisabledClasses}`}
+                disabled={fieldDisabled}
               >
                 {INVENTORY_TYPES.map((type) => (
                   <option key={type} value={type}>
@@ -257,7 +282,9 @@ const AddOutletModal: React.FC<AddOutletModalProps> = ({ outlet, onClose, onSucc
                 required
                 value={formData.addressLine1}
                 onChange={(event) => handleChange('addressLine1', event.target.value)}
-                className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                className={`h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100${inputDisabledClasses}`}
+                disabled={fieldDisabled}
+                readOnly={isViewMode}
               />
             </div>
 
@@ -270,7 +297,9 @@ const AddOutletModal: React.FC<AddOutletModalProps> = ({ outlet, onClose, onSucc
                 type="text"
                 value={formData.addressLine2}
                 onChange={(event) => handleChange('addressLine2', event.target.value)}
-                className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                className={`h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100${inputDisabledClasses}`}
+                disabled={fieldDisabled}
+                readOnly={isViewMode}
               />
             </div>
 
@@ -284,7 +313,9 @@ const AddOutletModal: React.FC<AddOutletModalProps> = ({ outlet, onClose, onSucc
                   type="text"
                   value={formData.city}
                   onChange={(event) => handleChange('city', event.target.value)}
-                  className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  className={`h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100${inputDisabledClasses}`}
+                  disabled={fieldDisabled}
+                  readOnly={isViewMode}
                 />
               </div>
               <div className="flex flex-col gap-2">
@@ -296,7 +327,9 @@ const AddOutletModal: React.FC<AddOutletModalProps> = ({ outlet, onClose, onSucc
                   type="text"
                   value={formData.state}
                   onChange={(event) => handleChange('state', event.target.value)}
-                  className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  className={`h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100${inputDisabledClasses}`}
+                  disabled={fieldDisabled}
+                  readOnly={isViewMode}
                 />
               </div>
             </div>
@@ -310,7 +343,8 @@ const AddOutletModal: React.FC<AddOutletModalProps> = ({ outlet, onClose, onSucc
                   id="country"
                   value={formData.country}
                   onChange={(event) => handleChange('country', event.target.value)}
-                  className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  className={`h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100${inputDisabledClasses}`}
+                  disabled={fieldDisabled}
                 >
                   {COUNTRIES.map((country) => (
                     <option key={country} value={country}>
@@ -328,7 +362,9 @@ const AddOutletModal: React.FC<AddOutletModalProps> = ({ outlet, onClose, onSucc
                   type="text"
                   value={formData.postcode}
                   onChange={(event) => handleChange('postcode', event.target.value)}
-                  className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  className={`h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100${inputDisabledClasses}`}
+                  disabled={fieldDisabled}
+                  readOnly={isViewMode}
                 />
               </div>
             </div>
@@ -344,7 +380,9 @@ const AddOutletModal: React.FC<AddOutletModalProps> = ({ outlet, onClose, onSucc
                   required
                   value={formData.phone}
                   onChange={(event) => handleChange('phone', event.target.value)}
-                  className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  className={`h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100${inputDisabledClasses}`}
+                  disabled={fieldDisabled}
+                  readOnly={isViewMode}
                 />
               </div>
               <div className="flex flex-col gap-2">
@@ -357,7 +395,9 @@ const AddOutletModal: React.FC<AddOutletModalProps> = ({ outlet, onClose, onSucc
                   required
                   value={formData.email}
                   onChange={(event) => handleChange('email', event.target.value)}
-                  className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  className={`h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100${inputDisabledClasses}`}
+                  disabled={fieldDisabled}
+                  readOnly={isViewMode}
                 />
               </div>
             </div>
@@ -372,9 +412,10 @@ const AddOutletModal: React.FC<AddOutletModalProps> = ({ outlet, onClose, onSucc
                       key={method}
                       type="button"
                       onClick={() => handlePaymentToggle(method)}
-                      className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
+                      className={`rounded-md px-3 py-1.5 text-sm font-medium transition${
                         selected ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
+                      }${inputDisabledClasses}`}
+                      disabled={isViewMode}
                     >
                       {selected ? '✓ ' : ''}{method}
                     </button>
@@ -412,7 +453,9 @@ const AddOutletModal: React.FC<AddOutletModalProps> = ({ outlet, onClose, onSucc
                   value={formData.tables}
                   onChange={(event) => handleChange('tables', event.target.value)}
                   placeholder="e.g., 1, 2, 3, 4"
-                  className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  className={`h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100${inputDisabledClasses}`}
+                  disabled={fieldDisabled}
+                  readOnly={isViewMode}
                 />
                 <p className="text-xs text-gray-500">Visible only for Restaurant / Cafe outlets.</p>
               </div>
@@ -425,8 +468,9 @@ const AddOutletModal: React.FC<AddOutletModalProps> = ({ outlet, onClose, onSucc
               <select
                 id="status"
                 value={statusValue}
-                onChange={(event) => handleChange('isActive', event.target.value === 'enabled')}
-                className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                onChange={(event) => handleChange('recordStatus', event.target.value as RecordStatus)}
+                className={`h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100${inputDisabledClasses}`}
+                disabled={fieldDisabled}
               >
                 {STATUS_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -437,22 +481,24 @@ const AddOutletModal: React.FC<AddOutletModalProps> = ({ outlet, onClose, onSucc
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-3 border-t border-gray-200 bg-gray-50 px-6 py-4">
+          <div className="flex shrink-0 items-center justify-end gap-3 border-t border-gray-200 bg-gray-50 px-6 py-4">
             <button
               type="button"
               onClick={onClose}
-              disabled={saving}
+              disabled={saving && !isViewMode}
               className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-100 disabled:opacity-50"
             >
-              Cancel
+              {isViewMode ? 'Close' : 'Cancel'}
             </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-            >
-              {saving ? 'Saving...' : submitLabel}
-            </button>
+            {!isViewMode && (
+              <button
+                type="submit"
+                disabled={saving}
+                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              >
+                {saving ? 'Saving...' : submitLabel}
+              </button>
+            )}
           </div>
         </form>
       </div>

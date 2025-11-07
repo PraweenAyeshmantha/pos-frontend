@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import Alert, { type AlertType } from '../../components/common/Alert';
@@ -13,23 +13,9 @@ const ResetPasswordPage: React.FC = () => {
   const { resetPassword, logout, user } = useAuth();
   const navigate = useNavigate();
   const { tenantId } = useParams<{ tenantId: string }>();
-  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const showToast = useCallback((type: AlertType, text: string) => {
-    if (toastTimeoutRef.current) {
-      clearTimeout(toastTimeoutRef.current);
-    }
-
     setToast({ type, text });
-    toastTimeoutRef.current = setTimeout(() => setToast(null), 3000);
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (toastTimeoutRef.current) {
-        clearTimeout(toastTimeoutRef.current);
-      }
-    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -180,6 +166,7 @@ const ResetPasswordPage: React.FC = () => {
             type={toast.type}
             title={toast.type.charAt(0).toUpperCase() + toast.type.slice(1)}
             message={toast.text}
+            onClose={() => setToast(null)}
           />
         </ToastContainer>
       )}

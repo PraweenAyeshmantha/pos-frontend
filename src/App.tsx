@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { TenantProvider } from './contexts/TenantContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -7,6 +7,8 @@ import TenantRouteGuard from './components/auth/TenantRouteGuard';
 import EnvConfigErrorPage from './components/errors/EnvConfigErrorPage';
 import InvalidUrlErrorPage from './components/errors/InvalidUrlErrorPage';
 import env from './config/env';
+import { useAuth } from './hooks/useAuth';
+import { getDefaultTenantPath } from './utils/authRoles';
 
 // Lazy load pages for better performance
 const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
@@ -21,7 +23,14 @@ const POSAdminPage = lazy(() => import('./pages/admin/pos-admin/POSAdminPage'));
 const OutletsPage = lazy(() => import('./pages/admin/outlets/OutletsPage'));
 const CashiersPage = lazy(() => import('./pages/admin/cashiers/CashiersPage'));
 const TablesPage = lazy(() => import('./pages/admin/tables/TablesPage'));
+const ProductsPage = lazy(() => import('./pages/admin/products/ProductsPage'));
 const AssignBarcodesPage = lazy(() => import('./pages/admin/assign-barcodes/AssignBarcodesPage'));
+const AssignStocksPage = lazy(() => import('./pages/admin/assign-stocks/AssignStocksPage'));
+const BrandsPage = lazy(() => import('./pages/admin/taxonomy/BrandsPage'));
+const TagsPage = lazy(() => import('./pages/admin/taxonomy/TagsPage'));
+const ProductCategoriesPage = lazy(() => import('./pages/admin/taxonomy/ProductCategoriesPage'));
+const CashierPOSPage = lazy(() => import('./pages/cashier/CashierPOSPage'));
+const CashierDashboardPage = lazy(() => import('./pages/cashier/CashierDashboardPage'));
 
 // Loading component
 const LoadingFallback = () => (
@@ -32,6 +41,13 @@ const LoadingFallback = () => (
     </div>
   </div>
 );
+
+const TenantLanding = () => {
+  const { user } = useAuth();
+  const { tenantId } = useParams<{ tenantId: string }>();
+  const target = getDefaultTenantPath(user, tenantId);
+  return <Navigate to={target} replace />;
+};
 
 function App() {
   // Check if environment is properly configured
@@ -66,71 +82,119 @@ function App() {
                       </ProtectedRoute>
                     } />
                     
-                    <Route path="/" element={<Navigate to="admin/dashboard" replace />} />
+                    <Route path="/" element={
+                      <ProtectedRoute>
+                        <TenantLanding />
+                      </ProtectedRoute>
+                    } />
                     
                     <Route path="admin/dashboard" element={
-                      <ProtectedRoute>
+                      <ProtectedRoute allowedRoles={['ADMIN']}>
                         <DashboardPage />
                       </ProtectedRoute>
                     } />
                     
                     <Route path="admin/customers" element={
-                      <ProtectedRoute>
+                      <ProtectedRoute allowedRoles={['ADMIN', 'CASHIER']}>
                         <CustomersPage />
                       </ProtectedRoute>
                     } />
 
                     <Route path="admin/cashiers" element={
-                      <ProtectedRoute>
+                      <ProtectedRoute allowedRoles={['ADMIN']}>
                         <CashiersPage />
                       </ProtectedRoute>
                     } />
-                    
+                   
                     <Route path="admin/orders" element={
-                      <ProtectedRoute>
+                      <ProtectedRoute allowedRoles={['ADMIN', 'CASHIER']}>
                         <OrdersPage />
                       </ProtectedRoute>
                     } />
-                    
+                   
                     <Route path="admin/pos-admin" element={
-                      <ProtectedRoute>
+                      <ProtectedRoute allowedRoles={['ADMIN']}>
                         <POSAdminPage />
                       </ProtectedRoute>
                     } />
 
                     <Route path="admin/outlets" element={
-                      <ProtectedRoute>
+                      <ProtectedRoute allowedRoles={['ADMIN']}>
                         <OutletsPage />
                       </ProtectedRoute>
                     } />
 
                     <Route path="admin/tables" element={
-                      <ProtectedRoute>
+                      <ProtectedRoute allowedRoles={['ADMIN']}>
                         <TablesPage />
                       </ProtectedRoute>
                     } />
 
+                    <Route path="admin/products" element={
+                      <ProtectedRoute allowedRoles={['ADMIN']}>
+                        <ProductsPage />
+                      </ProtectedRoute>
+                    } />
+
                     <Route path="admin/assign-barcodes" element={
-                      <ProtectedRoute>
+                      <ProtectedRoute allowedRoles={['ADMIN']}>
                         <AssignBarcodesPage />
                       </ProtectedRoute>
                     } />
 
+                    <Route path="admin/assign-stocks" element={
+                      <ProtectedRoute allowedRoles={['ADMIN']}>
+                        <AssignStocksPage />
+                      </ProtectedRoute>
+                    } />
+
+                    <Route path="admin/pos-admin/brands" element={
+                      <ProtectedRoute allowedRoles={['ADMIN']}>
+                        <BrandsPage />
+                      </ProtectedRoute>
+                    } />
+
+                    <Route path="admin/pos-admin/tags" element={
+                      <ProtectedRoute allowedRoles={['ADMIN']}>
+                        <TagsPage />
+                      </ProtectedRoute>
+                    } />
+
+                    <Route path="admin/pos-admin/categories" element={
+                      <ProtectedRoute allowedRoles={['ADMIN']}>
+                        <ProductCategoriesPage />
+                      </ProtectedRoute>
+                    } />
+
                     <Route path="admin/statistics" element={
-                      <ProtectedRoute>
+                      <ProtectedRoute allowedRoles={['ADMIN']}>
                         <StatisticsPage />
                       </ProtectedRoute>
                     } />
-                    
+                   
                     <Route path="admin/configuration/general" element={
-                      <ProtectedRoute>
+                      <ProtectedRoute allowedRoles={['ADMIN']}>
                         <AdminPage />
                       </ProtectedRoute>
                     } />
-                    
+                   
                     <Route path="admin/settings" element={
-                      <ProtectedRoute>
+                      <ProtectedRoute allowedRoles={['ADMIN', 'CASHIER']}>
                         <SettingsPage />
+                      </ProtectedRoute>
+                    } />
+
+                    <Route path="cashier" element={<Navigate to="cashier/dashboard" replace />} />
+
+                    <Route path="cashier/dashboard" element={
+                      <ProtectedRoute allowedRoles={['CASHIER']}>
+                        <CashierDashboardPage />
+                      </ProtectedRoute>
+                    } />
+
+                    <Route path="cashier/pos" element={
+                      <ProtectedRoute allowedRoles={['CASHIER']}>
+                        <CashierPOSPage />
                       </ProtectedRoute>
                     } />
 

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { configurationService } from '../../../services/configurationService';
 import type { PrinterConfigFormData } from '../../../types/configuration';
 import Alert from '../../common/Alert';
@@ -105,22 +105,10 @@ const PrinterConfiguration: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState<PrinterConfigFormData>({ ...fallbackForm });
   const [message, setMessage] = useState<MessageState>(null);
-  const messageTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const clearMessageTimeout = useCallback(() => {
-    if (messageTimeout.current) {
-      clearTimeout(messageTimeout.current);
-      messageTimeout.current = null;
-    }
-  }, []);
 
   const showMessage = useCallback((type: AlertType, text: string) => {
-    clearMessageTimeout();
     setMessage({ type, text });
-    messageTimeout.current = setTimeout(() => setMessage(null), 3000);
-  }, [clearMessageTimeout]);
-
-  useEffect(() => clearMessageTimeout, [clearMessageTimeout]);
+  }, []);
 
   const fetchConfigurations = useCallback(async () => {
     try {
@@ -341,6 +329,7 @@ const PrinterConfiguration: React.FC = () => {
             type={message.type}
             title={message.type.charAt(0).toUpperCase() + message.type.slice(1)}
             message={message.text}
+            onClose={() => setMessage(null)}
           />
         </ToastContainer>
       )}
