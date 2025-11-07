@@ -115,7 +115,7 @@ const CashierDashboardPage: React.FC = () => {
 
   return (
     <CashierLayout>
-      <div className="px-6 pb-10 pt-8">
+      <div className="px-6 pb-10">
         <header className="mb-6 flex flex-col gap-2">
           <h1 className="text-3xl font-semibold text-slate-900">
             Welcome back{user?.name ? `, ${user.name.split(' ')[0]}` : ''} 👋

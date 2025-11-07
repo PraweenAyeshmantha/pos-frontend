@@ -51,6 +51,14 @@ const POSAdminPage: React.FC = () => {
         accentClass: 'bg-cyan-100 text-cyan-600',
       },
       {
+        id: 'coupons',
+        title: 'Coupons',
+        description: 'Create and manage discount coupons to drive sales and customer loyalty.',
+        path: '/admin/coupons',
+        icon: '🎟️',
+        accentClass: 'bg-orange-100 text-orange-600',
+      },
+      {
         id: 'brands',
         title: 'Brands',
         description: 'Standardize product branding to streamline filters and reporting.',
