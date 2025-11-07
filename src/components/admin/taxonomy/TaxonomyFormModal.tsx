@@ -6,7 +6,7 @@ import type { TaxonomyFormValues } from '../../../types/taxonomy';
 
 interface TaxonomyFormModalProps {
   open: boolean;
-  mode: 'create' | 'edit';
+  mode: 'create' | 'edit' | 'view';
   entityName: string;
   onClose: () => void;
   initialValues?: TaxonomyFormValues;
@@ -62,7 +62,10 @@ const TaxonomyFormModal: React.FC<TaxonomyFormModalProps> = ({
     }
   }, [initialValues, open]);
 
-  const title = useMemo(() => `${mode === 'edit' ? 'Edit' : 'Add'} ${entityName}`, [entityName, mode]);
+  const title = useMemo(() => {
+    if (mode === 'view') return `View ${entityName}`;
+    return `${mode === 'edit' ? 'Edit' : 'Add'} ${entityName}`;
+  }, [entityName, mode]);
   const submitLabel = mode === 'edit' ? 'Save Changes' : `Create ${entityName}`;
 
   const handleOverlayClick = useCallback(() => {
@@ -137,7 +140,9 @@ const TaxonomyFormModal: React.FC<TaxonomyFormModalProps> = ({
               {title}
             </h2>
             <p className="mt-1 text-sm text-gray-600">
-              {mode === 'edit'
+              {mode === 'view'
+                ? `View the ${entityName.toLowerCase()} details.`
+                : mode === 'edit'
                 ? `Update the ${entityName.toLowerCase()} details and availability.`
                 : `Provide details for the new ${entityName.toLowerCase()}.`}
             </p>
@@ -174,11 +179,12 @@ const TaxonomyFormModal: React.FC<TaxonomyFormModalProps> = ({
               type="text"
               value={formValues.name}
               onChange={(event) => handleFieldChange('name', event.target.value)}
-              className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              disabled={mode === 'view'}
+              className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 disabled:bg-gray-50 disabled:text-gray-500"
               maxLength={150}
               placeholder={`Enter ${entityName.toLowerCase()} name`}
               autoComplete="off"
-              autoFocus
+              autoFocus={mode !== 'view'}
             />
           </div>
 
@@ -190,7 +196,8 @@ const TaxonomyFormModal: React.FC<TaxonomyFormModalProps> = ({
               id="taxonomy-description"
               value={formValues.description ?? ''}
               onChange={(event) => handleFieldChange('description', event.target.value)}
-              className="min-h-[96px] rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              disabled={mode === 'view'}
+              className="min-h-[96px] rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 disabled:bg-gray-50 disabled:text-gray-500"
               maxLength={255}
               placeholder={`Add a short description for the ${entityName.toLowerCase()}`}
             />
@@ -205,7 +212,8 @@ const TaxonomyFormModal: React.FC<TaxonomyFormModalProps> = ({
               id="taxonomy-status"
               value={formValues.recordStatus}
               onChange={(event) => handleFieldChange('recordStatus', event.target.value as RecordStatus)}
-              className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              disabled={mode === 'view'}
+              className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 disabled:bg-gray-50 disabled:text-gray-500"
             >
               {RESOLVED_STATUS_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -221,15 +229,17 @@ const TaxonomyFormModal: React.FC<TaxonomyFormModalProps> = ({
               onClick={handleOverlayClick}
               className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
             >
-              Cancel
+              {mode === 'view' ? 'Close' : 'Cancel'}
             </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              {saving ? 'Saving...' : submitLabel}
-            </button>
+            {mode !== 'view' && (
+              <button
+                type="submit"
+                disabled={saving}
+                className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {saving ? 'Saving...' : submitLabel}
+              </button>
+            )}
           </div>
         </form>
       </div>

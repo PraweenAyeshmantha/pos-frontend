@@ -1,9 +1,11 @@
 import React, { memo, useMemo } from 'react';
 import { Navigate, useLocation, useParams } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { getDefaultTenantPath, getUserRoleCodes } from '../../utils/authRoles';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  allowedRoles?: string[];
 }
 
 // Loading component extracted for reusability
@@ -18,7 +20,7 @@ const LoadingSpinner = memo(() => (
 
 LoadingSpinner.displayName = 'LoadingSpinner';
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles }) => {
   const { isAuthenticated, isLoading, user } = useAuth();
   const location = useLocation();
   const { tenantId } = useParams<{ tenantId: string }>();
@@ -45,6 +47,18 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return needsReset;
   }, [user]);
 
+  const roleCodes = useMemo(() => getUserRoleCodes(user), [user]);
+
+  const hasRequiredRole = useMemo(() => {
+    if (!allowedRoles || allowedRoles.length === 0) {
+      return true;
+    }
+    if (!user) {
+      return false;
+    }
+    return allowedRoles.some((role) => roleCodes.has(role.toUpperCase()));
+  }, [allowedRoles, roleCodes, user]);
+
   if (isLoading) {
     return <LoadingSpinner />;
   }
@@ -60,6 +74,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   if (requirePasswordReset && !location.pathname.includes('/reset-password')) {
     const resetPath = tenantId ? `/posai/${tenantId}/reset-password` : '/';
     return <Navigate to={resetPath} replace />;
+  }
+
+  if (!hasRequiredRole) {
+    const fallbackPath = getDefaultTenantPath(user, tenantId);
+    return <Navigate to={fallbackPath} replace />;
   }
 
   return <>{children}</>;

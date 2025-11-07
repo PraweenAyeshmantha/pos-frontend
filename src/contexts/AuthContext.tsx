@@ -33,10 +33,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.removeItem('user');
     
     const token = authService.getToken();
-    const user = authService.getCurrentUser();
-    
+    const storedUser = authService.getCurrentUser() as User | null;
+    const normalizedUser = storedUser
+      ? {
+          cashierId: storedUser.cashierId ?? null,
+          userId: storedUser.userId ?? null,
+          username: storedUser.username,
+          name: storedUser.name,
+          email: storedUser.email,
+          requirePasswordReset: storedUser.requirePasswordReset === true,
+          categories: Array.isArray(storedUser.categories) ? storedUser.categories : [],
+          access: Array.isArray(storedUser.access) ? storedUser.access : [],
+        }
+      : null;
+
     setAuthState({
-      user,
+      user: normalizedUser,
       token,
       isAuthenticated: !!token,
       isLoading: false,
@@ -50,14 +62,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       // Create user object with explicit boolean for requirePasswordReset
       const user = {
-        cashierId: userData.cashierId,
+        cashierId: userData.cashierId ?? null,
+        userId: userData.userId ?? null,
         username: userData.username,
         name: userData.name,
         email: userData.email,
         // Explicitly convert to boolean to avoid any truthy/falsy issues
         requirePasswordReset: userData.requirePasswordReset === true,
+        categories: userData.userCategories ?? [],
+        access: userData.userAccess ?? [],
       };
       
+      sessionStorage.setItem('user', JSON.stringify(user));
+
       setAuthState({
         user,
         token: userData.token,

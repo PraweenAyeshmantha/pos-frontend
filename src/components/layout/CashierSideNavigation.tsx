@@ -1,6 +1,7 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { getUserRoleCodes } from '../../utils/authRoles';
 
 interface NavigationItem {
   id: string;
@@ -12,16 +13,51 @@ interface NavigationItem {
 const CashierSideNavigation: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const { tenantId } = useParams<{ tenantId: string }>();
 
-  const navigationItems: NavigationItem[] = [
-    { id: 'home', label: 'Home', icon: '🏠', path: '/cashier/pos' },
-    { id: 'customers', label: 'Customers', icon: '👥', path: '/cashier/customers' },
-    { id: 'orders', label: 'Orders', icon: '🛍️', path: '/cashier/orders' },
-    { id: 'statistics', label: 'Statistics', icon: '💲', path: '/cashier/statistics' },
-    { id: 'settings', label: 'Settings', icon: '⚙️', path: '/cashier/settings' },
-  ];
+  const roleCodes = useMemo(() => getUserRoleCodes(user), [user]);
+  const hasAdminRole = roleCodes.has('ADMIN');
+  const hasCashierRole = roleCodes.has('CASHIER');
+
+  const navigationItems = useMemo<NavigationItem[]>(() => {
+    const items: NavigationItem[] = [];
+
+    if (hasCashierRole) {
+      items.push(
+        { id: 'cashier-home', label: 'Home', icon: '🏠', path: '/cashier/dashboard' },
+        { id: 'cashier-pos', label: 'POS', icon: '🛒', path: '/cashier/pos' },
+        { id: 'cashier-orders', label: 'Sales', icon: '🛍️', path: '/admin/orders' },
+        { id: 'cashier-customers', label: 'Customers', icon: '👥', path: '/admin/customers' },
+        { id: 'cashier-settings', label: 'Settings', icon: '⚙️', path: '/admin/settings' },
+      );
+    }
+
+    if (hasAdminRole) {
+      items.push(
+        { id: 'admin-dashboard', label: 'Admin', icon: '🏛️', path: '/admin/dashboard' },
+        { id: 'admin-orders', label: 'Orders', icon: '🛍️', path: '/admin/orders' },
+        { id: 'admin-customers', label: 'Customers', icon: '👥', path: '/admin/customers' },
+        { id: 'admin-settings', label: 'Settings', icon: '⚙️', path: '/admin/settings' },
+      );
+    }
+
+    if (items.length === 0) {
+      return [
+        { id: 'cashier-home-fallback', label: 'Home', icon: '🏠', path: '/cashier/dashboard' },
+        { id: 'cashier-settings-fallback', label: 'Settings', icon: '⚙️', path: '/admin/settings' },
+      ];
+    }
+
+    const seen = new Set<string>();
+    return items.filter((item) => {
+      if (seen.has(item.path)) {
+        return false;
+      }
+      seen.add(item.path);
+      return true;
+    });
+  }, [hasAdminRole, hasCashierRole]);
 
   const handleNavigation = (path: string) => {
     const fullPath = tenantId ? `/posai/${tenantId}${path}` : path;

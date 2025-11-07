@@ -1,4 +1,4 @@
-import React, { useState, memo, useCallback, useMemo } from 'react';
+import React, { useState, memo, useCallback, useMemo, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -9,6 +9,49 @@ const getInitials = (name: string) => {
     return (parts[0][0] + parts[1][0]).toUpperCase();
   }
   return name.substring(0, 2).toUpperCase();
+};
+
+// Date and Time Component
+const DateTimeDisplay: React.FC = () => {
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatDate = (date: Date) => {
+    const options: Intl.DateTimeFormatOptions = { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    };
+    return date.toLocaleDateString('en-US', options);
+  };
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true 
+    });
+  };
+
+  return (
+    <div className="flex flex-col text-white">
+      <div className="text-sm font-semibold whitespace-nowrap">
+        {formatDate(currentTime)}
+      </div>
+      <div className="text-xs text-blue-100">
+        {formatTime(currentTime)}
+      </div>
+    </div>
+  );
 };
 
 const TopNavigation: React.FC = () => {
@@ -34,9 +77,9 @@ const TopNavigation: React.FC = () => {
 
   return (
     <div className="h-14 bg-blue-600 shadow-md flex items-center justify-between px-6 fixed top-0 right-0 left-20 z-10">
-      {/* Left side - empty or can add breadcrumbs */}
+      {/* Left side - Date and Time */}
       <div className="flex items-center space-x-4">
-        {/* Placeholder for additional features */}
+        <DateTimeDisplay />
       </div>
 
       {/* Right side - User profile and actions */}

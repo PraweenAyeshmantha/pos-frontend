@@ -68,6 +68,7 @@ const TaxonomyManager = <T extends TaxonomyEntity>({
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [modalOpen, setModalOpen] = useState<boolean>(false);
   const [editingItem, setEditingItem] = useState<T | null>(null);
+  const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>('create');
   const [alert, setAlert] = useState<{ type: AlertType; title: string; message: string } | null>(null);
   const [archiveConfirm, setArchiveConfirm] = useState<{ open: boolean; item: T | null }>({ open: false, item: null });
 
@@ -105,23 +106,37 @@ const TaxonomyManager = <T extends TaxonomyEntity>({
     });
   }, [items, searchQuery]);
 
+  const totalItems = items.length;
+  const activeItems = useMemo(() => items.filter((item) => item.recordStatus === 'ACTIVE').length, [items]);
+
   const handleAddNew = useCallback(() => {
     setEditingItem(null);
+    setModalMode('create');
     setModalOpen(true);
   }, []);
 
   const handleEdit = useCallback((item: T) => {
     setEditingItem(item);
+    setModalMode('edit');
+    setModalOpen(true);
+  }, []);
+
+  const handleView = useCallback((item: T) => {
+    setEditingItem(item);
+    setModalMode('view');
     setModalOpen(true);
   }, []);
 
   const handleModalClose = useCallback(() => {
     setModalOpen(false);
     setEditingItem(null);
+    setModalMode('create');
   }, []);
 
   const handleModalSubmit = useCallback(
     async (values: TaxonomyFormValues) => {
+      if (modalMode === 'view') return;
+
       if (editingItem) {
         const updated = await updateEntity(editingItem.id, values);
         setItems((prev) => prev.map((item) => (item.id === updated.id ? ({ ...item, ...updated }) as T : item)));
@@ -141,8 +156,9 @@ const TaxonomyManager = <T extends TaxonomyEntity>({
       }
       setModalOpen(false);
       setEditingItem(null);
+      setModalMode('create');
     },
-    [createEntity, editingItem, entityName, showAlert, updateEntity],
+    [createEntity, editingItem, entityName, modalMode, showAlert, updateEntity],
   );
 
   const handleArchiveRequest = useCallback((item: T) => {
@@ -211,15 +227,6 @@ const TaxonomyManager = <T extends TaxonomyEntity>({
       <AdminPageHeader
         title={title}
         description={description}
-        actions={
-          <button
-            type="button"
-            onClick={handleAddNew}
-            className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white"
-          >
-            Add {entityName}
-          </button>
-        }
       />
 
       {(alert || loadError) && (
@@ -245,22 +252,32 @@ const TaxonomyManager = <T extends TaxonomyEntity>({
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="text-sm text-slate-600">
-            {filteredItems.length === items.length
-              ? `Showing ${items.length} ${entityName.toLowerCase()}${items.length === 1 ? '' : 's'}`
-              : `Showing ${filteredItems.length} of ${items.length} ${entityName.toLowerCase()}s`}
+          <div className="text-xs text-slate-500 sm:text-sm whitespace-nowrap">
+            {filteredItems.length === totalItems
+              ? `Showing ${totalItems} ${entityName.toLowerCase()}${totalItems === 1 ? '' : 's'}`
+              : `Showing ${filteredItems.length} of ${totalItems} ${entityName.toLowerCase()}${totalItems === 1 ? '' : 's'}`}
+            {` • ${activeItems} active`}
           </div>
-          <input
-            type="text"
-            placeholder={`Search ${entityName.toLowerCase()}s...`}
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            className="h-10 w-full max-w-xs rounded-lg border border-slate-200 px-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 md:max-w-md"
-          />
+          <div className="flex w-full flex-col items-stretch gap-3 md:flex-row md:justify-end md:gap-3">
+            <div className="relative w-full md:max-w-xs">
+              <input
+                type="text"
+                placeholder={`Search ${entityName.toLowerCase()}s...`}
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                className="h-10 w-full rounded-lg border border-slate-200 px-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={handleAddNew}
+              className="inline-flex h-10 items-center justify-center rounded-lg bg-blue-600 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white md:w-auto"
+            >
+              Add {entityName}
+            </button>
+          </div>
         </div>
-      </section>
-
-      {loading ? (
+      </section>      {loading ? (
         <div className="flex min-h-[320px] items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white">
           <div className="text-center">
             <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600" />
@@ -324,11 +341,18 @@ const TaxonomyManager = <T extends TaxonomyEntity>({
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-500">{formatDateTime(item.updatedAt ?? item.createdAt)}</td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center justify-end gap-3">
+                      <div className="flex items-center justify-end gap-3 text-sm font-semibold">
+                        <button
+                          type="button"
+                          onClick={() => handleView(item)}
+                          className="text-slate-600 transition hover:text-slate-800"
+                        >
+                          View
+                        </button>
                         <button
                           type="button"
                           onClick={() => handleEdit(item)}
-                          className="text-sm font-semibold text-blue-600 transition hover:text-blue-800"
+                          className="text-blue-600 transition hover:text-blue-800"
                         >
                           Edit
                         </button>
@@ -336,7 +360,7 @@ const TaxonomyManager = <T extends TaxonomyEntity>({
                           <button
                             type="button"
                             onClick={() => handleArchiveRequest(item)}
-                            className="text-sm font-semibold text-rose-600 transition hover:text-rose-700"
+                            className="text-rose-600 transition hover:text-rose-700"
                           >
                             Deactivate
                           </button>
@@ -344,7 +368,7 @@ const TaxonomyManager = <T extends TaxonomyEntity>({
                           <button
                             type="button"
                             onClick={() => handleActivate(item)}
-                            className="text-sm font-semibold text-emerald-600 transition hover:text-emerald-700"
+                            className="text-emerald-600 transition hover:text-emerald-700"
                           >
                             Activate
                           </button>
@@ -361,7 +385,7 @@ const TaxonomyManager = <T extends TaxonomyEntity>({
 
       <TaxonomyFormModal
         open={modalOpen}
-        mode={editingItem ? 'edit' : 'create'}
+        mode={modalMode}
         entityName={entityName}
         onClose={handleModalClose}
         initialValues={

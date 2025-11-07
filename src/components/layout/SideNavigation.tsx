@@ -1,7 +1,8 @@
-import React, { memo, useCallback, useState } from 'react';
+import React, { memo, useCallback, useMemo, useState } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import ConfirmationDialog from '../common/ConfirmationDialog';
+import { getUserRoleCodes } from '../../utils/authRoles';
 
 interface NavigationItem {
   id: string;
@@ -10,20 +11,57 @@ interface NavigationItem {
   path: string;
 }
 
-const navigationItems: NavigationItem[] = [
-  { id: 'home', label: 'Home', icon: '🏠', path: '/admin/dashboard' },
-  { id: 'posAdmin', label: 'POS Admin', icon: '🗂️', path: '/admin/pos-admin' },
-  { id: 'customers', label: 'Customers', icon: '👥', path: '/admin/customers' },
-  { id: 'orders', label: 'Orders', icon: '🛍️', path: '/admin/orders' },
-  { id: 'settings', label: 'Settings', icon: '⚙️', path: '/admin/settings' },
-];
-
 const SideNavigation: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const { tenantId } = useParams<{ tenantId: string }>();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  const roleCodes = useMemo(() => getUserRoleCodes(user), [user]);
+  const hasAdminRole = roleCodes.has('ADMIN');
+  const hasCashierRole = roleCodes.has('CASHIER');
+
+  const navigationItems = useMemo(() => {
+    const adminItems: NavigationItem[] = [
+      { id: 'admin-home', label: 'Home', icon: '🏠', path: '/admin/dashboard' },
+      { id: 'admin-pos-admin', label: 'POS Admin', icon: '🗂️', path: '/admin/pos-admin' },
+      { id: 'admin-customers', label: 'Customers', icon: '👥', path: '/admin/customers' },
+      { id: 'admin-orders', label: 'Orders', icon: '🛍️', path: '/admin/orders' },
+      { id: 'admin-settings', label: 'Settings', icon: '⚙️', path: '/admin/settings' },
+    ];
+
+    const cashierItems: NavigationItem[] = [
+      { id: 'cashier-home', label: 'POS Home', icon: '🏠', path: '/cashier/dashboard' },
+      { id: 'cashier-pos', label: 'POS', icon: '🛒', path: '/cashier/pos' },
+      { id: 'cashier-orders', label: 'Sales', icon: '🛍️', path: '/admin/orders' },
+      { id: 'cashier-customers', label: 'Customers', icon: '👥', path: '/admin/customers' },
+      { id: 'cashier-settings', label: 'Settings', icon: '⚙️', path: '/admin/settings' },
+    ];
+
+    const items: NavigationItem[] = [];
+
+    if (hasAdminRole) {
+      items.push(...adminItems);
+    }
+
+    if (hasCashierRole) {
+      items.push(...cashierItems);
+    }
+
+    if (items.length === 0) {
+      return adminItems;
+    }
+
+    const seen = new Set<string>();
+    return items.filter((item) => {
+      if (seen.has(item.path)) {
+        return false;
+      }
+      seen.add(item.path);
+      return true;
+    });
+  }, [hasAdminRole, hasCashierRole]);
 
   const handleNavigation = useCallback((path: string) => {
     // Prepend tenant ID to the path

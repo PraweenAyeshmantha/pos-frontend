@@ -15,14 +15,14 @@ export interface TaxonomyFormValues {
   recordStatus: RecordStatus;
 }
 
-export interface CreateTaxonomyRequest extends TaxonomyFormValues {}
+export type CreateTaxonomyRequest = TaxonomyFormValues;
 
 export interface UpdateTaxonomyRequest extends TaxonomyFormValues {
   id: number;
 }
 
-export interface Tag extends TaxonomyEntity {}
+export type Tag = TaxonomyEntity;
 
-export interface Brand extends TaxonomyEntity {}
+export type Brand = TaxonomyEntity;
 
-export interface ProductCategory extends TaxonomyEntity {}
+export type ProductCategory = TaxonomyEntity;

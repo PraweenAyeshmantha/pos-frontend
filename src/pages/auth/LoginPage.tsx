@@ -3,6 +3,7 @@ import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import Alert, { type AlertType } from '../../components/common/Alert';
 import ToastContainer from '../../components/common/ToastContainer';
+import { getDefaultTenantPath } from '../../utils/authRoles';
 
 const LoginPage: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -18,7 +19,7 @@ const LoginPage: React.FC = () => {
   // Get the intended destination or default to dashboard
   // Filter out /reset-password from 'from' to avoid redirect loop after password reset
   const fromPath = (location.state as { from?: { pathname: string }; passwordResetSuccess?: boolean })?.from?.pathname;
-  const baseFrom = (fromPath && !fromPath.includes('/reset-password')) ? fromPath : `/posai/${tenantId}/admin/dashboard`;
+  const baseFrom = fromPath && !fromPath.includes('/reset-password') ? fromPath : undefined;
   const passwordResetSuccess = (location.state as { passwordResetSuccess?: boolean })?.passwordResetSuccess || false;
 
   const showToast = useCallback((type: AlertType, text: string) => {
@@ -33,8 +34,9 @@ const LoginPage: React.FC = () => {
       if (user.requirePasswordReset) {
         navigate(`/posai/${tenantId}/reset-password`, { replace: true });
       } else {
-        // Otherwise, redirect to intended destination
-        navigate(baseFrom, { replace: true });
+        const defaultPath = getDefaultTenantPath(user, tenantId);
+        const targetPath = baseFrom ?? defaultPath;
+        navigate(targetPath, { replace: true });
       }
     }
   }, [isAuthenticated, user, navigate, baseFrom, isNavigating, tenantId]);
@@ -63,7 +65,9 @@ const LoginPage: React.FC = () => {
       if (loggedInUser.requirePasswordReset) {
         navigate(`/posai/${tenantId}/reset-password`, { replace: true });
       } else {
-        navigate(baseFrom, { replace: true });
+        const defaultPath = getDefaultTenantPath(loggedInUser, tenantId);
+        const targetPath = baseFrom ?? defaultPath;
+        navigate(targetPath, { replace: true });
       }
     } catch (err) {
       console.error('Login error:', err);
