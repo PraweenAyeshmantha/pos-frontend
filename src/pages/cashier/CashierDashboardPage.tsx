@@ -115,129 +115,132 @@ const CashierDashboardPage: React.FC = () => {
 
   return (
     <CashierLayout>
-      <div className="px-6 pb-10">
-        <header className="mb-6 flex flex-col gap-2">
-          <h1 className="text-3xl font-semibold text-slate-900">
-            Welcome back{user?.name ? `, ${user.name.split(' ')[0]}` : ''} 👋
-          </h1>
-          <p className="text-sm text-slate-500">
-            Here's how your register has performed so far today. Keep an eye on your open tickets and continue closing
-            strong.
-          </p>
-        </header>
-
-        {error ? (
-          <div className="mb-6 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
-            {error}
-          </div>
-        ) : null}
-
-        <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">My Gross Sales</p>
-            <p className="mt-3 text-3xl font-semibold text-emerald-600">
-              {isLoading ? '—' : formatCurrency(totalSales)}
+      <div className="px-4 pb-12 sm:px-8 lg:px-12">
+        <div className="flex flex-col gap-8">
+          <header className="flex flex-col gap-2">
+            <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
+              Welcome back{user?.name ? `, ${user.name.split(' ')[0]}` : ''} 👋
+            </h1>
+            <p className="text-sm text-slate-500">
+              Here's how your register has performed so far today. Keep an eye on your open tickets and continue closing
+              strong.
             </p>
-            <p className="mt-2 text-sm text-slate-500">Completed tickets that you processed today.</p>
-          </article>
+          </header>
 
-          <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Net Sales After Refunds</p>
-            <p className="mt-3 text-3xl font-semibold text-slate-900">
-              {isLoading ? '—' : formatCurrency(netSales)}
-            </p>
-            <p className="mt-2 text-sm text-slate-500">{formatCurrency(refundedAmount)} refunded today.</p>
-          </article>
+          {error ? (
+            <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">{error}</div>
+          ) : null}
 
-          <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Orders Closed</p>
-            <p className="mt-3 text-3xl font-semibold text-slate-900">
-              {isLoading ? '—' : formatNumber(completedOrders.length)}
-            </p>
-            <p className="mt-2 text-sm text-slate-500">
-              {activeOrders.length
-                ? `${formatNumber(activeOrders.length)} still in progress`
-                : 'No open orders right now.'}
-            </p>
-          </article>
+          <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">My Gross Sales</p>
+              <p className="mt-3 text-3xl font-semibold text-emerald-600">
+                {isLoading ? '—' : formatCurrency(totalSales)}
+              </p>
+              <p className="mt-2 text-sm text-slate-500">Completed tickets that you processed today.</p>
+            </article>
 
-          <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Average Ticket Value</p>
-            <p className="mt-3 text-3xl font-semibold text-slate-900">
-              {isLoading ? '—' : formatCurrency(averageTicket || 0)}
-            </p>
-            <p className="mt-2 text-sm text-slate-500">Net sales divided by your completed orders.</p>
-          </article>
-        </section>
+            <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Net Sales After Refunds</p>
+              <p className="mt-3 text-3xl font-semibold text-slate-900">
+                {isLoading ? '—' : formatCurrency(netSales)}
+              </p>
+              <p className="mt-2 text-sm text-slate-500">{formatCurrency(refundedAmount)} refunded today.</p>
+            </article>
 
-        <section className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <div className="space-y-6 lg:col-span-2">
-            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-              <header className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold text-slate-900">Recent Activity</h2>
-                  <p className="text-sm text-slate-500">Track the last tickets you opened or closed.</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    void loadOrders();
-                  }}
-                  className="inline-flex items-center rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 transition hover:border-blue-300 hover:text-blue-600"
-                >
-                  Refresh
-                </button>
-              </header>
+            <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Orders Closed</p>
+              <p className="mt-3 text-3xl font-semibold text-slate-900">
+                {isLoading ? '—' : formatNumber(completedOrders.length)}
+              </p>
+              <p className="mt-2 text-sm text-slate-500">
+                {activeOrders.length
+                  ? `${formatNumber(activeOrders.length)} still in progress`
+                  : 'No open orders right now.'}
+              </p>
+            </article>
 
-              {isLoading ? (
-                <div className="space-y-3">
-                  {Array.from({ length: 4 }).map((_, index) => (
-                    <div key={index} className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
-                      <div className="h-4 w-24 animate-pulse rounded bg-slate-200" />
-                      <div className="mt-3 h-3 w-32 animate-pulse rounded bg-slate-200" />
-                    </div>
-                  ))}
-                </div>
-              ) : recentOrders.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
-                  You haven’t processed any tickets yet today. Once you do, a log will appear here.
-                </div>
-              ) : (
-                <ul className="space-y-4">
-                  {recentOrders.map((order) => {
-                    const icon = activityIcons[order.status] ?? '🧾';
-                    const createdAt = new Date(order.createdDate);
-                    const completedAt = order.completedDate ? new Date(order.completedDate) : null;
+            <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Average Ticket Value</p>
+              <p className="mt-3 text-3xl font-semibold text-slate-900">
+                {isLoading ? '—' : formatCurrency(averageTicket || 0)}
+              </p>
+              <p className="mt-2 text-sm text-slate-500">Net sales divided by your completed orders.</p>
+            </article>
+          </section>
 
-                    return (
-                      <li
-                        key={order.id}
-                        className="flex flex-col justify-between gap-2 rounded-2xl border border-slate-100 bg-slate-50 p-4 transition hover:border-blue-200 hover:bg-blue-50/40 sm:flex-row sm:items-center"
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-xl">
-                            {icon}
-                          </span>
-                          <div>
-                            <p className="text-sm font-semibold text-slate-900">#{order.orderNumber}</p>
-                            <p className="text-xs text-slate-500">
-                              Opened {createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                              {completedAt
-                                ? ` • Closed ${completedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-                                : ''}
+          <section className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <div className="space-y-6 lg:col-span-2">
+              <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                <header className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h2 className="text-lg font-semibold text-slate-900">Recent Activity</h2>
+                    <p className="text-sm text-slate-500">Track the last tickets you opened or closed.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void loadOrders();
+                    }}
+                    className="inline-flex items-center rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 transition hover:border-blue-300 hover:text-blue-600"
+                  >
+                    Refresh
+                  </button>
+                </header>
+
+                {isLoading ? (
+                  <div className="space-y-3">
+                    {Array.from({ length: 4 }).map((_, index) => (
+                      <div key={index} className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                        <div className="h-4 w-24 animate-pulse rounded bg-slate-200" />
+                        <div className="mt-3 h-3 w-32 animate-pulse rounded bg-slate-200" />
+                      </div>
+                    ))}
+                  </div>
+                ) : recentOrders.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
+                    You haven’t processed any tickets yet today. Once you do, a log will appear here.
+                  </div>
+                ) : (
+                  <ul className="space-y-4">
+                    {recentOrders.map((order) => {
+                      const icon = activityIcons[order.status] ?? '🧾';
+                      const createdAt = new Date(order.createdDate);
+                      const completedAt = order.completedDate ? new Date(order.completedDate) : null;
+
+                      return (
+                        <li
+                          key={order.id}
+                          className="flex flex-col justify-between gap-2 rounded-2xl border border-slate-100 bg-slate-50 p-4 transition hover:border-blue-200 hover:bg-blue-50/40 sm:flex-row sm:items-center"
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-xl">
+                              {icon}
+                            </span>
+                            <div>
+                              <p className="text-sm font-semibold text-slate-900">#{order.orderNumber}</p>
+                              <p className="text-xs text-slate-500">
+                                Opened {createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                {completedAt
+                                  ? ` • Closed ${completedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                                  : ''}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm font-semibold text-slate-900">
+                              {formatCurrency(order.totalAmount ?? 0)}
+                            </p>
+                            <p className="text-xs text-slate-500 capitalize">
+                              {order.status.replace('_', ' ').toLowerCase()}
                             </p>
                           </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm font-semibold text-slate-900">{formatCurrency(order.totalAmount ?? 0)}</p>
-                          <p className="text-xs text-slate-500 capitalize">{order.status.replace('_', ' ').toLowerCase()}</p>
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
 
             <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
               <h2 className="text-lg font-semibold text-slate-900">Taxes & Discounts</h2>
@@ -327,6 +330,7 @@ const CashierDashboardPage: React.FC = () => {
           </aside>
         </section>
       </div>
+    </div>
     </CashierLayout>
   );
 };
