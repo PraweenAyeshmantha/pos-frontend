@@ -4,6 +4,8 @@ import Alert, { type AlertType } from '../../components/common/Alert';
 import ToastContainer from '../../components/common/ToastContainer';
 import PaymentModal from '../../components/cashier/payment/PaymentModal';
 import PaymentSuccessModal from '../../components/cashier/payment/PaymentSuccessModal';
+import ApplyCouponModal from '../../components/cashier/coupon/ApplyCouponModal';
+import DiscountModal from '../../components/cashier/discount/DiscountModal';
 import { productService } from '../../services/productService';
 import { productCategoryService } from '../../services/productCategoryService';
 import { posService } from '../../services/posService';
@@ -11,6 +13,7 @@ import type { Product } from '../../types/product';
 import type { ProductCategory } from '../../types/taxonomy';
 import type { PaymentMethod } from '../../types/payment';
 import type { Order } from '../../types/order';
+import type { Coupon } from '../../types/coupon';
 import { useAuth } from '../../hooks/useAuth';
 
 type CategoryKey = 'all' | number;
@@ -133,6 +136,12 @@ const CashierPOSPage: React.FC = () => {
   const categoryScrollRef = React.useRef<HTMLDivElement>(null);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(false);
+  
+  // Coupon and Discount state
+  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
+  const [appliedDiscount, setAppliedDiscount] = useState<{ type: 'FIXED' | 'PERCENTAGE'; value: number } | null>(null);
+  const [couponModalOpen, setCouponModalOpen] = useState(false);
+  const [discountModalOpen, setDiscountModalOpen] = useState(false);
 
   const showToast = useCallback((type: AlertType, title: string, message: string) => {
     setToast({ type, title, message });
@@ -351,20 +360,85 @@ const CashierPOSPage: React.FC = () => {
   }, []);
 
   const subtotal = useMemo(
-    () => cartItems.reduce((accumulator, item) => {
-      if (item.isWeightBased && item.weight) {
-        // For weight-based products: price per unit × weight
-        return accumulator + item.price * item.weight;
-      }
-      // For regular products: price × quantity
-      return accumulator + item.price * item.quantity;
-    }, 0),
+    () => {
+      const sum = cartItems.reduce((accumulator, item) => {
+        if (item.isWeightBased && item.weight) {
+          // For weight-based products: price per unit × weight
+          return accumulator + item.price * item.weight;
+        }
+        // For regular products: price × quantity
+        return accumulator + item.price * item.quantity;
+      }, 0);
+      // Round to 2 decimals to avoid floating point precision issues
+      return Math.round(sum * 100) / 100;
+    },
     [cartItems],
   );
 
-  const taxAmount = useMemo(() => subtotal * TAX_RATE, [subtotal]);
-  const discountAmount = 0;
-  const totalDue = subtotal + taxAmount - discountAmount;
+  const taxAmount = useMemo(() => {
+    const tax = subtotal * TAX_RATE;
+    // Round to 2 decimals
+    return Math.round(tax * 100) / 100;
+  }, [subtotal]);
+
+  const discountAmount = useMemo(() => {
+    let discount = 0;
+
+    // For coupon: only calculate discount on applicable items
+    if (appliedCoupon) {
+      // Check if coupon has product restrictions
+      const hasProductRestrictions =
+        appliedCoupon.applicableProductIds && appliedCoupon.applicableProductIds.length > 0;
+
+      // Calculate applicable subtotal (don't round - keep full precision for calculation)
+      let applicableSubtotal = subtotal;
+      if (hasProductRestrictions) {
+        // Only sum up items that are applicable to the coupon
+        applicableSubtotal = cartItems
+          .filter((item) => appliedCoupon.applicableProductIds?.includes(item.productId))
+          .reduce((acc, item) => {
+            if (item.isWeightBased && item.weight) {
+              return acc + item.price * item.weight;
+            }
+            return acc + item.price * item.quantity;
+          }, 0);
+        // Don't round here - keep full precision for percentage calculation
+      }
+
+      // Apply discount only to applicable subtotal
+      if (appliedCoupon.discountType === 'PERCENTAGE') {
+        discount += (applicableSubtotal * appliedCoupon.discountValue) / 100;
+      } else {
+        discount += appliedCoupon.discountValue;
+      }
+      // Round ONLY the final discount amount down to 2 decimals
+      discount = Math.floor(discount * 100) / 100;
+    }
+
+    // For custom discount: applies to entire subtotal
+    if (appliedDiscount) {
+      let customDiscount = 0;
+      if (appliedDiscount.type === 'PERCENTAGE') {
+        customDiscount = (subtotal * appliedDiscount.value) / 100;
+      } else {
+        customDiscount = appliedDiscount.value;
+      }
+      // Round to 2 decimals, always rounding down to avoid over-discounting
+      customDiscount = Math.floor(customDiscount * 100) / 100;
+      discount += customDiscount;
+      // Round total discount down to 2 decimals
+      discount = Math.floor(discount * 100) / 100;
+    }
+
+    // Ensure discount doesn't exceed subtotal
+    return Math.min(discount, subtotal);
+  }, [subtotal, appliedCoupon, appliedDiscount, cartItems]);
+
+  const totalDue = useMemo(() => {
+    const total = subtotal + taxAmount - discountAmount;
+    // Round to 2 decimals
+    return Math.round(total * 100) / 100;
+  }, [subtotal, taxAmount, discountAmount]);
 
   const handleDrawerConfirm = useCallback(() => {
     if (!drawerAmount || Number.isNaN(Number.parseFloat(drawerAmount))) {
@@ -431,8 +505,9 @@ const CashierPOSPage: React.FC = () => {
             notes: null,
             weight: item.weight,
           })),
-          discountAmount: discountAmount,
-          discountType: 'FIXED' as const,
+          discountAmount: discountAmount > 0 ? discountAmount : undefined,
+          discountType: appliedDiscount ? appliedDiscount.type : undefined,
+          couponCode: appliedCoupon ? appliedCoupon.code : null,
           payments: payments,
           notes: notes || null,
         };
@@ -443,6 +518,8 @@ const CashierPOSPage: React.FC = () => {
         setPaymentModalOpen(false);
         setSuccessModalOpen(true);
         setCartItems([]);
+        setAppliedCoupon(null);
+        setAppliedDiscount(null);
         
         showToast('success', 'Order Complete', `Order #${order.orderNumber} completed successfully!`);
       } catch (err) {
@@ -457,7 +534,7 @@ const CashierPOSPage: React.FC = () => {
         setProcessingPayment(false);
       }
     },
-    [cartItems, discountAmount, processingPayment, showToast, user?.cashierId, selectedOutletId],
+    [cartItems, discountAmount, appliedCoupon, appliedDiscount, processingPayment, showToast, user?.cashierId, selectedOutletId],
   );
 
   const handlePaymentCancel = useCallback(() => {
@@ -482,15 +559,57 @@ const CashierPOSPage: React.FC = () => {
 
   const handleQuickAction = useCallback(
     (action: 'coupon' | 'discount' | 'hold') => {
-      const labels: Record<typeof action, string> = {
-        coupon: 'Coupon',
-        discount: 'Discount',
-        hold: 'Hold Order',
-      };
-      showToast('info', labels[action], `${labels[action]} flow is coming soon.`);
+      if (action === 'coupon') {
+        if (cartItems.length === 0) {
+          showToast('warning', 'Empty Cart', 'Add items to your cart first.');
+          return;
+        }
+        setCouponModalOpen(true);
+      } else if (action === 'discount') {
+        if (cartItems.length === 0) {
+          showToast('warning', 'Empty Cart', 'Add items to your cart first.');
+          return;
+        }
+        setDiscountModalOpen(true);
+      } else if (action === 'hold') {
+        showToast('info', 'Hold Order', 'Hold order feature is coming soon.');
+      }
+    },
+    [cartItems.length, showToast],
+  );
+
+  const handleApplyCoupon = useCallback(
+    (coupon: Coupon) => {
+      setAppliedCoupon(coupon);
+      setCouponModalOpen(false);
+      // Clear discount when coupon is applied
+      setAppliedDiscount(null);
+      showToast('success', 'Coupon Applied', `${coupon.code} applied successfully.`);
     },
     [showToast],
   );
+
+  const handleApplyDiscount = useCallback(
+    (discountType: 'FIXED' | 'PERCENTAGE', discountValue: number) => {
+      setAppliedDiscount({ type: discountType, value: discountValue });
+      setDiscountModalOpen(false);
+      // Clear coupon when custom discount is applied
+      setAppliedCoupon(null);
+      const label = discountType === 'FIXED' ? `$${discountValue.toFixed(2)}` : `${discountValue}%`;
+      showToast('success', 'Discount Applied', `${label} discount applied successfully.`);
+    },
+    [showToast],
+  );
+
+  const handleRemoveCoupon = useCallback(() => {
+    setAppliedCoupon(null);
+    showToast('info', 'Coupon Removed', 'Coupon has been removed from this order.');
+  }, [showToast]);
+
+  const handleRemoveDiscount = useCallback(() => {
+    setAppliedDiscount(null);
+    showToast('info', 'Discount Removed', 'Discount has been removed from this order.');
+  }, [showToast]);
 
   return (
     <CashierLayout>
@@ -848,14 +967,66 @@ const CashierPOSPage: React.FC = () => {
                     <span>Tax</span>
                     <span className="font-semibold text-slate-900">{formatCurrency(taxAmount)}</span>
                   </div>
-                  <div className="flex items-center justify-between text-slate-600">
-                    <span>Discount</span>
-                    <span className="font-semibold text-slate-900">-{formatCurrency(discountAmount)}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-slate-600">
-                    <span>Applied Coupon(s)</span>
-                    <span className="font-semibold text-slate-900">N/A</span>
-                  </div>
+                  {discountAmount > 0 && (
+                    <div className="flex items-center justify-between text-slate-600">
+                      <span>Discount</span>
+                      <span className="font-semibold text-slate-900">-{formatCurrency(discountAmount)}</span>
+                    </div>
+                  )}
+                  
+                  {/* Applied Coupon */}
+                  {appliedCoupon && (
+                    <div className="flex items-center justify-between rounded-lg bg-emerald-50 px-3 py-2 text-emerald-900">
+                      <div className="flex items-center gap-2">
+                        <svg className="h-4 w-4 text-emerald-600" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M9 3.5h6v17H9z" opacity="0.3" />
+                          <path d="M12 2l2 4h4l-3 3 1 4-4-3-4 3 1-4-3-3h4l2-4zm0 8h.01M12 13c-3.86 0-7 3.14-7 7s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm2 9h-4m2-4v4" />
+                        </svg>
+                        <div className="flex-1">
+                          <p className="text-xs font-semibold">{appliedCoupon.code}</p>
+                          <p className="text-[10px] text-emerald-700">Coupon Applied</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleRemoveCoupon}
+                        className="ml-2 text-emerald-600 hover:text-emerald-700"
+                      >
+                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Applied Custom Discount */}
+                  {appliedDiscount && (
+                    <div className="flex items-center justify-between rounded-lg bg-blue-50 px-3 py-2 text-blue-900">
+                      <div className="flex items-center gap-2">
+                        <svg className="h-4 w-4 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-3.315 0-6 .895-6 2v9c0 1.105 2.685 2 6 2s6-.895 6-2v-9c0-1.105-2.685-2-6-2z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 10c0 1.105 2.685 2 6 2s6-.895 6-2" />
+                        </svg>
+                        <div className="flex-1">
+                          <p className="text-xs font-semibold">
+                            {appliedDiscount.type === 'FIXED'
+                              ? `$${appliedDiscount.value.toFixed(2)}`
+                              : `${appliedDiscount.value}%`}
+                          </p>
+                          <p className="text-[10px] text-blue-700">Custom Discount</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleRemoveDiscount}
+                        className="ml-2 text-blue-600 hover:text-blue-700"
+                      >
+                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <div className="mt-5 grid grid-cols-3 gap-3">
@@ -907,6 +1078,21 @@ const CashierPOSPage: React.FC = () => {
         onAmountChange={setDrawerAmount}
         onConfirm={handleDrawerConfirm}
         onClose={() => setDrawerOpen(false)}
+      />
+
+      <ApplyCouponModal
+        open={couponModalOpen}
+        onClose={() => setCouponModalOpen(false)}
+        onSuccess={handleApplyCoupon}
+        totalAmount={subtotal}
+        cartItems={cartItems}
+      />
+
+      <DiscountModal
+        open={discountModalOpen}
+        onClose={() => setDiscountModalOpen(false)}
+        onSuccess={handleApplyDiscount}
+        totalAmount={subtotal}
       />
 
       <PaymentModal

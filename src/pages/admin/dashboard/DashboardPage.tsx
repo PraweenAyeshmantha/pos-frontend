@@ -213,7 +213,7 @@ const DashboardPage: React.FC = () => {
 
   return (
     <AdminLayout>
-      <div className="flex flex-col gap-8 pb-12 pt-8">
+      <div className="flex flex-col gap-8 pb-12">
         <AdminPageHeader
           title="Daily Sales Overview"
           description={`Live performance across all locations for ${todayLabel}.`}
