@@ -5,6 +5,7 @@ import ToastContainer from '../../../components/common/ToastContainer';
 import AdminPageHeader from '../../../components/layout/AdminPageHeader';
 import { analyticsService } from '../../../services/analyticsService';
 import { outletService } from '../../../services/outletService';
+import { statisticsService, type DailySalesReport } from '../../../services/statisticsService';
 import type { SalesAnalytics } from '../../../types/analytics';
 import type { Outlet } from '../../../types/outlet';
 
@@ -397,6 +398,7 @@ const StatisticsPage: React.FC = () => {
 
   const [currentAnalytics, setCurrentAnalytics] = useState<SalesAnalytics | null>(null);
   const [previousAnalytics, setPreviousAnalytics] = useState<SalesAnalytics | null>(null);
+  const [dailySalesReport, setDailySalesReport] = useState<DailySalesReport | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState<number>(0);
@@ -462,6 +464,37 @@ const StatisticsPage: React.FC = () => {
       active = false;
     };
   }, []);
+
+  // Fetch today's daily sales report for cash drawer metrics
+  useEffect(() => {
+    let active = true;
+    
+    // Only fetch if a specific outlet is selected
+    if (filters.outletId !== 'all') {
+      const outletId = Number(filters.outletId);
+      
+      // Don't pass date parameter - let server use its today to avoid timezone issues
+      statisticsService.getDailySalesReport(outletId)
+        .then((report) => {
+          if (active) {
+            setDailySalesReport(report);
+          }
+        })
+        .catch((error: unknown) => {
+          console.error('Failed to load daily sales report', error);
+          // Don't show error as this is optional data
+          if (active) {
+            setDailySalesReport(null);
+          }
+        });
+    } else {
+      setDailySalesReport(null);
+    }
+
+    return () => {
+      active = false;
+    };
+  }, [filters.outletId, reloadKey]);
 
   useEffect(() => {
     if (validationMessage) {
@@ -686,6 +719,49 @@ const StatisticsPage: React.FC = () => {
             </div>
           </div>
         </section>
+
+        {/* Today's Cash Drawer Metrics - Only shown for specific outlet */}
+        {dailySalesReport && filters.outletId !== 'all' && (
+          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold text-slate-900">Today's Cash Drawer</h3>
+              <p className="text-sm text-slate-500">Real-time cash flow metrics for the selected outlet</p>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="rounded-2xl border border-red-100 bg-red-50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-red-600">Open Drawer Amount</p>
+                <p className="mt-2 text-2xl font-bold text-red-700">
+                  {currencyFormatter.format(dailySalesReport.openCashDrawerAmount)}
+                </p>
+                <p className="mt-1 text-xs text-red-600">Opening balance</p>
+              </div>
+
+              <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-emerald-600">Today's Cash Sale</p>
+                <p className="mt-2 text-2xl font-bold text-emerald-700">
+                  {currencyFormatter.format(dailySalesReport.todaysCashSale)}
+                </p>
+                <p className="mt-1 text-xs text-emerald-600">Cash payments only</p>
+              </div>
+
+              <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-blue-600">Today's Total Sale</p>
+                <p className="mt-2 text-2xl font-bold text-blue-700">
+                  {currencyFormatter.format(dailySalesReport.todaysTotalSale)}
+                </p>
+                <p className="mt-1 text-xs text-blue-600">All payment methods</p>
+              </div>
+
+              <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-amber-600">Expected Drawer</p>
+                <p className="mt-2 text-2xl font-bold text-amber-700">
+                  {currencyFormatter.format(dailySalesReport.expectedDrawerAmount)}
+                </p>
+                <p className="mt-1 text-xs text-amber-600">Calculated total</p>
+              </div>
+            </div>
+          </section>
+        )}
 
         {effectiveError ? (
           <ToastContainer>

@@ -287,6 +287,9 @@ const ProductsPage: React.FC = () => {
                 Price
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Tax
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Stock
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -335,6 +338,9 @@ const ProductsPage: React.FC = () => {
                     )}
                   </td>
                   <td className="px-6 py-4 align-top text-sm font-semibold text-slate-900">{formatCurrency(product.price)}</td>
+                  <td className="px-6 py-4 align-top text-sm text-slate-600">
+                    {product.taxRate ? `${product.taxRate}%` : '—'}
+                  </td>
                   <td className="px-6 py-4 align-top">
                     <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${stockStatus.badgeClass}`}>
                       {stockStatus.label}

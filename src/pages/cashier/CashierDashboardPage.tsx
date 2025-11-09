@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import CashierLayout from '../../components/layout/CashierLayout';
+import Alert from '../../components/common/Alert';
+import ToastContainer from '../../components/common/ToastContainer';
 import { orderService } from '../../services/orderService';
 import type { Order } from '../../types/order';
 import { useAuth } from '../../hooks/useAuth';
@@ -118,7 +120,7 @@ const CashierDashboardPage: React.FC = () => {
       <div className="px-4 pb-12 sm:px-8 lg:px-12">
         <div className="flex flex-col gap-8">
           <header className="flex flex-col gap-2">
-            <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
+            <h1 className="mt-2.5 text-3xl font-semibold tracking-tight text-slate-900">
               Welcome back{user?.name ? `, ${user.name.split(' ')[0]}` : ''} 👋
             </h1>
             <p className="text-sm text-slate-500">
@@ -127,9 +129,16 @@ const CashierDashboardPage: React.FC = () => {
             </p>
           </header>
 
-          {error ? (
-            <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">{error}</div>
-          ) : null}
+          {error && (
+            <ToastContainer>
+              <Alert
+                type="error"
+                title="Error"
+                message={error}
+                onClose={() => setError(null)}
+              />
+            </ToastContainer>
+          )}
 
           <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
             <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">

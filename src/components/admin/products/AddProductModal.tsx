@@ -317,6 +317,44 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ categories, tags, bra
               </div>
             </div>
 
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="flex flex-col gap-2">
+                <label htmlFor="product-cost" className="text-sm font-medium text-gray-700">
+                  Cost
+                </label>
+                <input
+                  id="product-cost"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  inputMode="decimal"
+                  value={formData.cost}
+                  onChange={(event) => handleChange('cost', event.target.value)}
+                  className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                />
+                <p className="text-xs text-gray-500">Product cost for margin calculation</p>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label htmlFor="product-tax-rate" className="text-sm font-medium text-gray-700">
+                  Tax Rate (%)
+                </label>
+                <input
+                  id="product-tax-rate"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="100"
+                  inputMode="decimal"
+                  value={formData.taxRate}
+                  onChange={(event) => handleChange('taxRate', event.target.value)}
+                  placeholder="0.00"
+                  className="h-11 rounded-lg border border-gray-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                />
+                <p className="text-xs text-gray-500">Leave empty or 0 for no tax</p>
+              </div>
+            </div>
+
             <div className="flex flex-col gap-2">
               <label htmlFor="product-description" className="text-sm font-medium text-gray-700">
                 Description

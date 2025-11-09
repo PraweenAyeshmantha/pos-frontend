@@ -32,6 +32,7 @@ const TagsPage = lazy(() => import('./pages/admin/taxonomy/TagsPage'));
 const ProductCategoriesPage = lazy(() => import('./pages/admin/taxonomy/ProductCategoriesPage'));
 const CashierPOSPage = lazy(() => import('./pages/cashier/CashierPOSPage'));
 const CashierDashboardPage = lazy(() => import('./pages/cashier/CashierDashboardPage'));
+const CashierStatisticsPage = lazy(() => import('./pages/cashier/StatisticsPage'));
 
 // Loading component
 const LoadingFallback = () => (
@@ -196,6 +197,12 @@ function App() {
                     <Route path="cashier/dashboard" element={
                       <ProtectedRoute allowedRoles={['CASHIER']}>
                         <CashierDashboardPage />
+                      </ProtectedRoute>
+                    } />
+
+                    <Route path="cashier/statistics" element={
+                      <ProtectedRoute allowedRoles={['CASHIER']}>
+                        <CashierStatisticsPage />
                       </ProtectedRoute>
                     } />
 

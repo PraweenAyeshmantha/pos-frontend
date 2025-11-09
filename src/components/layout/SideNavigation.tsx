@@ -34,6 +34,7 @@ const SideNavigation: React.FC = () => {
     const cashierItems: NavigationItem[] = [
       { id: 'cashier-home', label: 'POS Home', icon: '🏠', path: '/cashier/dashboard' },
       { id: 'cashier-pos', label: 'POS', icon: '🛒', path: '/cashier/pos' },
+      { id: 'cashier-statistics', label: 'Statistics', icon: '$', path: '/cashier/statistics' },
       { id: 'cashier-orders', label: 'Sales', icon: '🛍️', path: '/admin/orders' },
       { id: 'cashier-customers', label: 'Customers', icon: '👥', path: '/admin/customers' },
       { id: 'cashier-settings', label: 'Settings', icon: '⚙️', path: '/admin/settings' },
