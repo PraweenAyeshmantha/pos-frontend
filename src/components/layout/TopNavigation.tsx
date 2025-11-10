@@ -1,6 +1,7 @@
 import React, { useState, memo, useCallback, useMemo, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import BranchSelector from './BranchSelector';
 
 // Get user initials for avatar
 const getInitials = (name: string) => {
@@ -78,25 +79,13 @@ const TopNavigation: React.FC = () => {
   return (
     <div className="h-14 bg-blue-600 shadow-md flex items-center justify-between px-6 fixed top-0 right-0 left-20 z-10">
       {/* Left side - Date and Time */}
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center">
         <DateTimeDisplay />
       </div>
 
-      {/* Right side - User profile and actions */}
+      {/* Right side - Branch Selector, User profile and actions */}
       <div className="flex items-center space-x-3">
-        {/* WiFi/Connection Status */}
-        <button className="text-white hover:text-gray-200 transition-colors">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
-          </svg>
-        </button>
-
-        {/* Sync/Refresh */}
-        <button className="text-white hover:text-gray-200 transition-colors">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-        </button>
+        <BranchSelector />
 
         {/* User Profile with Dropdown */}
         <div className="relative">
@@ -137,6 +126,20 @@ const TopNavigation: React.FC = () => {
             </div>
           )}
         </div>
+
+        {/* WiFi/Connection Status */}
+        <button className="text-white hover:text-gray-200 transition-colors">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
+          </svg>
+        </button>
+
+        {/* Sync/Refresh */}
+        <button className="text-white hover:text-gray-200 transition-colors">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+        </button>
       </div>
     </div>
   );

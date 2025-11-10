@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { TenantProvider } from './contexts/TenantContext';
+import { OutletProvider } from './contexts/OutletContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import TenantRouteGuard from './components/auth/TenantRouteGuard';
 import EnvConfigErrorPage from './components/errors/EnvConfigErrorPage';
@@ -22,6 +23,7 @@ const SettingsPage = lazy(() => import('./pages/admin/settings/SettingsPage'));
 const POSAdminPage = lazy(() => import('./pages/admin/pos-admin/POSAdminPage'));
 const OutletsPage = lazy(() => import('./pages/admin/outlets/OutletsPage'));
 const CashiersPage = lazy(() => import('./pages/admin/cashiers/CashiersPage'));
+const CashierBalancingPage = lazy(() => import('./pages/admin/cashier-balancing/CashierBalancingPage'));
 const TablesPage = lazy(() => import('./pages/admin/tables/TablesPage'));
 const ProductsPage = lazy(() => import('./pages/admin/products/ProductsPage'));
 const CouponsPage = lazy(() => import('./pages/admin/coupons/CouponsPage'));
@@ -33,6 +35,7 @@ const ProductCategoriesPage = lazy(() => import('./pages/admin/taxonomy/ProductC
 const CashierPOSPage = lazy(() => import('./pages/cashier/CashierPOSPage'));
 const CashierDashboardPage = lazy(() => import('./pages/cashier/CashierDashboardPage'));
 const CashierStatisticsPage = lazy(() => import('./pages/cashier/StatisticsPage'));
+const CashierBalancingPageCashier = lazy(() => import('./pages/cashier/CashierBalancingPage'));
 
 // Loading component
 const LoadingFallback = () => (
@@ -60,7 +63,8 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <Suspense fallback={<LoadingFallback />}>
+        <OutletProvider>
+          <Suspense fallback={<LoadingFallback />}>
           <Routes>
             {/* Redirect root to error - tenant ID required */}
             <Route path="/" element={
@@ -105,6 +109,12 @@ function App() {
                     <Route path="admin/cashiers" element={
                       <ProtectedRoute allowedRoles={['ADMIN']}>
                         <CashiersPage />
+                      </ProtectedRoute>
+                    } />
+
+                    <Route path="admin/cashier-balancing" element={
+                      <ProtectedRoute allowedRoles={['ADMIN']}>
+                        <CashierBalancingPage />
                       </ProtectedRoute>
                     } />
                    
@@ -212,6 +222,12 @@ function App() {
                       </ProtectedRoute>
                     } />
 
+                    <Route path="cashier/balancing" element={
+                      <ProtectedRoute allowedRoles={['CASHIER']}>
+                        <CashierBalancingPageCashier />
+                      </ProtectedRoute>
+                    } />
+
                     {/* Catch-all for invalid URLs within tenant scope */}
                     <Route path="*" element={<InvalidUrlErrorPage />} />
                   </Routes>
@@ -223,6 +239,7 @@ function App() {
             <Route path="*" element={<InvalidUrlErrorPage />} />
           </Routes>
         </Suspense>
+        </OutletProvider>
       </AuthProvider>
     </Router>
   );

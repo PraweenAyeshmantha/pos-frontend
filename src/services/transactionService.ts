@@ -1,13 +1,23 @@
 import apiClient from './apiClient';
 import type { ApiResponse } from '../types/configuration';
 
-export interface CreateTransactionRequest {
-  outletId: number;
-  cashierId?: number;
-  transactionType: 'OPENING_BALANCE' | 'CLOSING_BALANCE' | 'CASH_IN' | 'CASH_OUT' | 'EXPENSE' | 'REFUND' | 'SALE';
+export interface CashTransactionRequest {
+  sessionId: number;
+  transactionType: 'CASH_IN' | 'CASH_OUT';
   amount: number;
   description?: string;
   referenceNumber?: string;
+}
+
+export interface CreateTransactionRequest {
+  outletId: number;
+  cashierId?: number;
+  transactionType: string;
+  amount: number;
+  description?: string;
+  referenceNumber?: string;
+  paymentMethod?: string;
+  orderId?: number;
 }
 
 export interface Transaction {
@@ -46,6 +56,19 @@ export const transactionService = {
       throw new Error('Failed to create transaction');
     }
     return response.data.data;
+  },
+
+  async createCashTransaction(request: CashTransactionRequest): Promise<Transaction> {
+    const response = await apiClient.post<ApiResponse<Transaction>>('/admin/transactions/cash', request);
+    if (!response.data.data) {
+      throw new Error('Failed to create cash transaction');
+    }
+    return response.data.data;
+  },
+
+  async getBySession(sessionId: number): Promise<Transaction[]> {
+    const response = await apiClient.get<ApiResponse<Transaction[]>>(`/admin/transactions/session/${sessionId}`);
+    return response.data.data ?? [];
   },
 
   async getAll(params?: GetTransactionsParams): Promise<Transaction[]> {

@@ -9,8 +9,8 @@ import DiscountModal from '../../components/cashier/discount/DiscountModal';
 import { productService } from '../../services/productService';
 import { productCategoryService } from '../../services/productCategoryService';
 import { posService } from '../../services/posService';
-import { statisticsService } from '../../services/statisticsService';
-import { transactionService } from '../../services/transactionService';
+import { cashierSessionService } from '../../services/cashierSessionService';
+import { orderService } from '../../services/orderService';
 import type { Product } from '../../types/product';
 import type { ProductCategory } from '../../types/taxonomy';
 import type { PaymentMethod } from '../../types/payment';
@@ -269,15 +269,18 @@ const CashierPOSPage: React.FC = () => {
     const checkOpeningBalance = async () => {
       try {
         setCheckingOpeningBalance(true);
-        const report = await statisticsService.getDailySalesReport(selectedOutletId);
-        
+
+        // Check if there's an active cashier session with opening balance already set
+        const activeSession = await cashierSessionService.getMyActiveSession();
+
         if (!mounted) return;
 
-        // If opening balance is 0, show mandatory modal
-        if (report.openCashDrawerAmount === 0) {
+        // If there's no active session or opening balance is 0, show mandatory modal
+        if (!activeSession || activeSession.openingBalance === 0) {
           setDrawerMandatory(true);
           setDrawerOpen(true);
         }
+        // If there's an active session with opening balance > 0, don't show the popup
       } catch (error) {
         console.error('Failed to check opening balance', error);
         if (mounted) {
@@ -510,15 +513,13 @@ const CashierPOSPage: React.FC = () => {
       return;
     }
 
-    // If this is a mandatory opening balance, create the transaction
-    if (drawerMandatory && selectedOutletId) {
+    // If this is a mandatory opening balance, start a cashier session
+    if (drawerMandatory && selectedOutletId && user?.cashierId) {
       try {
-        await transactionService.createTransaction({
+        await cashierSessionService.startSession({
+          cashierId: user.cashierId,
           outletId: selectedOutletId,
-          cashierId: user?.cashierId ?? undefined,
-          transactionType: 'OPENING_BALANCE',
-          amount,
-          description: 'Opening balance for shift',
+          openingBalance: amount,
         });
         
         showToast('success', 'Opening Balance', `Opening balance of ${formatCurrency(amount)} has been recorded.`);
@@ -526,9 +527,11 @@ const CashierPOSPage: React.FC = () => {
         setDrawerOpen(false);
         setDrawerAmount('');
       } catch (error) {
-        console.error('Failed to create opening balance transaction', error);
+        console.error('Failed to start cashier session', error);
         showToast('error', 'Error', 'Failed to record opening balance. Please try again.');
       }
+    } else if (drawerMandatory) {
+      showToast('error', 'Error', 'Unable to start session. Please log in as a cashier.');
     } else {
       // Optional drawer open (just a notification, not creating transaction)
       showToast('success', 'Cash Drawer', `Opening balance set to ${formatCurrency(amount)}.`);
@@ -641,9 +644,30 @@ const CashierPOSPage: React.FC = () => {
     showToast('info', 'New Order', 'Ready for next order.');
   }, [showToast]);
 
-  const handlePrintReceipt = useCallback(() => {
-    showToast('info', 'Print Receipt', 'Receipt printing will be available soon.');
-  }, [showToast]);
+  const handlePrintReceipt = useCallback(async () => {
+    if (!completedOrder) {
+      showToast('warning', 'No Order', 'No completed order to print.');
+      return;
+    }
+
+    try {
+      showToast('info', 'Opening Receipt', 'Preparing receipt for printing...');
+      
+      const receiptHtml = await orderService.printReceipt(completedOrder.id);
+      
+      // Open receipt in a new window which will auto-trigger print dialog
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(receiptHtml);
+        printWindow.document.close();
+      } else {
+        showToast('error', 'Print Failed', 'Please allow pop-ups to print receipts.');
+      }
+    } catch (error) {
+      console.error('Failed to print receipt:', error);
+      showToast('error', 'Print Failed', 'Failed to print receipt. Please try again.');
+    }
+  }, [completedOrder, showToast]);
 
   const handleQuickAction = useCallback(
     (action: 'coupon' | 'discount' | 'hold') => {

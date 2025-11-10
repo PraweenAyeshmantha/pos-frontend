@@ -41,6 +41,9 @@ export interface Order {
   cashierId?: number;
   cashierName?: string;
   cashierUsername?: string;
+
+  // Order items
+  items?: OrderItem[];
 }
 
 export interface OrderFilters {
@@ -51,4 +54,44 @@ export interface OrderFilters {
   endDate?: string;
   cashierId?: number;
   cashierUsername?: string;
+}
+
+export interface OrderItem {
+  id: number;
+  productId: number;
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+  notes?: string;
+}
+
+export interface PartialRefundRequest {
+  items: Array<{
+    orderItemId: number;
+    quantity: number;
+  }>;
+  reason?: string;
+  restockItems: boolean;
+}
+
+export interface RefundResponse {
+  orderId: number;
+  orderNumber: string;
+  status: OrderStatus;
+  refundedAmount: number;
+  originalAmount: number;
+  remainingAmount: number;
+  restockedItems: boolean;
+  reason?: string;
+  refundDate: string;
+  refundedItems: RefundedItemDTO[];
+}
+
+export interface RefundedItemDTO {
+  orderItemId: number;
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+  totalAmount: number;
 }
