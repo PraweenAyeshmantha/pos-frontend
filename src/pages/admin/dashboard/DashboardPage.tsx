@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import AdminLayout from '../../../components/layout/AdminLayout';
 import AdminPageHeader from '../../../components/layout/AdminPageHeader';
+import Alert from '../../../components/common/Alert';
+import ToastContainer from '../../../components/common/ToastContainer';
 import { analyticsService } from '../../../services/analyticsService';
 import { orderService } from '../../../services/orderService';
 import type { SalesAnalytics } from '../../../types/analytics';
@@ -219,6 +221,17 @@ const DashboardPage: React.FC = () => {
           description={`Live performance across all locations for ${todayLabel}.`}
         />
 
+        {error && (
+          <ToastContainer>
+            <Alert
+              type="error"
+              title="Error"
+              message={error}
+              onClose={() => setError(null)}
+            />
+          </ToastContainer>
+        )}
+
         <section className="flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -240,12 +253,6 @@ const DashboardPage: React.FC = () => {
               </button>
             </div>
           </header>
-
-          {error ? (
-            <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-600">
-              {error}
-            </div>
-          ) : null}
 
           {isLoading && !analytics ? (
             metricSkeleton

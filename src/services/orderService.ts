@@ -1,6 +1,6 @@
 import apiClient from './apiClient';
 import type { ApiResponse } from '../types/configuration';
-import type { Order, OrderFilters } from '../types/order';
+import type { Order, OrderFilters, PartialRefundRequest, RefundResponse } from '../types/order';
 
 const buildQuery = (filters?: OrderFilters): string => {
   if (!filters) {
@@ -56,10 +56,44 @@ export const orderService = {
     return response.data.data;
   },
 
+  async getOrderDetails(id: number): Promise<Order> {
+    const response = await apiClient.get<ApiResponse<Order>>(`/admin/orders/${id}/details`);
+    if (!response.data.data) {
+      throw new Error('Failed to load order details');
+    }
+    return response.data.data;
+  },
+
   async getByOrderNumber(orderNumber: string): Promise<Order> {
     const response = await apiClient.get<ApiResponse<Order>>(`/admin/orders/by-number/${orderNumber}`);
     if (!response.data.data) {
       throw new Error('Failed to load order');
+    }
+    return response.data.data;
+  },
+
+  async printReceipt(orderId: number): Promise<string> {
+    const response = await apiClient.get(`/admin/orders/${orderId}/receipt`, {
+      responseType: 'text',
+    });
+    return response.data;
+  },
+
+  async processPartialRefund(orderId: number, request: PartialRefundRequest): Promise<RefundResponse> {
+    const response = await apiClient.post<ApiResponse<RefundResponse>>(`/admin/orders/${orderId}/refund/partial`, request);
+    if (!response.data.data) {
+      throw new Error('Failed to process partial refund');
+    }
+    return response.data.data;
+  },
+
+  async processFullRefund(orderId: number, reason?: string, restockItems: boolean = true): Promise<RefundResponse> {
+    const response = await apiClient.post<ApiResponse<RefundResponse>>(`/admin/orders/${orderId}/refund`, {
+      reason,
+      restockItems,
+    });
+    if (!response.data.data) {
+      throw new Error('Failed to process full refund');
     }
     return response.data.data;
   },

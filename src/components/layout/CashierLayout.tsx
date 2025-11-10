@@ -16,7 +16,7 @@ const CashierLayout: React.FC<CashierLayoutProps> = ({ children }) => {
       <TopNavigation />
       
       {/* Main Content */}
-      <div className="ml-20 pt-14">
+      <div className="ml-20 min-h-screen pt-16">
         {children}
       </div>
     </div>

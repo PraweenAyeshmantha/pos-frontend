@@ -5,6 +5,7 @@ import type { Order } from '../../../types/order';
 interface OrderDetailsModalProps {
   order: Order;
   onClose: () => void;
+  onPrintReceipt?: (orderId: number) => void;
 }
 
 const formatCurrency = (value?: number): string => {
@@ -74,7 +75,7 @@ const getStatusLabel = (status: string): string => {
   return labels[status] ?? status;
 };
 
-const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onClose }) => {
+const OrderDetailsModal: React.FC<OrderDetailsModalProps> = memo(({ order, onClose, onPrintReceipt }) => {
   const handleBackdropClick = (event: React.MouseEvent<HTMLDivElement>) => {
     if (event.target === event.currentTarget) {
       onClose();
@@ -93,16 +94,30 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onClose })
             <h2 className="text-xl font-semibold text-slate-900">Order Details</h2>
             <span className="text-lg font-bold text-blue-600">{order.orderNumber}</span>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
-            aria-label="Close modal"
-          >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+          <div className="flex items-center gap-2">
+            {onPrintReceipt && (
+              <button
+                type="button"
+                onClick={() => onPrintReceipt(order.id)}
+                className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                Print Receipt
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+              aria-label="Close modal"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* Content */}
@@ -257,6 +272,6 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onClose })
   );
 
   return createPortal(modalContent, document.body);
-};
+});
 
 export default memo(OrderDetailsModal);

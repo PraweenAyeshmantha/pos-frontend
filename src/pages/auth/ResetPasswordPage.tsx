@@ -71,7 +71,7 @@ const ResetPasswordPage: React.FC = () => {
       <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Reset Password</h1>
+          <h1 className="mt-2.5 text-3xl font-bold text-gray-800 mb-2">Reset Password</h1>
           <p className="text-gray-600">
             {user?.name ? `Welcome, ${user.name}!` : 'Welcome!'}
           </p>

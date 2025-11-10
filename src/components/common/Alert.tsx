@@ -82,6 +82,11 @@ const Alert: React.FC<AlertProps> = ({ type, title, message, onClose, autoHideDu
     return null;
   }
 
+  const handleClose = () => {
+    setVisible(false);
+    onClose?.();
+  };
+
   return (
     <div className={`${alertStyles.bgColor} text-white rounded-lg shadow-lg p-4 flex items-start space-x-4 min-w-[300px] max-w-[500px] animate-slide-in`}>
       <div className={`${alertStyles.iconBg} rounded-full p-2 flex-shrink-0`}>
@@ -91,6 +96,18 @@ const Alert: React.FC<AlertProps> = ({ type, title, message, onClose, autoHideDu
         <h3 className="font-semibold text-lg mb-1">{title}</h3>
         <p className="text-sm opacity-90">{message}</p>
       </div>
+      {onClose && (
+        <button
+          type="button"
+          onClick={handleClose}
+          className="flex-shrink-0 rounded-lg p-1.5 hover:bg-white/20 transition-colors focus:outline-none focus:ring-2 focus:ring-white/50"
+          aria-label="Close"
+        >
+          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+          </svg>
+        </button>
+      )}
     </div>
   );
 };

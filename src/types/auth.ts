@@ -37,7 +37,16 @@ export interface LoginResponse {
     token: string;
     userCategories?: UserCategory[];
     userAccess?: UserAccess[];
+    defaultOutlet?: OutletSummaryDTO;
+    assignedOutlets?: OutletSummaryDTO[];
   };
+}
+
+export interface OutletSummaryDTO {
+  id: number;
+  name: string;
+  code: string;
+  recordStatus: string;
 }
 
 export interface ResetPasswordRequest {
@@ -72,6 +81,8 @@ export interface User {
   requirePasswordReset: boolean;
   categories?: UserCategory[];
   access?: UserAccess[];
+  defaultOutlet?: OutletSummaryDTO;
+  assignedOutlets?: OutletSummaryDTO[];
 }
 
 export interface AuthState {

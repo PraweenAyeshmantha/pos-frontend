@@ -1,6 +1,7 @@
 import apiClient from './apiClient';
 import type { ApiResponse } from '../types/configuration';
 import type { Cashier, CreateCashierRequest, UpdateCashierRequest } from '../types/cashier';
+import type { Outlet } from '../types/outlet';
 
 export const cashierService = {
   async getAll(): Promise<Cashier[]> {
@@ -26,5 +27,10 @@ export const cashierService = {
 
   async delete(id: number): Promise<void> {
     await apiClient.delete(`/admin/cashiers/${id}`);
+  },
+
+  async getCurrentOutlets(): Promise<Outlet[]> {
+    const response = await apiClient.get<ApiResponse<Outlet[]>>('/admin/cashiers/current/outlets');
+    return response.data.data ?? [];
   },
 };

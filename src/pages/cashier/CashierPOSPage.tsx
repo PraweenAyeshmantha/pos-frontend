@@ -9,6 +9,8 @@ import DiscountModal from '../../components/cashier/discount/DiscountModal';
 import { productService } from '../../services/productService';
 import { productCategoryService } from '../../services/productCategoryService';
 import { posService } from '../../services/posService';
+import { cashierSessionService } from '../../services/cashierSessionService';
+import { orderService } from '../../services/orderService';
 import type { Product } from '../../types/product';
 import type { ProductCategory } from '../../types/taxonomy';
 import type { PaymentMethod } from '../../types/payment';
@@ -32,9 +34,8 @@ interface CartItem {
   imageUrl?: string;
   weight?: number | null;
   isWeightBased?: boolean;
+  taxRate?: number; // Tax rate percentage (e.g., 10 for 10%)
 }
-
-const TAX_RATE = 0.07;
 
 const currencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -62,8 +63,9 @@ const CashDrawerModal: React.FC<{
   amount: string;
   onAmountChange: (value: string) => void;
   onConfirm: () => void;
-  onClose: () => void;
-}> = ({ open, amount, onAmountChange, onConfirm, onClose }) => {
+  onClose?: () => void;
+  mandatory?: boolean;
+}> = ({ open, amount, onAmountChange, onConfirm, onClose, mandatory = false }) => {
   if (!open) {
     return null;
   }
@@ -72,8 +74,14 @@ const CashDrawerModal: React.FC<{
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm px-4">
       <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
         <div className="mb-6 text-center">
-          <h2 className="text-2xl font-semibold text-slate-900">Open Cash Drawer Amount</h2>
-          <p className="mt-2 text-sm text-slate-500">Enter the opening balance for your shift.</p>
+          <h2 className="text-2xl font-semibold text-slate-900">
+            {mandatory ? 'Opening Balance Required' : 'Open Cash Drawer Amount'}
+          </h2>
+          <p className="mt-2 text-sm text-slate-500">
+            {mandatory
+              ? 'You must enter an opening balance before using the POS.'
+              : 'Enter the opening balance for your shift.'}
+          </p>
         </div>
         <label className="block text-left text-sm font-medium text-slate-700">
           Enter Amount
@@ -95,19 +103,21 @@ const CashDrawerModal: React.FC<{
           </div>
         </label>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-end">
-          <button
-            type="button"
-            onClick={onClose}
-            className="inline-flex flex-1 items-center justify-center rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 sm:flex-none sm:px-6"
-          >
-            Cancel
-          </button>
+          {!mandatory && onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex flex-1 items-center justify-center rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 sm:flex-none sm:px-6"
+            >
+              Cancel
+            </button>
+          )}
           <button
             type="button"
             onClick={onConfirm}
             className="inline-flex flex-1 items-center justify-center rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 sm:flex-none sm:px-6"
           >
-            Add
+            {mandatory ? 'Confirm' : 'Add'}
           </button>
         </div>
       </div>
@@ -127,6 +137,8 @@ const CashierPOSPage: React.FC = () => {
   const [toast, setToast] = useState<{ type: AlertType; title: string; message: string } | null>(null);
   const [drawerAmount, setDrawerAmount] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerMandatory, setDrawerMandatory] = useState(false);
+  const [checkingOpeningBalance, setCheckingOpeningBalance] = useState(false);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [successModalOpen, setSuccessModalOpen] = useState(false);
@@ -248,6 +260,47 @@ const CashierPOSPage: React.FC = () => {
     }
   }, []);
 
+  // Check for opening balance when page loads and outlet is set
+  useEffect(() => {
+    if (!selectedOutletId) return;
+
+    let mounted = true;
+
+    const checkOpeningBalance = async () => {
+      try {
+        setCheckingOpeningBalance(true);
+
+        // Check if there's an active cashier session with opening balance already set
+        const activeSession = await cashierSessionService.getMyActiveSession();
+
+        if (!mounted) return;
+
+        // If there's no active session or opening balance is 0, show mandatory modal
+        if (!activeSession || activeSession.openingBalance === 0) {
+          setDrawerMandatory(true);
+          setDrawerOpen(true);
+        }
+        // If there's an active session with opening balance > 0, don't show the popup
+      } catch (error) {
+        console.error('Failed to check opening balance', error);
+        if (mounted) {
+          // On error, still allow POS usage but show warning
+          showToast('warning', 'Opening Balance', 'Unable to verify opening balance. Please check your connection.');
+        }
+      } finally {
+        if (mounted) {
+          setCheckingOpeningBalance(false);
+        }
+      }
+    };
+
+    void checkOpeningBalance();
+
+    return () => {
+      mounted = false;
+    };
+  }, [selectedOutletId, showToast]);
+
   useEffect(() => {
     let mounted = true;
 
@@ -322,6 +375,7 @@ const CashierPOSPage: React.FC = () => {
             imageUrl: product.imageUrl,
             weight: null,
             isWeightBased: product.isWeightBased,
+            taxRate: product.taxRate ?? 0, // Include product's tax rate
           },
         ];
       });
@@ -376,10 +430,17 @@ const CashierPOSPage: React.FC = () => {
   );
 
   const taxAmount = useMemo(() => {
-    const tax = subtotal * TAX_RATE;
+    // Calculate tax based on each item's individual tax rate
+    const tax = cartItems.reduce((acc, item) => {
+      const itemSubtotal = item.isWeightBased && item.weight 
+        ? item.price * item.weight 
+        : item.price * item.quantity;
+      const itemTaxRate = (item.taxRate ?? 0) / 100; // Convert percentage to decimal
+      return acc + (itemSubtotal * itemTaxRate);
+    }, 0);
     // Round to 2 decimals
     return Math.round(tax * 100) / 100;
-  }, [subtotal]);
+  }, [cartItems]);
 
   const discountAmount = useMemo(() => {
     let discount = 0;
@@ -440,14 +501,44 @@ const CashierPOSPage: React.FC = () => {
     return Math.round(total * 100) / 100;
   }, [subtotal, taxAmount, discountAmount]);
 
-  const handleDrawerConfirm = useCallback(() => {
+  const handleDrawerConfirm = useCallback(async () => {
     if (!drawerAmount || Number.isNaN(Number.parseFloat(drawerAmount))) {
       showToast('warning', 'Cash Drawer', 'Please enter a valid opening amount.');
       return;
     }
-    showToast('success', 'Cash Drawer', `Opening balance set to ${formatCurrency(Number.parseFloat(drawerAmount))}.`);
-    setDrawerOpen(false);
-  }, [drawerAmount, showToast]);
+
+    const amount = Number.parseFloat(drawerAmount);
+    if (amount < 0) {
+      showToast('warning', 'Cash Drawer', 'Opening balance cannot be negative.');
+      return;
+    }
+
+    // If this is a mandatory opening balance, start a cashier session
+    if (drawerMandatory && selectedOutletId && user?.cashierId) {
+      try {
+        await cashierSessionService.startSession({
+          cashierId: user.cashierId,
+          outletId: selectedOutletId,
+          openingBalance: amount,
+        });
+        
+        showToast('success', 'Opening Balance', `Opening balance of ${formatCurrency(amount)} has been recorded.`);
+        setDrawerMandatory(false);
+        setDrawerOpen(false);
+        setDrawerAmount('');
+      } catch (error) {
+        console.error('Failed to start cashier session', error);
+        showToast('error', 'Error', 'Failed to record opening balance. Please try again.');
+      }
+    } else if (drawerMandatory) {
+      showToast('error', 'Error', 'Unable to start session. Please log in as a cashier.');
+    } else {
+      // Optional drawer open (just a notification, not creating transaction)
+      showToast('success', 'Cash Drawer', `Opening balance set to ${formatCurrency(amount)}.`);
+      setDrawerOpen(false);
+      setDrawerAmount('');
+    }
+  }, [drawerAmount, drawerMandatory, selectedOutletId, user?.cashierId, showToast]);
 
   const handleProceedToPay = useCallback(() => {
     if (cartItems.length === 0) {
@@ -553,9 +644,30 @@ const CashierPOSPage: React.FC = () => {
     showToast('info', 'New Order', 'Ready for next order.');
   }, [showToast]);
 
-  const handlePrintReceipt = useCallback(() => {
-    showToast('info', 'Print Receipt', 'Receipt printing will be available soon.');
-  }, [showToast]);
+  const handlePrintReceipt = useCallback(async () => {
+    if (!completedOrder) {
+      showToast('warning', 'No Order', 'No completed order to print.');
+      return;
+    }
+
+    try {
+      showToast('info', 'Opening Receipt', 'Preparing receipt for printing...');
+      
+      const receiptHtml = await orderService.printReceipt(completedOrder.id);
+      
+      // Open receipt in a new window which will auto-trigger print dialog
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(receiptHtml);
+        printWindow.document.close();
+      } else {
+        showToast('error', 'Print Failed', 'Please allow pop-ups to print receipts.');
+      }
+    } catch (error) {
+      console.error('Failed to print receipt:', error);
+      showToast('error', 'Print Failed', 'Failed to print receipt. Please try again.');
+    }
+  }, [completedOrder, showToast]);
 
   const handleQuickAction = useCallback(
     (action: 'coupon' | 'discount' | 'hold') => {
@@ -613,7 +725,7 @@ const CashierPOSPage: React.FC = () => {
 
   return (
     <CashierLayout>
-      <div className="box-border flex h-[calc(100vh-56px)] flex-col gap-6 overflow-hidden px-6 py-6">
+      <div className="flex h-[calc(100vh-4rem)] flex-col overflow-hidden p-6">
         <div className="flex flex-1 flex-col gap-6 overflow-hidden lg:flex-row">
           <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
             <div className="border-b border-slate-100 bg-slate-50/70 px-6 py-5">
@@ -621,8 +733,13 @@ const CashierPOSPage: React.FC = () => {
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
-                    onClick={() => setDrawerOpen(true)}
-                    className="inline-flex items-center rounded-xl border border-blue-100 bg-white px-4 py-2 text-sm font-medium text-blue-600 transition hover:border-blue-200 hover:bg-blue-50"
+                    onClick={() => {
+                      if (!drawerMandatory) {
+                        setDrawerOpen(true);
+                      }
+                    }}
+                    disabled={checkingOpeningBalance || drawerMandatory}
+                    className="inline-flex items-center rounded-xl border border-blue-100 bg-white px-4 py-2 text-sm font-medium text-blue-600 transition hover:border-blue-200 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -720,7 +837,7 @@ const CashierPOSPage: React.FC = () => {
 
             <div className="px-6 py-4">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div className="flex flex-1 items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <div className="flex flex-1 items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-2.5">
                   <svg className="h-5 w-5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                   </svg>
@@ -747,13 +864,15 @@ const CashierPOSPage: React.FC = () => {
             <div className="flex flex-1 overflow-hidden px-6 pb-6">
               <div className="h-full w-full overflow-y-auto pr-0.5">
                 {productLoading ? (
-                  <div className="grid grid-cols-5 gap-1.5 sm:grid-cols-6 xl:grid-cols-7">
-                    {Array.from({ length: 9 }).map((_, index) => (
-                      <div key={`product-skeleton-${index.toString()}`} className="rounded-lg border border-slate-100 bg-slate-50 p-1.5 shadow-sm">
-                        <div className="mb-1.5 aspect-square w-full rounded-md bg-slate-200" />
-                        <div className="h-2.5 w-3/4 rounded bg-slate-200" />
-                        <div className="mt-1 h-2.5 w-2/3 rounded bg-slate-200" />
-                        <div className="mt-1.5 h-6 w-full rounded-md bg-slate-200" />
+                  <div className="space-y-2">
+                    {Array.from({ length: 8 }).map((_, index) => (
+                      <div key={`product-skeleton-${index.toString()}`} className="flex items-center gap-4 rounded-lg border border-slate-100 bg-white p-3 shadow-sm">
+                        <div className="h-16 w-16 flex-shrink-0 animate-pulse rounded-lg bg-slate-200" />
+                        <div className="flex-1">
+                          <div className="h-4 w-2/3 rounded bg-slate-200" />
+                          <div className="mt-2 h-3 w-1/3 rounded bg-slate-200" />
+                        </div>
+                        <div className="h-9 w-24 rounded-md bg-slate-200" />
                       </div>
                     ))}
                   </div>
@@ -765,13 +884,13 @@ const CashierPOSPage: React.FC = () => {
                     </p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-5 gap-1.5 pb-2 sm:grid-cols-6 xl:grid-cols-7">
+                  <div className="space-y-2 pb-2">
                     {filteredProducts.map((product) => (
                       <article
                         key={product.id}
-                        className="flex h-full flex-col rounded-lg border border-slate-200 bg-white p-1.5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg"
+                        className="flex items-center gap-4 rounded-lg border border-slate-200 bg-white p-3 shadow-sm transition hover:border-blue-300 hover:shadow-md"
                       >
-                        <div className="relative mb-1 flex aspect-square items-center justify-center overflow-hidden rounded-md bg-slate-50">
+                        <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-slate-50">
                           {product.imageUrl ? (
                             <img
                               src={product.imageUrl}
@@ -779,51 +898,57 @@ const CashierPOSPage: React.FC = () => {
                               className="h-full w-full object-cover"
                             />
                           ) : (
-                            <span className="text-lg">🛒</span>
+                            <div className="flex h-full w-full items-center justify-center text-2xl">🛒</div>
                           )}
                           {product.stockStatus === 'LOW_STOCK' && (
-                            <span className="absolute left-1.5 top-1.5 rounded-full bg-amber-500 px-2 py-0.5 text-[9px] font-semibold text-white shadow-sm">
-                              Low stock
+                            <span className="absolute left-1 top-1 rounded-full bg-amber-500 px-1.5 py-0.5 text-[9px] font-semibold text-white shadow-sm">
+                              Low
                             </span>
                           )}
                           {product.stockStatus === 'OUT_OF_STOCK' && (
-                            <span className="absolute left-1.5 top-1.5 rounded-full bg-rose-500 px-2 py-0.5 text-[9px] font-semibold text-white shadow-sm">
-                              Out of stock
+                            <span className="absolute left-1 top-1 rounded-full bg-rose-500 px-1.5 py-0.5 text-[9px] font-semibold text-white shadow-sm">
+                              Out
                             </span>
                           )}
                         </div>
-                        <h3 className="line-clamp-2 min-h-[2.1rem] text-sm font-semibold text-slate-900">{product.name}</h3>
-                        <div className="mt-0.5 flex flex-wrap items-center gap-1 text-xs">
-                          <span className="font-semibold text-blue-600">
-                            {formatCurrency(product.price ?? 0)}
-                            {product.isWeightBased && <span className="text-[10px] font-normal">/kg</span>}
-                          </span>
-                          {product.isWeightBased && (
-                            <span className="rounded-full bg-purple-100 px-2 py-0.5 text-[11px] font-medium text-purple-700">
-                              ⚖️ Weight
+                        
+                        <div className="flex min-w-0 flex-1 flex-col">
+                          <h3 className="truncate text-sm font-semibold text-slate-900">{product.name}</h3>
+                          <div className="mt-1 flex flex-wrap items-center gap-2">
+                            <span className="text-base font-bold text-blue-600">
+                              {formatCurrency(product.price ?? 0)}
+                              {product.isWeightBased && <span className="text-xs font-normal">/kg</span>}
                             </span>
-                          )}
-                          {product.sku && (
-                            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-slate-500">SKU • {product.sku}</span>
-                          )}
-                          {product.stockStatus && (
-                            <span
-                              className={`ml-auto rounded-full px-2 py-0.5 text-[11px] font-medium ${
-                                product.stockStatus === 'IN_STOCK'
-                                  ? 'bg-emerald-100 text-emerald-700'
-                                  : product.stockStatus === 'LOW_STOCK'
-                                    ? 'bg-amber-100 text-amber-700'
-                                    : 'bg-rose-100 text-rose-700'
-                              }`}
-                            >
-                              {product.stockStatus === 'IN_STOCK' ? 'In stock' : product.stockStatus === 'LOW_STOCK' ? 'Low stock' : 'Out of stock'}
-                            </span>
-                          )}
+                            {product.isWeightBased && (
+                              <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">
+                                ⚖️ Weight
+                              </span>
+                            )}
+                            {product.sku && (
+                              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
+                                SKU: {product.sku}
+                              </span>
+                            )}
+                            {product.stockStatus && (
+                              <span
+                                className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                                  product.stockStatus === 'IN_STOCK'
+                                    ? 'bg-emerald-100 text-emerald-700'
+                                    : product.stockStatus === 'LOW_STOCK'
+                                      ? 'bg-amber-100 text-amber-700'
+                                      : 'bg-rose-100 text-rose-700'
+                                }`}
+                              >
+                                {product.stockStatus === 'IN_STOCK' ? 'In stock' : product.stockStatus === 'LOW_STOCK' ? 'Low stock' : 'Out of stock'}
+                              </span>
+                            )}
+                          </div>
                         </div>
+
                         <button
                           type="button"
                           onClick={() => handleAddToCart(product)}
-                          className="mt-1.5 inline-flex items-center justify-center rounded-md bg-blue-600 px-2.5 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
+                          className="flex-shrink-0 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
                         >
                           Add to Cart
                         </button>
@@ -1077,7 +1202,8 @@ const CashierPOSPage: React.FC = () => {
         amount={drawerAmount}
         onAmountChange={setDrawerAmount}
         onConfirm={handleDrawerConfirm}
-        onClose={() => setDrawerOpen(false)}
+        onClose={drawerMandatory ? undefined : () => setDrawerOpen(false)}
+        mandatory={drawerMandatory}
       />
 
       <ApplyCouponModal

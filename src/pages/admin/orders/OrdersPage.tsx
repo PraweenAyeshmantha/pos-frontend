@@ -4,6 +4,7 @@ import AdminPageHeader from '../../../components/layout/AdminPageHeader';
 import Alert, { type AlertType } from '../../../components/common/Alert';
 import ToastContainer from '../../../components/common/ToastContainer';
 import OrderDetailsModal from '../../../components/admin/orders/OrderDetailsModal';
+import RefundModal from '../../../components/cashier/payment/RefundModal';
 import { orderService } from '../../../services/orderService';
 import { outletService } from '../../../services/outletService';
 import type { Order, OrderStatus, OrderType } from '../../../types/order';
@@ -116,6 +117,10 @@ const OrdersPage: React.FC = () => {
   const [alert, setAlert] = useState<{ type: AlertType; title: string; message: string } | null>(null);
   const [viewingOrder, setViewingOrder] = useState<Order | null>(null);
 
+  // Refund modal state
+  const [refundModalOpen, setRefundModalOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+
   const matchesCurrentCashier = useCallback((order: Order) => {
     const idMatch = user?.cashierId !== undefined && user?.cashierId !== null
       ? order.cashierId === user?.cashierId
@@ -217,6 +222,41 @@ const OrdersPage: React.FC = () => {
     setViewingOrder(null);
   }, []);
 
+  const handlePrintReceipt = useCallback(async (order: Order) => {
+    try {
+      setAlert({ type: 'info', title: 'Opening Receipt', message: 'Preparing receipt for printing...' });
+
+      const receiptHtml = await orderService.printReceipt(order.id);
+
+      // Open receipt in a new window which will auto-trigger print dialog
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(receiptHtml);
+        printWindow.document.close();
+      } else {
+        setAlert({ type: 'error', title: 'Print Failed', message: 'Please allow pop-ups to print receipts.' });
+      }
+    } catch (error) {
+      console.error('Failed to print receipt:', error);
+      setAlert({ type: 'error', title: 'Print Failed', message: 'Failed to print receipt. Please try again.' });
+    }
+  }, []);
+
+  const handleRefundOrder = useCallback((order: Order) => {
+    setSelectedOrder(order);
+    setRefundModalOpen(true);
+  }, []);
+
+  const handleRefundSuccess = useCallback((refundResponse: any) => {
+    setAlert({
+      type: 'success',
+      title: 'Refund Completed',
+      message: `Refund processed successfully. Amount: ${formatCurrency(refundResponse.refundedAmount)}`
+    });
+    // Refresh orders to show updated status
+    void fetchOrders();
+  }, [fetchOrders]);
+
   const renderLoadState = () => (
     <div className="flex min-h-[320px] items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white">
       <div className="text-center">
@@ -307,13 +347,35 @@ const OrdersPage: React.FC = () => {
                     {formatDate(order.createdDate)}
                   </td>
                   <td className="px-6 py-4 align-top text-right">
-                    <button
-                      type="button"
-                      onClick={() => handleViewOrder(order)}
-                      className="inline-flex items-center justify-center rounded-lg border border-blue-600 px-3 py-1.5 text-sm font-semibold text-blue-600 transition hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                    >
-                      View
-                    </button>
+                    <div className="flex flex-col gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleViewOrder(order)}
+                        className="inline-flex items-center justify-center rounded-lg border border-blue-600 px-3 py-1.5 text-sm font-semibold text-blue-600 transition hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                      >
+                        View
+                      </button>
+                      {order.status === 'COMPLETED' && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => handlePrintReceipt(order)}
+                            className="inline-flex items-center justify-center rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2"
+                            title="Print Receipt"
+                          >
+                            🖨️ Print
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleRefundOrder(order)}
+                            className="inline-flex items-center justify-center rounded-lg border border-amber-600 px-3 py-1.5 text-sm font-semibold text-amber-600 transition hover:bg-amber-50 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
+                            title="Process Refund"
+                          >
+                            ↩️ Refund
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </td>
                 </tr>
               );
@@ -432,6 +494,13 @@ const OrdersPage: React.FC = () => {
             onClose={handleCloseView}
           />
         ) : null}
+
+        <RefundModal
+          open={refundModalOpen}
+          onClose={() => setRefundModalOpen(false)}
+          onSuccess={handleRefundSuccess}
+          order={selectedOrder}
+        />
       </div>
     </AdminLayout>
   );

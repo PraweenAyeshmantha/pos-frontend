@@ -44,6 +44,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           requirePasswordReset: storedUser.requirePasswordReset === true,
           categories: Array.isArray(storedUser.categories) ? storedUser.categories : [],
           access: Array.isArray(storedUser.access) ? storedUser.access : [],
+          defaultOutlet: storedUser.defaultOutlet,
+          assignedOutlets: Array.isArray(storedUser.assignedOutlets) ? storedUser.assignedOutlets : [],
         }
       : null;
 
@@ -71,6 +73,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         requirePasswordReset: userData.requirePasswordReset === true,
         categories: userData.userCategories ?? [],
         access: userData.userAccess ?? [],
+        defaultOutlet: userData.defaultOutlet,
+        assignedOutlets: userData.assignedOutlets ?? [],
       };
       
       sessionStorage.setItem('user', JSON.stringify(user));

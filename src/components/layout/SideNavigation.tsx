@@ -14,7 +14,7 @@ interface NavigationItem {
 const SideNavigation: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { user, logout, isLoading } = useAuth();
   const { tenantId } = useParams<{ tenantId: string }>();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
@@ -34,6 +34,8 @@ const SideNavigation: React.FC = () => {
     const cashierItems: NavigationItem[] = [
       { id: 'cashier-home', label: 'POS Home', icon: '🏠', path: '/cashier/dashboard' },
       { id: 'cashier-pos', label: 'POS', icon: '🛒', path: '/cashier/pos' },
+      { id: 'cashier-balancing', label: 'Balance', icon: '💰', path: '/cashier/balancing' },
+      { id: 'cashier-statistics', label: 'Statistics', icon: '$', path: '/cashier/statistics' },
       { id: 'cashier-orders', label: 'Sales', icon: '🛍️', path: '/admin/orders' },
       { id: 'cashier-customers', label: 'Customers', icon: '👥', path: '/admin/customers' },
       { id: 'cashier-settings', label: 'Settings', icon: '⚙️', path: '/admin/settings' },
@@ -47,6 +49,18 @@ const SideNavigation: React.FC = () => {
 
     if (hasCashierRole) {
       items.push(...cashierItems);
+    }
+
+    if (items.length === 0 && user) {
+      // Fallback for authenticated users with no detected roles
+      return [
+        { id: 'cashier-home-fallback', label: 'POS Home', icon: '🏠', path: '/cashier/dashboard' },
+        { id: 'cashier-pos-fallback', label: 'POS', icon: '🛒', path: '/cashier/pos' },
+        { id: 'cashier-balancing-fallback', label: 'Balance', icon: '💰', path: '/cashier/balancing' },
+        { id: 'cashier-statistics-fallback', label: 'Statistics', icon: '$', path: '/cashier/statistics' },
+        { id: 'cashier-orders-fallback', label: 'Sales', icon: '🛍️', path: '/admin/orders' },
+        { id: 'cashier-settings-fallback', label: 'Settings', icon: '⚙️', path: '/admin/settings' },
+      ];
     }
 
     if (items.length === 0) {
@@ -103,20 +117,28 @@ const SideNavigation: React.FC = () => {
 
       {/* Navigation Items */}
       <div className="flex-1 flex flex-col items-center space-y-2 w-full">
-        {navigationItems.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => handleNavigation(item.path)}
-            className={`flex flex-col items-center justify-center w-full py-4 transition-all ${
-              isActive(item.path)
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'text-gray-600 hover:bg-gray-100'
-            }`}
-          >
-            <span className="text-2xl mb-1">{item.icon}</span>
-            <span className="text-[10px] font-medium">{item.label}</span>
-          </button>
-        ))}
+        {isLoading ? (
+          // Loading state - show skeleton or spinner
+          <div className="flex flex-col items-center space-y-2 w-full py-4">
+            <div className="w-12 h-12 bg-gray-200 rounded-full animate-pulse" />
+            <div className="w-8 h-2 bg-gray-200 rounded animate-pulse" />
+          </div>
+        ) : (
+          navigationItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => handleNavigation(item.path)}
+              className={`flex flex-col items-center justify-center w-full py-4 transition-all ${
+                isActive(item.path)
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <span className="text-2xl mb-1">{item.icon}</span>
+              <span className="text-[10px] font-medium">{item.label}</span>
+            </button>
+          ))
+        )}
       </div>
 
       {/* Logout */}

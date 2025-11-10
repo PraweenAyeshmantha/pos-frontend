@@ -92,7 +92,7 @@ const LoginPage: React.FC = () => {
       <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
         {/* Logo/Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">POS System</h1>
+          <h1 className="mt-2.5 text-3xl font-bold text-gray-800 mb-2">POS System</h1>
           <p className="text-gray-600">Sign in to your account</p>
         </div>
 

@@ -91,6 +91,14 @@ const POSAdminPage: React.FC = () => {
         accentClass: 'bg-sky-100 text-sky-600',
       },
       {
+        id: 'cashier-balancing',
+        title: 'Cashier Balancing',
+        description: 'Monitor and manage cashier sessions, balances, and cash transactions.',
+        path: '/admin/cashier-balancing',
+        icon: '💰',
+        accentClass: 'bg-green-100 text-green-600',
+      },
+      {
         id: 'tables',
         title: 'Tables',
         description: 'Configure dining tables, seating capacity, and availability per outlet.',
