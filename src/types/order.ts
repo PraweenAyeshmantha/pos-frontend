@@ -63,6 +63,7 @@ export interface OrderItem {
   quantity: number;
   unitPrice: number;
   totalPrice: number;
+  weight?: number;
   notes?: string;
 }
 

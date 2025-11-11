@@ -289,6 +289,20 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ categories, tags, bra
               </div>
             </div>
 
+            <div className="flex items-center gap-3">
+              <input
+                id="product-weight-based"
+                type="checkbox"
+                checked={formData.isWeightBased}
+                onChange={(event) => handleChange('isWeightBased', event.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <label htmlFor="product-weight-based" className="text-sm font-medium text-gray-700">
+                Enable weight-based pricing
+              </label>
+              <p className="text-xs text-gray-500">Check this for products sold by weight (e.g., fruits, meat)</p>
+            </div>
+
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="flex flex-col gap-2">
                 <label htmlFor="product-sku" className="text-sm font-medium text-gray-700">

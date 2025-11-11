@@ -14,6 +14,7 @@ interface PaymentModalProps {
   onClose: () => void;
   paymentMethods: PaymentMethod[];
   enableOrderNotes?: boolean;
+  enableSplitPayment?: boolean;
 }
 
 const currencyFormatter = new Intl.NumberFormat('en-US', {
@@ -31,6 +32,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   onClose,
   paymentMethods,
   enableOrderNotes = false,
+  enableSplitPayment = true,
 }) => {
   const [payments, setPayments] = useState<PaymentEntry[]>([
     { id: '1', paymentMethodId: paymentMethods[0]?.id ?? 1, amount: '' },
@@ -68,12 +70,14 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   }, [totalDue]);
 
   const handleAddPaymentMethod = useCallback(() => {
+    if (!enableSplitPayment) return;
+    
     const nextId = (Math.max(...payments.map((payment) => parseInt(payment.id))) + 1).toString();
     setPayments((prev) => [
       ...prev,
       { id: nextId, paymentMethodId: paymentMethods[0]?.id ?? 1, amount: '' },
     ]);
-  }, [payments, paymentMethods]);
+  }, [payments, paymentMethods, enableSplitPayment]);
 
   const handleRemovePayment = useCallback((id: string) => {
     setPayments((prev) => prev.filter((payment) => payment.id !== id));
@@ -271,16 +275,18 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             </div>
 
             {/* Add Another Payment Method */}
-            <button
-              type="button"
-              onClick={handleAddPaymentMethod}
-              className="w-full rounded-lg border-2 border-dashed border-blue-300 bg-blue-50 px-3 py-2.5 text-xs font-semibold text-blue-600 transition hover:border-blue-400 hover:bg-blue-100"
-            >
-              <svg className="mx-auto mb-0.5 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-              </svg>
-              Add Another Payment Method
-            </button>
+            {enableSplitPayment && (
+              <button
+                type="button"
+                onClick={handleAddPaymentMethod}
+                className="w-full rounded-lg border-2 border-dashed border-blue-300 bg-blue-50 px-3 py-2.5 text-xs font-semibold text-blue-600 transition hover:border-blue-400 hover:bg-blue-100"
+              >
+                <svg className="mx-auto mb-0.5 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+                Add Another Payment Method
+              </button>
+            )}
 
             {/* Order Notes */}
             {enableOrderNotes && (

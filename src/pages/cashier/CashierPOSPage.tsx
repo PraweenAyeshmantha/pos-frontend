@@ -6,11 +6,14 @@ import PaymentModal from '../../components/cashier/payment/PaymentModal';
 import PaymentSuccessModal from '../../components/cashier/payment/PaymentSuccessModal';
 import ApplyCouponModal from '../../components/cashier/coupon/ApplyCouponModal';
 import DiscountModal from '../../components/cashier/discount/DiscountModal';
+import CustomProductModal from '../../components/cashier/custom-product/CustomProductModal';
+import WeightInputModal from '../../components/cashier/weight-input/WeightInputModal';
 import { productService } from '../../services/productService';
 import { productCategoryService } from '../../services/productCategoryService';
 import { posService } from '../../services/posService';
 import { cashierSessionService } from '../../services/cashierSessionService';
 import { orderService } from '../../services/orderService';
+import { configurationService } from '../../services/configurationService';
 import type { Product } from '../../types/product';
 import type { ProductCategory } from '../../types/taxonomy';
 import type { PaymentMethod } from '../../types/payment';
@@ -147,6 +150,13 @@ const CashierPOSPage: React.FC = () => {
   const [selectedOutletId, setSelectedOutletId] = useState<number | null>(null);
   const categoryScrollRef = React.useRef<HTMLDivElement>(null);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [enableOrderNotes, setEnableOrderNotes] = useState(true);
+  const [enableSplitPayment, setEnableSplitPayment] = useState(true);
+  const [enableCustomProduct, setEnableCustomProduct] = useState(true);
+  // @ts-ignore - TODO: Implement when product variations are added
+  const [showVariationsAsProducts, setShowVariationsAsProducts] = useState(false);
+  // @ts-ignore - TODO: Use to conditionally show weight input for products
+  const [enableWeightBasedPricing, setEnableWeightBasedPricing] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(false);
   
   // Coupon and Discount state
@@ -154,6 +164,9 @@ const CashierPOSPage: React.FC = () => {
   const [appliedDiscount, setAppliedDiscount] = useState<{ type: 'FIXED' | 'PERCENTAGE'; value: number } | null>(null);
   const [couponModalOpen, setCouponModalOpen] = useState(false);
   const [discountModalOpen, setDiscountModalOpen] = useState(false);
+  const [customProductModalOpen, setCustomProductModalOpen] = useState(false);
+  const [weightInputModalOpen, setWeightInputModalOpen] = useState(false);
+  const [weightInputProduct, setWeightInputProduct] = useState<Product | null>(null);
 
   const showToast = useCallback((type: AlertType, title: string, message: string) => {
     setToast({ type, title, message });
@@ -260,6 +273,30 @@ const CashierPOSPage: React.FC = () => {
     }
   }, []);
 
+  // Fetch configuration settings
+  useEffect(() => {
+    const fetchConfigurations = async () => {
+      try {
+        const configs = await configurationService.getAllGeneralConfigurations();
+        const configMap: Record<string, string> = {};
+        configs.forEach(config => {
+          configMap[config.configKey] = config.configValue;
+        });
+
+        setEnableOrderNotes(configMap.enable_order_note !== 'false');
+        setEnableSplitPayment(configMap.enable_split_payment !== 'false');
+        setEnableCustomProduct(configMap.enable_custom_product !== 'false');
+        setShowVariationsAsProducts(configMap.show_variations_as_products === 'true');
+        setEnableWeightBasedPricing(configMap.enable_weight_based_pricing === 'true');
+      } catch (error) {
+        console.error('Failed to fetch configurations:', error);
+        // Keep default values (true) on error
+      }
+    };
+
+    fetchConfigurations();
+  }, []);
+
   // Check for opening balance when page loads and outlet is set
   useEffect(() => {
     if (!selectedOutletId) return;
@@ -356,11 +393,26 @@ const CashierPOSPage: React.FC = () => {
         return;
       }
 
+      // Check if weight-based pricing is enabled and product requires weight
+      if (enableWeightBasedPricing && product.isWeightBased) {
+        setWeightInputProduct(product);
+        setWeightInputModalOpen(true);
+        return;
+      }
+
+      // Add non-weight-based product directly to cart
+      addProductToCart(product, null);
+    },
+    [showToast, enableWeightBasedPricing],
+  );
+
+  const addProductToCart = useCallback(
+    (product: Product, weight: number | null) => {
       setCartItems((prev) => {
-        const existing = prev.find((item) => item.productId === product.id);
+        const existing = prev.find((item) => item.productId === product.id && item.weight === weight);
         if (existing) {
           return prev.map((item) =>
-            item.productId === product.id
+            item.productId === product.id && item.weight === weight
               ? { ...item, quantity: Math.min(item.quantity + 1, 99) }
               : item,
           );
@@ -373,7 +425,7 @@ const CashierPOSPage: React.FC = () => {
             price: product.price ?? 0,
             quantity: 1,
             imageUrl: product.imageUrl,
-            weight: null,
+            weight,
             isWeightBased: product.isWeightBased,
             taxRate: product.taxRate ?? 0, // Include product's tax rate
           },
@@ -382,6 +434,16 @@ const CashierPOSPage: React.FC = () => {
       showToast('success', 'Cart Updated', `${product.name} added to the cart.`);
     },
     [showToast],
+  );
+
+  const handleWeightInputSuccess = useCallback(
+    (weight: number) => {
+      if (weightInputProduct) {
+        addProductToCart(weightInputProduct, weight);
+        setWeightInputProduct(null);
+      }
+    },
+    [weightInputProduct, addProductToCart],
   );
 
   const updateCartQuantity = useCallback((productId: number, delta: number) => {
@@ -713,6 +775,37 @@ const CashierPOSPage: React.FC = () => {
     [showToast],
   );
 
+  const handleAddCustomProduct = useCallback(
+    (productName: string, price: number, quantity: number) => {
+      setCartItems((prev) => {
+        const existing = prev.find((item) => item.name === productName && item.price === price);
+        if (existing) {
+          return prev.map((item) =>
+            item.name === productName && item.price === price
+              ? { ...item, quantity: Math.min(item.quantity + quantity, 99) }
+              : item,
+          );
+        }
+        return [
+          ...prev,
+          {
+            productId: 0, // Custom product has no ID
+            name: productName,
+            price: price,
+            quantity: quantity,
+            imageUrl: undefined,
+            weight: null,
+            isWeightBased: false,
+            taxRate: 0, // Default tax rate for custom products
+          },
+        ];
+      });
+      setCustomProductModalOpen(false);
+      showToast('success', 'Product Added', `${productName} added to cart successfully.`);
+    },
+    [showToast],
+  );
+
   const handleRemoveCoupon = useCallback(() => {
     setAppliedCoupon(null);
     showToast('info', 'Coupon Removed', 'Coupon has been removed from this order.');
@@ -857,7 +950,21 @@ const CashierPOSPage: React.FC = () => {
                     </svg>
                   </button>
                 </div>
-                <span className="text-sm text-slate-500 lg:ml-4">{filteredProducts.length} Result{filteredProducts.length === 1 ? '' : 's'}</span>
+                <div className="flex items-center gap-3">
+                  {enableCustomProduct && (
+                    <button
+                      type="button"
+                      onClick={() => setCustomProductModalOpen(true)}
+                      className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
+                    >
+                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                      </svg>
+                      Add Custom Product
+                    </button>
+                  )}
+                  <span className="text-sm text-slate-500">{filteredProducts.length} Result{filteredProducts.length === 1 ? '' : 's'}</span>
+                </div>
               </div>
             </div>
 
@@ -884,7 +991,7 @@ const CashierPOSPage: React.FC = () => {
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-2 pb-2">
+                  <div className="grid grid-cols-2 gap-3 pb-2">
                     {filteredProducts.map((product) => (
                       <article
                         key={product.id}
@@ -1221,13 +1328,31 @@ const CashierPOSPage: React.FC = () => {
         totalAmount={subtotal}
       />
 
+      <CustomProductModal
+        open={customProductModalOpen}
+        onClose={() => setCustomProductModalOpen(false)}
+        onSuccess={handleAddCustomProduct}
+      />
+
+      <WeightInputModal
+        open={weightInputModalOpen}
+        onClose={() => {
+          setWeightInputModalOpen(false);
+          setWeightInputProduct(null);
+        }}
+        onSuccess={handleWeightInputSuccess}
+        productName={weightInputProduct?.name ?? ''}
+        unit={weightInputProduct?.unit ?? 'kg'}
+      />
+
       <PaymentModal
         open={paymentModalOpen}
         totalDue={totalDue}
         onConfirm={handlePaymentConfirm}
         onClose={handlePaymentCancel}
         paymentMethods={paymentMethods}
-        enableOrderNotes={true}
+        enableOrderNotes={enableOrderNotes}
+        enableSplitPayment={enableSplitPayment}
       />
 
       <PaymentSuccessModal
