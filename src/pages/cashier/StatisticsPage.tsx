@@ -3,7 +3,7 @@ import CashierLayout from '../../components/layout/CashierLayout';
 import Alert, { type AlertType } from '../../components/common/Alert';
 import ToastContainer from '../../components/common/ToastContainer';
 import { transactionService, type Transaction, type CreateTransactionRequest } from '../../services/transactionService';
-import { statisticsService } from '../../services/statisticsService';
+import { statisticsService, type DailySalesReport } from '../../services/statisticsService';
 import { useAuth } from '../../hooks/useAuth';
 
 const formatCurrency = (value: number): string => {
@@ -47,12 +47,7 @@ const StatisticsPage: React.FC = () => {
   const { user } = useAuth();
   const [selectedOutletId, setSelectedOutletId] = useState<number | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [dailySalesReport, setDailySalesReport] = useState<{
-    openCashDrawerAmount: number;
-    todaysCashSale: number;
-    todaysTotalSale: number;
-    expectedDrawerAmount: number;
-  } | null>(null);
+  const [dailySalesReport, setDailySalesReport] = useState<DailySalesReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -132,14 +127,19 @@ const StatisticsPage: React.FC = () => {
   const todaysCashSale = dailySalesReport?.todaysCashSale ?? 0;
   const todaysTotalSale = dailySalesReport?.todaysTotalSale ?? 0;
   const expectedDrawerAmount = dailySalesReport?.expectedDrawerAmount ?? 0;
+  const actualClosingBalance = dailySalesReport?.actualClosingBalance ?? 0;
+  const closingBalanceDifference = dailySalesReport?.closingBalanceDifference ?? 0;
 
   const filteredTransactions = useMemo(() => {
+    // All transactions are now properly filtered at the backend level
+    let activeTransactions = transactions;
+    
     if (!searchQuery.trim()) {
-      return transactions;
+      return activeTransactions;
     }
 
     const query = searchQuery.toLowerCase();
-    return transactions.filter((transaction) => {
+    return activeTransactions.filter((transaction) => {
       const idMatch = transaction.id.toString().includes(query);
       const descMatch = transaction.description?.toLowerCase().includes(query) ?? false;
       const refMatch = transaction.referenceNumber?.toLowerCase().includes(query) ?? false;
@@ -150,9 +150,7 @@ const StatisticsPage: React.FC = () => {
       const paymentMethodMatch = transaction.paymentMethod?.toLowerCase().includes(query) ?? false;
       return idMatch || descMatch || refMatch || typeMatch || cashierNameMatch || cashierUsernameMatch || orderNumberMatch || paymentMethodMatch;
     });
-  }, [transactions, searchQuery]);
-
-  const handleAddTransaction = useCallback(async () => {
+  }, [transactions, searchQuery]);  const handleAddTransaction = useCallback(async () => {
     if (!selectedOutletId) {
       showToast('error', 'Error', 'No outlet selected');
       return;
@@ -242,7 +240,7 @@ const StatisticsPage: React.FC = () => {
           )}
 
           {/* Metric Cards */}
-          <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
               <p className="text-sm font-medium text-slate-600">Open Cash Drawer Amount</p>
               <p className="mt-3 text-3xl font-bold text-red-600">
@@ -273,6 +271,28 @@ const StatisticsPage: React.FC = () => {
                 {formatCurrency(expectedDrawerAmount)}
               </p>
               <p className="mt-2 text-xs text-slate-500">Calculated end-of-day balance</p>
+            </div>
+
+            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <p className="text-sm font-medium text-slate-600">Actual Closing Balance</p>
+              <p className="mt-3 text-3xl font-bold text-purple-600">
+                {formatCurrency(actualClosingBalance)}
+              </p>
+              <p className="mt-2 text-xs text-slate-500">Sum of closing balances</p>
+            </div>
+
+            <div className={`rounded-3xl border border-slate-200 bg-white p-6 shadow-sm ${
+              closingBalanceDifference < 0 ? 'border-l-4 border-l-orange-500' : closingBalanceDifference > 0 ? 'border-l-4 border-l-green-500' : ''
+            }`}>
+              <p className="text-sm font-medium text-slate-600">Balance Difference</p>
+              <p className={`mt-3 text-3xl font-bold ${
+                closingBalanceDifference >= 0 ? 'text-green-600' : 'text-orange-600'
+              }`}>
+                {formatCurrency(closingBalanceDifference)}
+              </p>
+              <p className="mt-2 text-xs text-slate-500">
+                {closingBalanceDifference >= 0 ? 'Over by this amount' : 'Short by this amount'}
+              </p>
             </div>
           </section>
 

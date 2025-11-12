@@ -6,6 +6,8 @@ export interface DailySalesReport {
   todaysCashSale: number;
   todaysTotalSale: number;
   expectedDrawerAmount: number;
+  actualClosingBalance: number;
+  closingBalanceDifference: number;
 }
 
 export const statisticsService = {
@@ -21,7 +23,9 @@ export const statisticsService = {
       openCashDrawerAmount: 0, 
       todaysCashSale: 0, 
       todaysTotalSale: 0, 
-      expectedDrawerAmount: 0 
+      expectedDrawerAmount: 0,
+      actualClosingBalance: 0,
+      closingBalanceDifference: 0
     };
   },
 
@@ -40,7 +44,9 @@ export const statisticsService = {
       openCashDrawerAmount: 0, 
       todaysCashSale: 0, 
       todaysTotalSale: 0, 
-      expectedDrawerAmount: 0 
+      expectedDrawerAmount: 0,
+      actualClosingBalance: 0,
+      closingBalanceDifference: 0
     };
   },
 
@@ -56,7 +62,9 @@ export const statisticsService = {
       openCashDrawerAmount: 0, 
       todaysCashSale: 0, 
       todaysTotalSale: 0, 
-      expectedDrawerAmount: 0 
+      expectedDrawerAmount: 0,
+      actualClosingBalance: 0,
+      closingBalanceDifference: 0
     };
   },
 };

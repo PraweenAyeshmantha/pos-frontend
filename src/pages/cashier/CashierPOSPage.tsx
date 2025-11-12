@@ -468,7 +468,7 @@ const CashierPOSPage: React.FC = () => {
             imageUrl: product.imageUrl,
             weight,
             isWeightBased: product.isWeightBased,
-            taxRate: product.taxRate ?? 0, // Include product's tax rate
+            taxRate: product.taxRate ?? 0,
           },
         ];
       });
@@ -520,13 +520,10 @@ const CashierPOSPage: React.FC = () => {
     () => {
       const sum = cartItems.reduce((accumulator, item) => {
         if (item.isWeightBased && item.weight) {
-          // For weight-based products: price per unit × weight
           return accumulator + item.price * item.weight;
         }
-        // For regular products: price × quantity
         return accumulator + item.price * item.quantity;
       }, 0);
-      // Round to 2 decimals to avoid floating point precision issues
       return Math.round(sum * 100) / 100;
     },
     [cartItems],
@@ -600,7 +597,6 @@ const CashierPOSPage: React.FC = () => {
 
   const totalDue = useMemo(() => {
     const total = subtotal + taxAmount - discountAmount;
-    // Round to 2 decimals
     return Math.round(total * 100) / 100;
   }, [subtotal, taxAmount, discountAmount]);
 

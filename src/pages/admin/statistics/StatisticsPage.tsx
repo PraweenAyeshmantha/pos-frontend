@@ -385,9 +385,9 @@ const MiniLineChart: React.FC<{ data: ChartDataPoint[] }> = ({ data }) => {
 };
 
 const StatisticsPage: React.FC = () => {
-  const defaultRange = calculatePresetRange('last30Days');
+  const defaultRange = calculatePresetRange('today');
   const [filters, setFilters] = useState<AnalyticsFiltersState>({
-    preset: 'last30Days',
+    preset: 'today',
     startDate: defaultRange.start,
     endDate: defaultRange.end,
     outletId: 'all',
@@ -727,7 +727,7 @@ const StatisticsPage: React.FC = () => {
               <h3 className="text-lg font-semibold text-slate-900">Today's Cash Drawer</h3>
               <p className="text-sm text-slate-500">Real-time cash flow metrics for the selected outlet</p>
             </div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
               <div className="rounded-2xl border border-red-100 bg-red-50 p-4">
                 <p className="text-xs font-semibold uppercase tracking-wide text-red-600">Open Drawer Amount</p>
                 <p className="mt-2 text-2xl font-bold text-red-700">
@@ -758,6 +758,40 @@ const StatisticsPage: React.FC = () => {
                   {currencyFormatter.format(dailySalesReport.expectedDrawerAmount)}
                 </p>
                 <p className="mt-1 text-xs text-amber-600">Calculated total</p>
+              </div>
+
+              <div className="rounded-2xl border border-purple-100 bg-purple-50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-purple-600">Actual Closing Balance</p>
+                <p className="mt-2 text-2xl font-bold text-purple-700">
+                  {currencyFormatter.format(dailySalesReport.actualClosingBalance)}
+                </p>
+                <p className="mt-1 text-xs text-purple-600">Sum of closing balances</p>
+              </div>
+
+              <div className={`rounded-2xl border p-4 ${
+                dailySalesReport.closingBalanceDifference >= 0
+                  ? 'border-green-100 bg-green-50'
+                  : 'border-orange-100 bg-orange-50'
+              }`}>
+                <p className={`text-xs font-semibold uppercase tracking-wide ${
+                  dailySalesReport.closingBalanceDifference >= 0
+                    ? 'text-green-600'
+                    : 'text-orange-600'
+                }`}>Balance Difference</p>
+                <p className={`mt-2 text-2xl font-bold ${
+                  dailySalesReport.closingBalanceDifference >= 0
+                    ? 'text-green-700'
+                    : 'text-orange-700'
+                }`}>
+                  {currencyFormatter.format(dailySalesReport.closingBalanceDifference)}
+                </p>
+                <p className={`mt-1 text-xs ${
+                  dailySalesReport.closingBalanceDifference >= 0
+                    ? 'text-green-600'
+                    : 'text-orange-600'
+                }`}>
+                  {dailySalesReport.closingBalanceDifference >= 0 ? 'Over' : 'Short'}
+                </p>
               </div>
             </div>
           </section>

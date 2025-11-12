@@ -29,16 +29,7 @@ const CashierBalancingPage: React.FC = () => {
   const fetchSessionTransactions = useCallback(async (session: CashierSession) => {
     try {
       // Fetch transactions for this specific session only
-      // Filter by session start time to current time
-      const sessionStart = new Date(session.openingTime).toISOString();
-      const now = new Date().toISOString();
-
-      const transactions = await transactionService.getAll({
-        outletId: session.outletId,
-        cashierId: session.cashierId,
-        startDate: sessionStart,
-        endDate: now,
-      });
+      const transactions = await transactionService.getBySession(session.id);
       
       console.log('Transactions loaded for active session:', transactions.length);
       setSessionTransactions(transactions);
@@ -336,7 +327,7 @@ const CashierBalancingPage: React.FC = () => {
                 </article>
 
                 <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Today's Cash Sale</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Session Cash Sales</p>
                   <p className="mt-3 text-2xl font-semibold text-emerald-600">
                     {formatCurrency(todaysCashSale)}
                   </p>
