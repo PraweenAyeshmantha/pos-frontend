@@ -2,7 +2,7 @@ import type { RecordStatus } from './configuration';
 
 export type ProductType = 'Simple' | 'Variation';
 
-export type StockStatus = 'IN_STOCK' | 'OUT_OF_STOCK' | 'LOW_STOCK';
+export type StockStatus = 'IN_STOCK' | 'OUT_OF_STOCK' | 'LOW_STOCK' | 'NO_STOCK_CONFIG';
 
 export interface Product {
   id: number;
@@ -73,4 +73,11 @@ export interface ProductFormValues {
   recordStatus: RecordStatus;
   tagIds: string[];
   brandIds: string[];
+}
+
+export interface ProductWithStockDetails extends Product {
+  customStock?: number;
+  reorderLevel?: number;
+  maxStockLevel?: number;
+  isInStock: boolean;
 }

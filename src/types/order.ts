@@ -62,9 +62,13 @@ export interface OrderItem {
   productName: string;
   quantity: number;
   unitPrice: number;
-  totalPrice: number;
+  discountAmount: number;
+  taxRate: number;
+  taxAmount: number;
+  totalAmount: number;
   weight?: number;
   notes?: string;
+  isCustom: boolean;
 }
 
 export interface PartialRefundRequest {

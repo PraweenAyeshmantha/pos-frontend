@@ -4,7 +4,7 @@ import type { Product, ProductUpsertRequest, UpdateProductBarcodeRequest } from 
 
 const normalizeProduct = (product: Product): Product => ({
   ...product,
-  stockStatus: product.stockStatus ?? 'IN_STOCK',
+  stockStatus: product.stockStatus, // Keep null/undefined for products without stock configuration
   productType: product.productType ?? 'Simple',
   tags: product.tags ?? [],
   tagIds: product.tagIds ?? [],

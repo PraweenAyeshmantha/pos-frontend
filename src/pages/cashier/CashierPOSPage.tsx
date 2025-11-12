@@ -14,6 +14,7 @@ import { posService } from '../../services/posService';
 import { cashierSessionService } from '../../services/cashierSessionService';
 import { orderService } from '../../services/orderService';
 import { configurationService } from '../../services/configurationService';
+import { stockService } from '../../services/stockService';
 import type { Product } from '../../types/product';
 import type { ProductCategory } from '../../types/taxonomy';
 import type { PaymentMethod } from '../../types/payment';
@@ -153,6 +154,8 @@ const CashierPOSPage: React.FC = () => {
   const [enableOrderNotes, setEnableOrderNotes] = useState(true);
   const [enableSplitPayment, setEnableSplitPayment] = useState(true);
   const [enableCustomProduct, setEnableCustomProduct] = useState(true);
+  const [enableStockManagement, setEnableStockManagement] = useState(true);
+  const [enableStockValidation, setEnableStockValidation] = useState(true);
   // @ts-ignore - TODO: Implement when product variations are added
   const [showVariationsAsProducts, setShowVariationsAsProducts] = useState(false);
   // @ts-ignore - TODO: Use to conditionally show weight input for products
@@ -200,6 +203,16 @@ const CashierPOSPage: React.FC = () => {
           return;
         }
         const activeProducts = data.filter((product) => product.recordStatus !== 'INACTIVE');
+        
+        // Debug: Log first few products' stock status
+        console.log('Products loaded:', activeProducts.length);
+        console.log('Sample product stock statuses:', 
+          activeProducts.slice(0, 5).map(p => ({
+            name: p.name,
+            stockStatus: p.stockStatus
+          }))
+        );
+        
         setProducts(activeProducts);
       } catch (error) {
         console.error('Failed to load products for POS', error);
@@ -288,6 +301,26 @@ const CashierPOSPage: React.FC = () => {
         setEnableCustomProduct(configMap.enable_custom_product !== 'false');
         setShowVariationsAsProducts(configMap.show_variations_as_products === 'true');
         setEnableWeightBasedPricing(configMap.enable_weight_based_pricing === 'true');
+
+        // Fetch stock configurations
+        const stockConfigs = await stockService.getStockConfigurations();
+        const stockConfigMap: Record<string, string> = {};
+        stockConfigs.forEach(config => {
+          stockConfigMap[config.configKey] = config.configValue;
+        });
+
+        const stockMgmtEnabled = stockConfigMap.ENABLE_STOCK_MANAGEMENT !== 'false';
+        const stockValidationEnabled = stockConfigMap.ENABLE_STOCK_VALIDATION !== 'false';
+        
+        console.log('Stock Configurations:', {
+          ENABLE_STOCK_MANAGEMENT: stockConfigMap.ENABLE_STOCK_MANAGEMENT,
+          ENABLE_STOCK_VALIDATION: stockConfigMap.ENABLE_STOCK_VALIDATION,
+          stockMgmtEnabled,
+          stockValidationEnabled
+        });
+
+        setEnableStockManagement(stockMgmtEnabled);
+        setEnableStockValidation(stockValidationEnabled);
       } catch (error) {
         console.error('Failed to fetch configurations:', error);
         // Keep default values (true) on error
@@ -393,6 +426,14 @@ const CashierPOSPage: React.FC = () => {
         return;
       }
 
+      // Check stock status only if stock validation is enabled
+      if (enableStockValidation) {
+        if (product.stockStatus === 'OUT_OF_STOCK') {
+          showToast('error', 'Out of Stock', `${product.name} is currently out of stock.`);
+          return;
+        }
+      }
+
       // Check if weight-based pricing is enabled and product requires weight
       if (enableWeightBasedPricing && product.isWeightBased) {
         setWeightInputProduct(product);
@@ -433,7 +474,7 @@ const CashierPOSPage: React.FC = () => {
       });
       showToast('success', 'Cart Updated', `${product.name} added to the cart.`);
     },
-    [showToast],
+    [showToast, enableStockValidation],
   );
 
   const handleWeightInputSuccess = useCallback(
@@ -679,10 +720,22 @@ const CashierPOSPage: React.FC = () => {
         console.error('Failed to create order', err);
         const error = err as { response?: { data?: { message?: string }; status?: number } };
         let message = 'Failed to complete the order. Please try again.';
+        let title = 'Order Failed';
+
         if (error.response?.data?.message) {
-          message = error.response.data.message;
+          const errorMessage = error.response.data.message;
+
+          // Check for stock-related errors
+          if (errorMessage.includes('Insufficient stock') || errorMessage.includes('stock')) {
+            title = 'Stock Issue';
+            message = errorMessage;
+            // You could also highlight the problematic items in the cart here
+          } else {
+            message = errorMessage;
+          }
         }
-        showToast('error', 'Order Failed', message);
+
+        showToast('error', title, message);
       } finally {
         setProcessingPayment(false);
       }
@@ -1007,12 +1060,12 @@ const CashierPOSPage: React.FC = () => {
                           ) : (
                             <div className="flex h-full w-full items-center justify-center text-2xl">🛒</div>
                           )}
-                          {product.stockStatus === 'LOW_STOCK' && (
+                          {enableStockManagement && product.stockStatus === 'LOW_STOCK' && (
                             <span className="absolute left-1 top-1 rounded-full bg-amber-500 px-1.5 py-0.5 text-[9px] font-semibold text-white shadow-sm">
                               Low
                             </span>
                           )}
-                          {product.stockStatus === 'OUT_OF_STOCK' && (
+                          {enableStockManagement && product.stockStatus === 'OUT_OF_STOCK' && (
                             <span className="absolute left-1 top-1 rounded-full bg-rose-500 px-1.5 py-0.5 text-[9px] font-semibold text-white shadow-sm">
                               Out
                             </span>
@@ -1036,7 +1089,7 @@ const CashierPOSPage: React.FC = () => {
                                 SKU: {product.sku}
                               </span>
                             )}
-                            {product.stockStatus && (
+                            {enableStockManagement && product.stockStatus !== undefined && (
                               <span
                                 className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                                   product.stockStatus === 'IN_STOCK'
@@ -1046,7 +1099,11 @@ const CashierPOSPage: React.FC = () => {
                                       : 'bg-rose-100 text-rose-700'
                                 }`}
                               >
-                                {product.stockStatus === 'IN_STOCK' ? 'In stock' : product.stockStatus === 'LOW_STOCK' ? 'Low stock' : 'Out of stock'}
+                                {product.stockStatus === 'IN_STOCK'
+                                  ? '✓ In stock'
+                                  : product.stockStatus === 'LOW_STOCK'
+                                    ? '⚠ Low stock'
+                                    : '✗ Out of stock'}
                               </span>
                             )}
                           </div>
@@ -1055,9 +1112,18 @@ const CashierPOSPage: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => handleAddToCart(product)}
-                          className="flex-shrink-0 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
+                          disabled={enableStockValidation && product.stockStatus === 'OUT_OF_STOCK'}
+                          className={`flex-shrink-0 rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-sm transition focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                            enableStockValidation && product.stockStatus === 'OUT_OF_STOCK'
+                              ? 'bg-slate-400 cursor-not-allowed'
+                              : 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-400'
+                          }`}
                         >
-                          Add to Cart
+                          {product.stockStatus === 'OUT_OF_STOCK'
+                            ? 'Out of Stock'
+                            : product.stockStatus === 'NO_STOCK_CONFIG'
+                              ? 'No Stock Config'
+                              : 'Add to Cart'}
                         </button>
                       </article>
                     ))}
