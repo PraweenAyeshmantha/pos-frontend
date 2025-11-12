@@ -18,6 +18,8 @@ export interface ProductWithStock {
   price: number;
   centralizedStock?: number;
   customStock?: number;
+  reorderLevel?: number;
+  maxStockLevel?: number;
   isInStock: boolean;
 }
 

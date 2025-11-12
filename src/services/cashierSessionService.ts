@@ -37,8 +37,9 @@ export const cashierSessionService = {
     return response.data.data ?? null;
   },
 
-  async getMyActiveSession(): Promise<CashierSession | null> {
-    const response = await apiClient.get<ApiResponse<CashierSession>>('/cashier/sessions/active');
+  async getMyActiveSession(outletId?: number): Promise<CashierSession | null> {
+    const query = outletId ? `?outletId=${outletId}` : '';
+    const response = await apiClient.get<ApiResponse<CashierSession>>(`/cashier/sessions/active${query}`);
     return response.data.data ?? null;
   },
 

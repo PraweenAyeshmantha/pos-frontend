@@ -31,6 +31,7 @@ const AssignBarcodesPage = lazy(() => import('./pages/admin/assign-barcodes/Assi
 const AssignStocksPage = lazy(() => import('./pages/admin/assign-stocks/AssignStocksPage'));
 const StockAlertsPage = lazy(() => import('./pages/admin/stock-alerts/StockAlertsPage'));
 const StockConfigPage = lazy(() => import('./pages/admin/stock-config/StockConfigPage'));
+const SuppliersPage = lazy(() => import('./pages/admin/suppliers/SuppliersPage'));
 const BrandsPage = lazy(() => import('./pages/admin/taxonomy/BrandsPage'));
 const TagsPage = lazy(() => import('./pages/admin/taxonomy/TagsPage'));
 const ProductCategoriesPage = lazy(() => import('./pages/admin/taxonomy/ProductCategoriesPage'));
@@ -38,6 +39,7 @@ const CashierPOSPage = lazy(() => import('./pages/cashier/CashierPOSPage'));
 const CashierDashboardPage = lazy(() => import('./pages/cashier/CashierDashboardPage'));
 const CashierStatisticsPage = lazy(() => import('./pages/cashier/StatisticsPage'));
 const CashierBalancingPageCashier = lazy(() => import('./pages/cashier/CashierBalancingPage'));
+const GoodsReceivedNotesPage = lazy(() => import('./pages/cashier/GoodsReceivedNotesPage'));
 
 // Loading component
 const LoadingFallback = () => (
@@ -150,6 +152,12 @@ function App() {
                       </ProtectedRoute>
                     } />
 
+                    <Route path="admin/suppliers" element={
+                      <ProtectedRoute allowedRoles={['ADMIN']}>
+                        <SuppliersPage />
+                      </ProtectedRoute>
+                    } />
+
                     <Route path="admin/coupons" element={
                       <ProtectedRoute allowedRoles={['ADMIN']}>
                         <CouponsPage />
@@ -233,6 +241,12 @@ function App() {
                     <Route path="cashier/pos" element={
                       <ProtectedRoute allowedRoles={['CASHIER']}>
                         <CashierPOSPage />
+                      </ProtectedRoute>
+                    } />
+
+                    <Route path="cashier/goods-received" element={
+                      <ProtectedRoute allowedRoles={['CASHIER']}>
+                        <GoodsReceivedNotesPage />
                       </ProtectedRoute>
                     } />
 

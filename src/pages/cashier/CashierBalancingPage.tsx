@@ -9,8 +9,11 @@ import { cashierSessionService } from '../../services/cashierSessionService';
 import { transactionService, type Transaction } from '../../services/transactionService';
 import { statisticsService } from '../../services/statisticsService';
 import type { CashierSession } from '../../types/cashierSession';
+import { useOutlet } from '../../contexts/OutletContext';
 
 const CashierBalancingPage: React.FC = () => {
+  const { currentOutlet } = useOutlet();
+  const selectedOutletId = currentOutlet?.id ?? null;
   const [activeSession, setActiveSession] = useState<CashierSession | null>(null);
   const [sessionTransactions, setSessionTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -40,10 +43,18 @@ const CashierBalancingPage: React.FC = () => {
   }, []);
 
   const fetchActiveSession = useCallback(async () => {
+    if (!selectedOutletId) {
+      setLoading(false);
+      setActiveSession(null);
+      setSessionTransactions([]);
+      setBalanceData(null);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
-      const session = await cashierSessionService.getMyActiveSession();
+      const session = await cashierSessionService.getMyActiveSession(selectedOutletId);
       setActiveSession(session);
       if (session) {
         // Fetch session transactions
@@ -68,7 +79,7 @@ const CashierBalancingPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [fetchSessionTransactions]);
+  }, [fetchSessionTransactions, selectedOutletId]);
 
   const isCashSale = (transaction: Transaction): boolean => {
     return transaction.transactionType === 'SALE' && transaction.paymentMethod?.toLowerCase() === 'cash';
@@ -327,6 +338,20 @@ const CashierBalancingPage: React.FC = () => {
       </div>
     </div>
   );
+
+  if (!selectedOutletId) {
+    return (
+      <CashierLayout>
+        <div className="p-6">
+          <Alert
+            type="info"
+            title="Select Outlet"
+            message="Choose a branch from the top navigation before viewing cashier balancing."
+          />
+        </div>
+      </CashierLayout>
+    );
+  }
 
 
 

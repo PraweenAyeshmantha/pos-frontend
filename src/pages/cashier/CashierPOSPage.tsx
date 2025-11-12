@@ -21,6 +21,7 @@ import type { PaymentMethod } from '../../types/payment';
 import type { Order } from '../../types/order';
 import type { Coupon } from '../../types/coupon';
 import { useAuth } from '../../hooks/useAuth';
+import { useOutlet } from '../../contexts/OutletContext';
 
 type CategoryKey = 'all' | number;
 
@@ -131,6 +132,8 @@ const CashDrawerModal: React.FC<{
 
 const CashierPOSPage: React.FC = () => {
   const { user } = useAuth();
+  const { currentOutlet } = useOutlet();
+  const selectedOutletId = currentOutlet?.id ?? null;
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<CategoryOption[]>([{ id: 'all', name: 'All', icon: '🛍️' }]);
   const [selectedCategory, setSelectedCategory] = useState<CategoryKey>('all');
@@ -148,7 +151,6 @@ const CashierPOSPage: React.FC = () => {
   const [successModalOpen, setSuccessModalOpen] = useState(false);
   const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
   const [processingPayment, setProcessingPayment] = useState(false);
-  const [selectedOutletId, setSelectedOutletId] = useState<number | null>(null);
   const categoryScrollRef = React.useRef<HTMLDivElement>(null);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [enableOrderNotes, setEnableOrderNotes] = useState(true);
@@ -271,21 +273,6 @@ const CashierPOSPage: React.FC = () => {
     };
   }, [showToast, checkScrollArrows]);
 
-  // Initialize outlet from sessionStorage
-  useEffect(() => {
-    const storedOutletId = sessionStorage.getItem('selectedOutletId');
-    if (storedOutletId) {
-      setSelectedOutletId(Number(storedOutletId));
-    } else {
-      // TODO: Implement outlet selection screen
-      // For now, default to outlet 1 if not set
-      // This should be replaced with a proper outlet selection UI
-      console.warn('No outlet selected. Defaulting to outlet ID 1. Please implement outlet selection.');
-      setSelectedOutletId(1);
-      sessionStorage.setItem('selectedOutletId', '1');
-    }
-  }, []);
-
   // Fetch configuration settings
   useEffect(() => {
     const fetchConfigurations = async () => {
@@ -341,7 +328,7 @@ const CashierPOSPage: React.FC = () => {
         setCheckingOpeningBalance(true);
 
         // Check if there's an active cashier session with opening balance already set
-        const activeSession = await cashierSessionService.getMyActiveSession();
+        const activeSession = await cashierSessionService.getMyActiveSession(selectedOutletId);
 
         if (!mounted) return;
 
@@ -515,6 +502,20 @@ const CashierPOSPage: React.FC = () => {
       ),
     );
   }, []);
+
+  if (!selectedOutletId) {
+    return (
+      <CashierLayout>
+        <div className="p-6">
+          <Alert
+            type="info"
+            title="Select Outlet"
+            message="Choose a branch from the top navigation before using the POS."
+          />
+        </div>
+      </CashierLayout>
+    );
+  }
 
   const subtotal = useMemo(
     () => {

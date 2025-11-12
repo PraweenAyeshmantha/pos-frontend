@@ -5,6 +5,7 @@ import ToastContainer from '../../components/common/ToastContainer';
 import { transactionService, type Transaction, type CreateTransactionRequest } from '../../services/transactionService';
 import { statisticsService, type DailySalesReport } from '../../services/statisticsService';
 import { useAuth } from '../../hooks/useAuth';
+import { useOutlet } from '../../contexts/OutletContext';
 
 const formatCurrency = (value: number): string => {
   return new Intl.NumberFormat('en-US', {
@@ -45,7 +46,8 @@ const getTransactionLabel = (type: string): string => {
 
 const StatisticsPage: React.FC = () => {
   const { user } = useAuth();
-  const [selectedOutletId, setSelectedOutletId] = useState<number | null>(null);
+  const { currentOutlet } = useOutlet();
+  const selectedOutletId = currentOutlet?.id ?? null;
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [dailySalesReport, setDailySalesReport] = useState<DailySalesReport | null>(null);
   const [loading, setLoading] = useState(true);
@@ -54,24 +56,22 @@ const StatisticsPage: React.FC = () => {
   const [alert, setAlert] = useState<{ type: AlertType; title: string; message: string } | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newTransaction, setNewTransaction] = useState<CreateTransactionRequest>({
-    outletId: 0,
+    outletId: selectedOutletId ?? 0,
     transactionType: 'CASH_IN',
     amount: 0,
     description: '',
     referenceNumber: '',
   });
 
-  // Initialize outlet from session storage
+  // Keep the new transaction form aligned with the active outlet
   useEffect(() => {
-    const storedOutletId = sessionStorage.getItem('selectedOutletId');
-    if (storedOutletId) {
-      setSelectedOutletId(Number(storedOutletId));
-    } else {
-      // Default to outlet 1 if not set
-      setSelectedOutletId(1);
-      sessionStorage.setItem('selectedOutletId', '1');
+    if (selectedOutletId) {
+      setNewTransaction((prev) => ({
+        ...prev,
+        outletId: selectedOutletId,
+      }));
     }
-  }, []);
+  }, [selectedOutletId]);
 
   const showToast = useCallback((type: AlertType, title: string, message: string) => {
     setAlert({ type, title, message });
@@ -181,7 +181,23 @@ const StatisticsPage: React.FC = () => {
       const paymentMethodMatch = transaction.paymentMethod?.toLowerCase().includes(query) ?? false;
       return idMatch || descMatch || refMatch || typeMatch || cashierNameMatch || cashierUsernameMatch || orderNumberMatch || paymentMethodMatch;
     });
-  }, [transactions, searchQuery]);  const handleAddTransaction = useCallback(async () => {
+  }, [transactions, searchQuery]);
+
+  if (!selectedOutletId) {
+    return (
+      <CashierLayout>
+        <div className="p-6">
+          <Alert
+            type="info"
+            title="Select Outlet"
+            message="Choose a branch from the top navigation before viewing cashier statistics."
+          />
+        </div>
+      </CashierLayout>
+    );
+  }
+
+  const handleAddTransaction = useCallback(async () => {
     if (!selectedOutletId) {
       showToast('error', 'Error', 'No outlet selected');
       return;

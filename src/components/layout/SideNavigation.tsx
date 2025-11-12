@@ -27,6 +27,7 @@ const SideNavigation: React.FC = () => {
       { id: 'admin-home', label: 'Home', icon: '🏠', path: '/admin/dashboard' },
       { id: 'admin-pos-admin', label: 'POS Admin', icon: '🗂️', path: '/admin/pos-admin' },
       { id: 'admin-customers', label: 'Customers', icon: '👥', path: '/admin/customers' },
+      { id: 'admin-suppliers', label: 'Suppliers', icon: '🤝', path: '/admin/suppliers' },
       { id: 'admin-orders', label: 'Orders', icon: '🛍️', path: '/admin/orders' },
       { id: 'admin-settings', label: 'Settings', icon: '⚙️', path: '/admin/settings' },
     ];

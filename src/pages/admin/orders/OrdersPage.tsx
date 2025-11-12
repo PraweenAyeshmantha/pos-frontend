@@ -7,9 +7,10 @@ import OrderDetailsModal from '../../../components/admin/orders/OrderDetailsModa
 import RefundModal from '../../../components/cashier/payment/RefundModal';
 import { orderService } from '../../../services/orderService';
 import { outletService } from '../../../services/outletService';
-import type { Order, OrderStatus, OrderType } from '../../../types/order';
+import type { Order, OrderFilters, OrderStatus, OrderType } from '../../../types/order';
 import type { Outlet } from '../../../types/outlet';
 import { useAuth } from '../../../hooks/useAuth';
+import { useOutlet } from '../../../contexts/OutletContext';
 import { getUserRoleCodes } from '../../../utils/authRoles';
 
 const ORDER_STATUS_OPTIONS: Array<{ label: string; value: OrderStatus }> = [
@@ -101,6 +102,7 @@ const getStatusLabel = (status: string): string => {
 
 const OrdersPage: React.FC = () => {
   const { user } = useAuth();
+  const { currentOutlet } = useOutlet();
   const roleCodes = useMemo(() => getUserRoleCodes(user), [user]);
   const isCashier = roleCodes.has('CASHIER');
   const isAdmin = roleCodes.has('ADMIN');
@@ -111,6 +113,7 @@ const OrdersPage: React.FC = () => {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedOutlet, setSelectedOutlet] = useState<string>('');
+  const [hasManualOutletSelection, setHasManualOutletSelection] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<string>('');
   const [selectedType, setSelectedType] = useState<string>('');
   const [selectedSource, setSelectedSource] = useState<string>('');
@@ -133,14 +136,24 @@ const OrdersPage: React.FC = () => {
     try {
       setLoading(true);
       setLoadError(null);
-      const filters = (!isAdmin && isCashier)
-        ? {
-            ...(user?.cashierId ? { cashierId: user.cashierId } : {}),
-            ...(user?.cashierId ? {} : user?.username ? { cashierUsername: user.username } : {}),
-          }
-        : undefined;
+      const outletIdFromSelection = hasManualOutletSelection
+        ? (selectedOutlet ? Number(selectedOutlet) : undefined)
+        : currentOutlet?.id;
 
-      const data = await orderService.getAll(filters);
+      const filters: OrderFilters = {};
+      if (outletIdFromSelection) {
+        filters.outletId = outletIdFromSelection;
+      }
+      if (!isAdmin && isCashier) {
+        if (user?.cashierId) {
+          filters.cashierId = user.cashierId;
+        } else if (user?.username) {
+          filters.cashierUsername = user.username;
+        }
+      }
+
+      const hasFilters = Object.keys(filters).length > 0;
+      const data = await orderService.getAll(hasFilters ? filters : undefined);
       const scoped = (!isAdmin && isCashier) ? data.filter(matchesCurrentCashier) : data;
       setOrders(scoped);
     } catch (err) {
@@ -149,7 +162,7 @@ const OrdersPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [isAdmin, isCashier, matchesCurrentCashier, user]);
+  }, [currentOutlet?.id, hasManualOutletSelection, isAdmin, isCashier, matchesCurrentCashier, selectedOutlet, user]);
 
   const fetchOutlets = useCallback(async () => {
     try {
@@ -164,6 +177,12 @@ const OrdersPage: React.FC = () => {
     fetchOrders();
     fetchOutlets();
   }, [fetchOrders, fetchOutlets]);
+
+  useEffect(() => {
+    if (!hasManualOutletSelection && !selectedOutlet && currentOutlet?.id) {
+      setSelectedOutlet(currentOutlet.id.toString());
+    }
+  }, [currentOutlet?.id, hasManualOutletSelection, selectedOutlet]);
 
   const matchesQuery = (order: Order): boolean => {
     if (!searchQuery.trim()) {
@@ -396,7 +415,7 @@ const OrdersPage: React.FC = () => {
     <AdminLayout>
       <div className="flex flex-col gap-8 pb-12">
         <AdminPageHeader
-          title="Orders"
+          title="Sales"
           description="Review, fulfill, and reconcile POS orders across channels in real time."
         />
 
@@ -445,7 +464,10 @@ const OrdersPage: React.FC = () => {
           <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <select
               value={selectedOutlet}
-              onChange={(event) => setSelectedOutlet(event.target.value)}
+              onChange={(event) => {
+                setHasManualOutletSelection(true);
+                setSelectedOutlet(event.target.value);
+              }}
               className="h-10 rounded-lg border border-slate-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
             >
               <option value="">All Outlets</option>

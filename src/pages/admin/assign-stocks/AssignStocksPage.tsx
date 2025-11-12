@@ -5,41 +5,32 @@ import Alert, { type AlertType } from '../../../components/common/Alert';
 import ToastContainer from '../../../components/common/ToastContainer';
 import StockBatchTrackingModal from '../../../components/common/StockBatchTrackingModal';
 import { stockService } from '../../../services/stockService';
-import { outletService } from '../../../services/outletService';
 import type { ProductWithStock } from '../../../types/stock';
-import type { Outlet } from '../../../types/outlet';
+import { useOutlet } from '../../../contexts/OutletContext';
 
 const AssignStocksPage: React.FC = () => {
   const [stocks, setStocks] = useState<ProductWithStock[]>([]);
-  const [outlets, setOutlets] = useState<Outlet[]>([]);
-  const [selectedOutlet, setSelectedOutlet] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [alert, setAlert] = useState<{ type: AlertType; title: string; message: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [editingStocks, setEditingStocks] = useState<Map<number, string>>(new Map());
   const [editingPrices, setEditingPrices] = useState<Map<number, string>>(new Map());
   const [batchTrackingModal, setBatchTrackingModal] = useState<{ isOpen: boolean; product?: ProductWithStock }>({ isOpen: false });
+  const { currentOutlet } = useOutlet();
 
   const showAlert = useCallback((type: AlertType, title: string, message: string) => {
     setAlert({ type, title, message });
   }, []);
 
-  const fetchOutlets = useCallback(async () => {
-    try {
-      const data = await outletService.getAll();
-      setOutlets(data);
-    } catch (err) {
-      console.error('Failed to load outlets', err);
-      showAlert('error', 'Error', 'Failed to load outlets. Please try again.');
-    }
-  }, [showAlert]);
-
   const fetchStocks = useCallback(async () => {
     try {
+      if (!currentOutlet?.id) {
+        setStocks([]);
+        setLoading(false);
+        return;
+      }
       setLoading(true);
-      // Find the outlet ID from the selected outlet name
-      const outlet = outlets.find(o => o.name === selectedOutlet);
-      const data = await stockService.getProductStocks(outlet?.id);
+      const data = await stockService.getProductStocks(currentOutlet.id);
       setStocks(data);
     } catch (err) {
       console.error('Failed to load stocks', err);
@@ -47,19 +38,11 @@ const AssignStocksPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedOutlet, outlets, showAlert]);
+  }, [currentOutlet?.id, showAlert]);
 
   useEffect(() => {
-    fetchOutlets();
-  }, [fetchOutlets]);
-
-  useEffect(() => {
-    if (outlets.length > 0 && selectedOutlet) {
-      fetchStocks();
-    } else if (outlets.length > 0 && !selectedOutlet) {
-      setLoading(false);
-    }
-  }, [fetchStocks, outlets.length, selectedOutlet]);
+    fetchStocks();
+  }, [fetchStocks]);
 
   const handleStockChange = useCallback((productId: number, value: string) => {
     // Only allow numeric input
@@ -110,11 +93,15 @@ const AssignStocksPage: React.FC = () => {
         }
       }
 
+      if (!currentOutlet?.id) {
+        showAlert('error', 'Outlet Required', 'Select a branch before updating stock.');
+        return;
+      }
+
       try {
-        const outlet = outlets.find(o => o.name === selectedOutlet);
         await stockService.updateStock({
           productId: stock.productId,
-          outletId: outlet?.id,
+          outletId: currentOutlet.id,
           stockLevel: stockLevel,
           costPrice: costPrice !== undefined ? costPrice : undefined,
         });
@@ -145,7 +132,7 @@ const AssignStocksPage: React.FC = () => {
         showAlert('error', 'Update Failed', 'Unable to update stock. Please try again.');
       }
     },
-    [editingStocks, editingPrices, showAlert, outlets, selectedOutlet, fetchStocks]
+    [editingStocks, editingPrices, showAlert, currentOutlet?.id, fetchStocks]
   );
 
   const handleTrackBatches = useCallback((stock: ProductWithStock) => {
@@ -174,10 +161,10 @@ const AssignStocksPage: React.FC = () => {
   });
 
   const renderContent = () => {
-    if (!selectedOutlet) {
+    if (!currentOutlet) {
       return (
         <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center text-slate-600">
-          Select an outlet to view products and assign stocks.
+          Select a branch from the top navigation to view products and assign stocks.
         </div>
       );
     }
@@ -331,42 +318,27 @@ const AssignStocksPage: React.FC = () => {
           <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div className="text-xs text-slate-500 sm:text-sm whitespace-nowrap">
-                {filteredStocks.length === stocks.length
-                  ? `Showing ${stocks.length} product${stocks.length !== 1 ? 's' : ''}`
-                  : `Showing ${filteredStocks.length} of ${stocks.length} product${stocks.length !== 1 ? 's' : ''}`}
+                {currentOutlet
+                  ? `Managing ${filteredStocks.length} of ${stocks.length} products for ${currentOutlet.name}`
+                  : 'Select a branch from the top navigation to manage outlet stock levels.'}
               </div>
-              <div className="flex w-full flex-col items-stretch gap-3 md:flex-row md:justify-end md:gap-3">
-                <select
-                  value={selectedOutlet}
-                  onChange={(e) => setSelectedOutlet(e.target.value)}
-                  className="h-10 w-full max-w-xs rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-                >
-                  <option value="">Select Outlet</option>
-                  {outlets.map((outlet) => (
-                    <option key={outlet.id} value={outlet.name}>
-                      {outlet.name}
-                    </option>
-                  ))}
-                </select>
-                <div className="relative w-full md:max-w-xs">
-                  <input
-                    type="text"
-                    placeholder="Search products..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="h-10 w-full rounded-lg border border-slate-200 px-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-                  />
-                </div>
+              <div className="relative w-full md:max-w-sm">
+                <input
+                  type="text"
+                  placeholder="Search products..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="h-10 w-full rounded-lg border border-slate-200 px-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                />
               </div>
             </div>
           </section>
 
-            {/* Products Table */}
-            {renderContent()}
+          {renderContent()}
 
-            <p className="mt-6 text-sm text-slate-500">
-              Update stock levels for products at the selected outlet. Stock quantities are managed per outlet.
-            </p>
+          <p className="mt-6 text-sm text-slate-500">
+            Update stock levels for products at the active outlet. Stock quantities are managed per branch.
+          </p>
         </div>
       </AdminLayout>
 
@@ -386,7 +358,7 @@ const AssignStocksPage: React.FC = () => {
       <StockBatchTrackingModal
         isOpen={batchTrackingModal.isOpen}
         product={batchTrackingModal.product}
-        outletId={outlets.find(o => o.name === selectedOutlet)?.id}
+        outletId={currentOutlet?.id}
         onClose={handleCloseBatchModal}
         onError={handleBatchModalError}
       />

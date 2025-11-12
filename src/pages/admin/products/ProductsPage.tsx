@@ -11,9 +11,10 @@ import { productCategoryService } from '../../../services/productCategoryService
 import { tagService } from '../../../services/tagService';
 import { brandService } from '../../../services/brandService';
 import { stockService } from '../../../services/stockService';
-import { outletService } from '../../../services/outletService';
 import type { Product, ProductWithStockDetails } from '../../../types/product';
 import type { Brand, ProductCategory, Tag } from '../../../types/taxonomy';
+import type { ProductWithStock } from '../../../types/stock';
+import { useOutlet } from '../../../contexts/OutletContext';
 
 const formatProductType = (type?: string): string => {
   if (!type) {
@@ -80,6 +81,7 @@ const ProductsPage: React.FC = () => {
   const [categoryOptions, setCategoryOptions] = useState<ProductCategory[]>([]);
   const [tagOptions, setTagOptions] = useState<Tag[]>([]);
   const [brandOptions, setBrandOptions] = useState<Brand[]>([]);
+  const { currentOutlet } = useOutlet();
 
   const showToast = useCallback((type: AlertType, title: string, message: string) => {
     setAlert({ type, title, message });
@@ -90,20 +92,13 @@ const ProductsPage: React.FC = () => {
       setLoading(true);
       setLoadError(null);
 
-      // Fetch products and outlets in parallel
-      const [productsData, outletsData] = await Promise.all([
-        productService.getAll(),
-        outletService.getAll()
-      ]);
-
-      // Get stock data for the first outlet (or default outlet)
-      let stockData: any[] = [];
-      if (outletsData.length > 0) {
+      const productsData = await productService.getAll();
+      let stockData: ProductWithStock[] = [];
+      if (currentOutlet?.id) {
         try {
-          stockData = await stockService.getProductStocks(outletsData[0].id);
+          stockData = await stockService.getProductStocks(currentOutlet.id);
         } catch (err) {
           console.warn('Failed to fetch stock data:', err);
-          // Continue without stock data
         }
       }
 
@@ -126,7 +121,7 @@ const ProductsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentOutlet?.id]);
 
   const fetchTaxonomy = useCallback(async () => {
     try {
@@ -446,6 +441,12 @@ const ProductsPage: React.FC = () => {
           title="Products"
           description="Manage products available across registers, kitchen displays, and online ordering. Use quick search to stay focused on what your team needs."
         />
+
+        {!currentOutlet && (
+          <div className="rounded-2xl border border-dashed border-blue-200 bg-blue-50/60 p-4 text-sm text-blue-800">
+            Select a branch from the top navigation to view outlet-specific stock on hand.
+          </div>
+        )}
 
         {(alert || loadError) && (
           <ToastContainer>

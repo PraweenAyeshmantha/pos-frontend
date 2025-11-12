@@ -40,13 +40,18 @@ class SettingsService {
   }
 
   /**
-   * Switch to a different outlet
-   * @param cashierId - ID of the cashier switching outlets
-   * @param outletRequest - Outlet switch request
-   * @returns Promise with new outlet information
+   * Switch to a different outlet for a cashier
    */
-  async switchOutlet(cashierId: number, outletRequest: SwitchOutletRequest): Promise<Outlet> {
+  async switchCashierOutlet(cashierId: number, outletRequest: SwitchOutletRequest): Promise<Outlet> {
     const response = await apiClient.post(`/pos/settings/outlet/switch/${cashierId}`, outletRequest);
+    return response.data.data;
+  }
+
+  /**
+   * Switch to a different outlet for an admin user
+   */
+  async switchAdminOutlet(userId: number, outletRequest: SwitchOutletRequest): Promise<Outlet> {
+    const response = await apiClient.post(`/pos/settings/admin/outlet/switch/${userId}`, outletRequest);
     return response.data.data;
   }
 

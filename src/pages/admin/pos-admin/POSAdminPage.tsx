@@ -151,6 +151,21 @@ const POSAdminPage: React.FC = () => {
         ],
       },
       {
+        id: 'procurement',
+        title: 'Procurement',
+        description: 'Keep vendor master data current so receiving stays organized.',
+        tiles: [
+          {
+            id: 'suppliers',
+            title: 'Suppliers',
+            description: 'Manage supplier contacts, tax IDs, and fulfillment preferences.',
+            path: '/admin/suppliers',
+            icon: '🤝',
+            accentClass: 'bg-emerald-100 text-emerald-600',
+          },
+        ],
+      },
+      {
         id: 'promotions',
         title: 'Promotions',
         description: 'Launch and manage marketing incentives.',
