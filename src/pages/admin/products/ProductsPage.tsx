@@ -10,7 +10,9 @@ import { productService } from '../../../services/productService';
 import { productCategoryService } from '../../../services/productCategoryService';
 import { tagService } from '../../../services/tagService';
 import { brandService } from '../../../services/brandService';
-import type { Product } from '../../../types/product';
+import { stockService } from '../../../services/stockService';
+import { outletService } from '../../../services/outletService';
+import type { Product, ProductWithStockDetails } from '../../../types/product';
 import type { Brand, ProductCategory, Tag } from '../../../types/taxonomy';
 
 const formatProductType = (type?: string): string => {
@@ -41,19 +43,6 @@ const formatDateTime = (value?: string): string => {
   });
 };
 
-const formatStockStatus = (status?: string): { label: string; badgeClass: string } => {
-  if (!status || status === 'IN_STOCK') {
-    return { label: 'In stock', badgeClass: 'bg-emerald-100 text-emerald-700' };
-  }
-  if (status === 'OUT_OF_STOCK') {
-    return { label: 'Out of stock', badgeClass: 'bg-rose-100 text-rose-700' };
-  }
-  if (status === 'LOW_STOCK') {
-    return { label: 'Low stock', badgeClass: 'bg-amber-100 text-amber-700' };
-  }
-  return { label: 'In stock', badgeClass: 'bg-emerald-100 text-emerald-700' };
-};
-
 const currencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
   currency: 'USD',
@@ -76,7 +65,7 @@ const resolveTimestamp = (value?: string): number => {
 };
 
 const ProductsPage: React.FC = () => {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductWithStockDetails[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -100,8 +89,37 @@ const ProductsPage: React.FC = () => {
     try {
       setLoading(true);
       setLoadError(null);
-      const data = await productService.getAll();
-      setProducts(data);
+
+      // Fetch products and outlets in parallel
+      const [productsData, outletsData] = await Promise.all([
+        productService.getAll(),
+        outletService.getAll()
+      ]);
+
+      // Get stock data for the first outlet (or default outlet)
+      let stockData: any[] = [];
+      if (outletsData.length > 0) {
+        try {
+          stockData = await stockService.getProductStocks(outletsData[0].id);
+        } catch (err) {
+          console.warn('Failed to fetch stock data:', err);
+          // Continue without stock data
+        }
+      }
+
+      // Combine product and stock data
+      const productsWithStock: ProductWithStockDetails[] = productsData.map(product => {
+        const stockInfo = stockData.find(stock => stock.productId === product.id);
+        return {
+          ...product,
+          customStock: stockInfo?.customStock ?? 0,
+          reorderLevel: stockInfo?.reorderLevel,
+          maxStockLevel: stockInfo?.maxStockLevel,
+          isInStock: (stockInfo?.customStock ?? 0) > 0,
+        };
+      });
+
+      setProducts(productsWithStock);
     } catch (err) {
       console.error('Error loading products', err);
       setLoadError('Failed to load products. Please try again.');
@@ -136,9 +154,14 @@ const ProductsPage: React.FC = () => {
 
   const handleProductCreated = useCallback(
     (product: Product) => {
+      const productWithStock: ProductWithStockDetails = {
+        ...product,
+        customStock: 0,
+        isInStock: false,
+      };
       setProducts((prev) => {
         const remaining = prev.filter((existing) => existing.id !== product.id);
-        return [product, ...remaining];
+        return [productWithStock, ...remaining];
       });
       setLoadError(null);
       setShowAddModal(false);
@@ -170,7 +193,18 @@ const ProductsPage: React.FC = () => {
   const handleProductUpdated = useCallback(
     (product: Product) => {
       setProducts((prev) =>
-        prev.map((p) => (p.id === product.id ? product : p))
+        prev.map((p) => {
+          if (p.id === product.id) {
+            return {
+              ...product,
+              customStock: p.customStock,
+              reorderLevel: p.reorderLevel,
+              maxStockLevel: p.maxStockLevel,
+              isInStock: p.isInStock,
+            };
+          }
+          return p;
+        })
       );
       setEditingProduct(null);
       setModalMode(null);
@@ -305,7 +339,6 @@ const ProductsPage: React.FC = () => {
           </thead>
           <tbody className="divide-y divide-slate-200 bg-white">
             {filteredProducts.map((product) => {
-              const stockStatus = formatStockStatus(product.stockStatus);
               const isActive = product.isActive !== false && product.recordStatus !== 'INACTIVE';
               const statusClass = isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600';
               const statusLabel = isActive ? 'Active' : 'Inactive';
@@ -342,9 +375,29 @@ const ProductsPage: React.FC = () => {
                     {product.taxRate ? `${product.taxRate}%` : '—'}
                   </td>
                   <td className="px-6 py-4 align-top">
-                    <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${stockStatus.badgeClass}`}>
-                      {stockStatus.label}
-                    </span>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                          (product.customStock || 0) === 0
+                            ? 'bg-rose-100 text-rose-800'
+                            : (product.customStock || 0) <= (product.reorderLevel || 10)
+                            ? 'bg-amber-100 text-amber-800'
+                            : 'bg-emerald-100 text-emerald-800'
+                        }`}>
+                          {product.customStock || 0}
+                        </span>
+                        {product.reorderLevel && (
+                          <span className="text-xs text-slate-500">
+                            (Reorder: {product.reorderLevel})
+                          </span>
+                        )}
+                      </div>
+                      {product.maxStockLevel && (
+                        <div className="text-xs text-slate-400">
+                          Max: {product.maxStockLevel}
+                        </div>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4 align-top">
                     <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${statusClass}`}>

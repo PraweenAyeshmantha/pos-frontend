@@ -122,6 +122,22 @@ const POSAdminPage: React.FC = () => {
         icon: '📦',
         accentClass: 'bg-teal-100 text-teal-600',
       },
+      {
+        id: 'stock-alerts',
+        title: 'Stock Alerts',
+        description: 'Monitor low stock and out of stock alerts across your outlets.',
+        path: '/admin/stock-alerts',
+        icon: '🚨',
+        accentClass: 'bg-amber-100 text-amber-600',
+      },
+      {
+        id: 'stock-config',
+        title: 'Stock Configuration',
+        description: 'Configure stock management settings, thresholds, and alert preferences.',
+        path: '/admin/stock-config',
+        icon: '⚙️',
+        accentClass: 'bg-slate-100 text-slate-600',
+      },
     ],
     [],
   );

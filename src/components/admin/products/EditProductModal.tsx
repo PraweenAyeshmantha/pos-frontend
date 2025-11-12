@@ -315,6 +315,21 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
               </div>
             </div>
 
+            <div className="flex items-center gap-3">
+              <input
+                id="edit-product-weight-based"
+                type="checkbox"
+                checked={formData.isWeightBased}
+                onChange={(event) => handleChange('isWeightBased', event.target.checked)}
+                disabled={isViewMode}
+                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:cursor-not-allowed"
+              />
+              <label htmlFor="edit-product-weight-based" className="text-sm font-medium text-gray-700">
+                Enable weight-based pricing
+              </label>
+              <p className="text-xs text-gray-500">Check this for products sold by weight (e.g., fruits, meat)</p>
+            </div>
+
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="flex flex-col gap-2">
                 <label htmlFor="edit-product-sku" className="text-sm font-medium text-gray-700">

@@ -1,6 +1,6 @@
 import apiClient from './apiClient';
 import type { ApiResponse } from '../types/configuration';
-import type { ProductStock, ProductWithStock, UpdateStockRequest } from '../types/stock';
+import type { ProductStock, ProductWithStock, UpdateStockRequest, StockConfiguration, StockBatch } from '../types/stock';
 import type { Product } from '../types/product';
 
 export const stockService = {
@@ -42,11 +42,54 @@ export const stockService = {
         productId: data.productId,
         outletId: data.outletId,
         quantity: data.stockLevel,
+        costPrice: data.costPrice !== undefined ? data.costPrice : null,
       }
     );
     if (!response.data.data) {
       throw new Error('Failed to update stock');
     }
     return response.data.data;
+  },
+
+  // Get low stock alerts for an outlet
+  async getLowStockAlerts(outletId: number): Promise<ProductStock[]> {
+    const response = await apiClient.get<ApiResponse<ProductStock[]>>(
+      `/admin/stocks/outlet/${outletId}/low`
+    );
+    return response.data.data ?? [];
+  },
+
+  // Get all stock configurations
+  async getStockConfigurations(): Promise<StockConfiguration[]> {
+    const response = await apiClient.get<ApiResponse<StockConfiguration[]>>(
+      '/admin/configurations/stock'
+    );
+    return response.data.data ?? [];
+  },
+
+  // Update stock configuration
+  async updateStockConfiguration(key: string, value: string, description?: string): Promise<StockConfiguration> {
+    const response = await apiClient.put<ApiResponse<StockConfiguration>>(
+      `/admin/configurations/by-key?key=${key}&category=STOCK`,
+      { configValue: value, description }
+    );
+    return response.data.data;
+  },
+
+  // Bulk update stock configurations
+  async bulkUpdateStockConfigurations(configurations: Record<string, string>): Promise<StockConfiguration[]> {
+    const response = await apiClient.post<ApiResponse<StockConfiguration[]>>(
+      '/admin/configurations/bulk-update?category=STOCK',
+      { configurations }
+    );
+    return response.data.data;
+  },
+
+  // Get stock batches for a product at an outlet
+  async getStockBatches(productId: number, outletId: number): Promise<StockBatch[]> {
+    const response = await apiClient.get<ApiResponse<StockBatch[]>>(
+      `/admin/stocks/product/${productId}/outlet/${outletId}/batches`
+    );
+    return response.data.data ?? [];
   },
 };

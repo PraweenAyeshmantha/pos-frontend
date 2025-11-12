@@ -214,8 +214,14 @@ const OrdersPage: React.FC = () => {
     [orders]
   );
 
-  const handleViewOrder = useCallback((order: Order) => {
-    setViewingOrder(order);
+  const handleViewOrder = useCallback(async (order: Order) => {
+    try {
+      const orderDetails = await orderService.getOrderDetails(order.id);
+      setViewingOrder(orderDetails);
+    } catch (err) {
+      console.error('Error loading order details', err);
+      setAlert({ type: 'error', title: 'Error', message: 'Failed to load order details. Please try again.' });
+    }
   }, []);
 
   const handleCloseView = useCallback(() => {
@@ -347,7 +353,7 @@ const OrdersPage: React.FC = () => {
                     {formatDate(order.createdDate)}
                   </td>
                   <td className="px-6 py-4 align-top text-right">
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-row gap-2 justify-end">
                       <button
                         type="button"
                         onClick={() => handleViewOrder(order)}

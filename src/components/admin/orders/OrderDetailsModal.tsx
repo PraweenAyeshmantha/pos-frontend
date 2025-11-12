@@ -204,6 +204,34 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = memo(({ order, onClo
               </div>
             )}
 
+            {/* Order Items */}
+            {order.items && order.items.length > 0 && (
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <h3 className="mb-3 text-sm font-semibold text-slate-900">Order Items</h3>
+                <div className="space-y-3">
+                  {order.items.map((item) => (
+                    <div key={item.id} className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm font-medium text-slate-900">{item.productName}</span>
+                          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
+                            Qty: {item.quantity}
+                          </span>
+                        </div>
+                        {item.notes && (
+                          <p className="mt-1 text-xs text-slate-500">{item.notes}</p>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-medium text-slate-900">{formatCurrency(item.totalAmount)}</div>
+                        <div className="text-xs text-slate-500">{formatCurrency(item.unitPrice)} each</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Financial Details */}
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
               <h3 className="mb-3 text-sm font-semibold text-slate-900">Financial Details</h3>

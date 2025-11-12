@@ -29,6 +29,8 @@ const ProductsPage = lazy(() => import('./pages/admin/products/ProductsPage'));
 const CouponsPage = lazy(() => import('./pages/admin/coupons/CouponsPage'));
 const AssignBarcodesPage = lazy(() => import('./pages/admin/assign-barcodes/AssignBarcodesPage'));
 const AssignStocksPage = lazy(() => import('./pages/admin/assign-stocks/AssignStocksPage'));
+const StockAlertsPage = lazy(() => import('./pages/admin/stock-alerts/StockAlertsPage'));
+const StockConfigPage = lazy(() => import('./pages/admin/stock-config/StockConfigPage'));
 const BrandsPage = lazy(() => import('./pages/admin/taxonomy/BrandsPage'));
 const TagsPage = lazy(() => import('./pages/admin/taxonomy/TagsPage'));
 const ProductCategoriesPage = lazy(() => import('./pages/admin/taxonomy/ProductCategoriesPage'));
@@ -163,6 +165,18 @@ function App() {
                     <Route path="admin/assign-stocks" element={
                       <ProtectedRoute allowedRoles={['ADMIN']}>
                         <AssignStocksPage />
+                      </ProtectedRoute>
+                    } />
+
+                    <Route path="admin/stock-alerts" element={
+                      <ProtectedRoute allowedRoles={['ADMIN']}>
+                        <StockAlertsPage />
+                      </ProtectedRoute>
+                    } />
+
+                    <Route path="admin/stock-config" element={
+                      <ProtectedRoute allowedRoles={['ADMIN']}>
+                        <StockConfigPage />
                       </ProtectedRoute>
                     } />
 
