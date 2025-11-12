@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import AdminLayout from '../../../components/layout/AdminLayout';
 import AdminPageHeader from '../../../components/layout/AdminPageHeader';
@@ -22,6 +22,7 @@ interface AdminCategory {
 const POSAdminPage: React.FC = () => {
   const navigate = useNavigate();
   const { tenantId } = useParams<{ tenantId: string }>();
+  const [searchTerm, setSearchTerm] = useState('');
 
   const categories = useMemo<AdminCategory[]>(
     () => [
@@ -191,6 +192,25 @@ const POSAdminPage: React.FC = () => {
     [],
   );
 
+  const filteredCategories = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return categories;
+    }
+
+    const keyword = searchTerm.trim().toLowerCase();
+    return categories
+      .map((category) => ({
+        ...category,
+        tiles: category.tiles.filter(
+          (tile) =>
+            tile.title.toLowerCase().includes(keyword) ||
+            tile.description.toLowerCase().includes(keyword) ||
+            category.title.toLowerCase().includes(keyword),
+        ),
+      }))
+      .filter((category) => category.tiles.length > 0);
+  }, [categories, searchTerm]);
+
   const handleTileClick = useCallback(
     (path: string) => {
       const fullPath = tenantId ? `/posai/${tenantId}${path}` : path;
@@ -207,8 +227,29 @@ const POSAdminPage: React.FC = () => {
           description="Centralize your administrative tasks, fine-tune configuration, and keep operations running smoothly."
         />
 
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <label className="text-sm font-medium text-gray-700" htmlFor="tiles-search">
+            Search admin tools
+          </label>
+          <input
+            id="tiles-search"
+            type="search"
+            placeholder="Search by name, purpose, or category..."
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:max-w-md"
+          />
+        </div>
+
         <div className="flex flex-col gap-10">
-          {categories.map((category) => (
+          {filteredCategories.length === 0 && (
+            <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-sm text-gray-600">
+              No admin tools match "<span className="font-medium text-gray-800">{searchTerm}</span>".
+              Try another keyword.
+            </div>
+          )}
+
+          {filteredCategories.map((category) => (
             <section key={category.id} className="flex flex-col gap-3">
               <div>
                 <h2 className="text-base font-semibold text-gray-900">{category.title}</h2>
