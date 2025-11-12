@@ -123,12 +123,43 @@ const StatisticsPage: React.FC = () => {
   }, [fetchData]);
 
   // Use backend-calculated metrics
-  const openCashDrawerAmount = dailySalesReport?.openCashDrawerAmount ?? 0;
   const todaysCashSale = dailySalesReport?.todaysCashSale ?? 0;
   const todaysTotalSale = dailySalesReport?.todaysTotalSale ?? 0;
-  const expectedDrawerAmount = dailySalesReport?.expectedDrawerAmount ?? 0;
-  const actualClosingBalance = dailySalesReport?.actualClosingBalance ?? 0;
-  const closingBalanceDifference = dailySalesReport?.closingBalanceDifference ?? 0;
+  const backendExpectedDrawerAmount = dailySalesReport?.expectedDrawerAmount ?? 0;
+  const backendOpenCashDrawerAmount = dailySalesReport?.openCashDrawerAmount ?? 0;
+
+  const latestOpeningBalanceAmount = useMemo(() => {
+    const openingTransactions = transactions.filter(
+      (transaction) => transaction.transactionType === 'OPENING_BALANCE'
+    );
+
+    if (openingTransactions.length === 0) {
+      return 0;
+    }
+
+    const latest = openingTransactions.reduce((latestTx, currentTx) => {
+      const latestDate = new Date(latestTx.transactionDate).getTime();
+      const currentDate = new Date(currentTx.transactionDate).getTime();
+
+      if (Number.isNaN(currentDate)) {
+        return latestTx;
+      }
+      if (Number.isNaN(latestDate) || currentDate > latestDate) {
+        return currentTx;
+      }
+      return latestTx;
+    }, openingTransactions[0]);
+
+    return Math.abs(latest.amount ?? 0);
+  }, [transactions]);
+
+  const expectedDrawerAmount = useMemo(() => {
+    if (!dailySalesReport) {
+      return latestOpeningBalanceAmount;
+    }
+
+    return backendExpectedDrawerAmount - backendOpenCashDrawerAmount + latestOpeningBalanceAmount;
+  }, [dailySalesReport, backendExpectedDrawerAmount, backendOpenCashDrawerAmount, latestOpeningBalanceAmount]);
 
   const filteredTransactions = useMemo(() => {
     // All transactions are now properly filtered at the backend level
@@ -240,13 +271,13 @@ const StatisticsPage: React.FC = () => {
           )}
 
           {/* Metric Cards */}
-          <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
             <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
               <p className="text-sm font-medium text-slate-600">Open Cash Drawer Amount</p>
               <p className="mt-3 text-3xl font-bold text-red-600">
-                {formatCurrency(openCashDrawerAmount)}
+                {formatCurrency(latestOpeningBalanceAmount)}
               </p>
-              <p className="mt-2 text-xs text-slate-500">Starting balance for the day</p>
+              <p className="mt-2 text-xs text-slate-500">Most recent opening balance</p>
             </div>
 
             <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -271,28 +302,6 @@ const StatisticsPage: React.FC = () => {
                 {formatCurrency(expectedDrawerAmount)}
               </p>
               <p className="mt-2 text-xs text-slate-500">Calculated end-of-day balance</p>
-            </div>
-
-            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-              <p className="text-sm font-medium text-slate-600">Actual Closing Balance</p>
-              <p className="mt-3 text-3xl font-bold text-purple-600">
-                {formatCurrency(actualClosingBalance)}
-              </p>
-              <p className="mt-2 text-xs text-slate-500">Sum of closing balances</p>
-            </div>
-
-            <div className={`rounded-3xl border border-slate-200 bg-white p-6 shadow-sm ${
-              closingBalanceDifference < 0 ? 'border-l-4 border-l-orange-500' : closingBalanceDifference > 0 ? 'border-l-4 border-l-green-500' : ''
-            }`}>
-              <p className="text-sm font-medium text-slate-600">Balance Difference</p>
-              <p className={`mt-3 text-3xl font-bold ${
-                closingBalanceDifference >= 0 ? 'text-green-600' : 'text-orange-600'
-              }`}>
-                {formatCurrency(closingBalanceDifference)}
-              </p>
-              <p className="mt-2 text-xs text-slate-500">
-                {closingBalanceDifference >= 0 ? 'Over by this amount' : 'Short by this amount'}
-              </p>
             </div>
           </section>
 

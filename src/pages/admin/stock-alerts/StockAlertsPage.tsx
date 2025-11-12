@@ -22,10 +22,6 @@ const StockAlertsPage: React.FC = () => {
       try {
         const outletData = await outletService.getAll();
         setOutlets(outletData);
-        // Auto-select first outlet if available
-        if (outletData.length > 0 && !selectedOutletId) {
-          setSelectedOutletId(outletData[0].id);
-        }
       } catch (err) {
         console.error('Failed to load outlets:', err);
         setError('Failed to load outlets');
@@ -48,7 +44,12 @@ const StockAlertsPage: React.FC = () => {
     setError(null);
     try {
       const alertData = await stockService.getLowStockAlerts(selectedOutletId);
-      setAlerts(alertData);
+      const normalizedAlerts = alertData.map((alert) => ({
+        ...alert,
+        quantity: Number(alert.quantity ?? 0),
+        reorderLevel: alert.reorderLevel != null ? Number(alert.reorderLevel) : undefined,
+      }));
+      setAlerts(normalizedAlerts);
     } catch (err) {
       console.error('Failed to load stock alerts:', err);
       setError('Failed to load stock alerts');
@@ -83,8 +84,11 @@ const StockAlertsPage: React.FC = () => {
               </p>
             </div>
             <select
-              value={selectedOutletId || ''}
-              onChange={(e) => setSelectedOutletId(Number(e.target.value) || null)}
+              value={selectedOutletId ?? ''}
+              onChange={(e) => {
+                const value = e.target.value;
+                setSelectedOutletId(value ? Number(value) : null);
+              }}
               className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
             >
               <option value="">Select an outlet...</option>

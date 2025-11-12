@@ -70,6 +70,67 @@ const CashierBalancingPage: React.FC = () => {
     }
   }, [fetchSessionTransactions]);
 
+  const isCashSale = (transaction: Transaction): boolean => {
+    return transaction.transactionType === 'SALE' && transaction.paymentMethod?.toLowerCase() === 'cash';
+  };
+
+  const CASH_IN_TRANSACTION_TYPES = ['OPENING_BALANCE', 'CASH_IN'] as const;
+  const CASH_OUT_TRANSACTION_TYPES = ['CASH_OUT', 'EXPENSE', 'REFUND'] as const;
+
+  const getCashAmountIn = (transaction: Transaction): number => {
+    if (isCashSale(transaction)) {
+      if (transaction.amountIn != null) {
+        return transaction.amountIn;
+      }
+      return transaction.amount ?? 0;
+    }
+
+    if (CASH_IN_TRANSACTION_TYPES.includes(transaction.transactionType as (typeof CASH_IN_TRANSACTION_TYPES)[number])) {
+      return transaction.amountIn ?? transaction.amount ?? 0;
+    }
+
+    return 0;
+  };
+
+  const getCashAmountOut = (transaction: Transaction): number => {
+    if (transaction.transactionType === 'CLOSING_BALANCE') {
+      return 0;
+    }
+
+    if (isCashSale(transaction)) {
+      if (transaction.amountOut != null) {
+        return transaction.amountOut;
+      }
+      return 0;
+    }
+
+    if (CASH_OUT_TRANSACTION_TYPES.includes(transaction.transactionType as (typeof CASH_OUT_TRANSACTION_TYPES)[number])) {
+      return transaction.amountOut ?? transaction.amount ?? 0;
+    }
+
+    return 0;
+  };
+
+  const getCashNetAmount = (transaction: Transaction): number => {
+    if (transaction.transactionType === 'CLOSING_BALANCE') {
+      return transaction.amount ?? 0;
+    }
+
+    if (transaction.amountIn == null && transaction.amountOut == null) {
+      if (isCashSale(transaction)) {
+        return transaction.amount ?? 0;
+      }
+
+      if (
+        CASH_IN_TRANSACTION_TYPES.includes(transaction.transactionType as (typeof CASH_IN_TRANSACTION_TYPES)[number]) ||
+        CASH_OUT_TRANSACTION_TYPES.includes(transaction.transactionType as (typeof CASH_OUT_TRANSACTION_TYPES)[number])
+      ) {
+        return transaction.amount ?? 0;
+      }
+    }
+
+    return getCashAmountIn(transaction) - getCashAmountOut(transaction);
+  };
   // Calculate current balance based on backend data or fallback to frontend calculation
   const calculateCurrentBalance = useCallback((): number => {
     if (balanceData) {
@@ -81,25 +142,21 @@ const CashierBalancingPage: React.FC = () => {
 
     let balance = activeSession.openingBalance;
 
-    // Add cash sales (SALE transactions with cash payment)
-    const cashSales = sessionTransactions
-      .filter((t) => t.transactionType === 'SALE' && t.paymentMethod?.toLowerCase() === 'cash')
-      .reduce((sum, t) => sum + (t.amountIn || t.amount || 0), 0);
+    const netCashMovement = sessionTransactions.reduce((sum, transaction) => {
+      if (transaction.transactionType === 'OPENING_BALANCE') {
+        return sum;
+      }
+      return sum + getCashNetAmount(transaction);
+    }, 0);
 
-    // Add CASH_IN transactions
-    const cashIn = sessionTransactions
-      .filter((t) => t.transactionType === 'CASH_IN')
-      .reduce((sum, t) => sum + (t.amount || 0), 0);
-
-    // Subtract CASH_OUT and EXPENSE transactions
-    const cashOut = sessionTransactions
-      .filter((t) => t.transactionType === 'CASH_OUT' || t.transactionType === 'EXPENSE')
-      .reduce((sum, t) => sum + (t.amount || 0), 0);
-
-    balance = balance + cashSales + cashIn - cashOut;
+    balance += netCashMovement;
 
     return balance;
   }, [activeSession, sessionTransactions, balanceData]);
+
+  const saleTransactions = useMemo(() => {
+    return sessionTransactions.filter((transaction) => isCashSale(transaction));
+  }, [sessionTransactions]);
 
   // Use backend data for today's cash sale or calculate from transactions
   const todaysCashSale = useMemo(() => {
@@ -107,22 +164,42 @@ const CashierBalancingPage: React.FC = () => {
       return balanceData.todaysCashSale;
     }
     
-    return sessionTransactions
-      .filter((t) => t.transactionType === 'SALE' && t.paymentMethod?.toLowerCase() === 'cash')
-      .reduce((sum, t) => sum + (t.amountIn || t.amount || 0), 0);
-  }, [sessionTransactions, balanceData]);
+    return saleTransactions.reduce((sum, transaction) => sum + getCashNetAmount(transaction), 0);
+  }, [saleTransactions, balanceData]);
 
   const cashIn = useMemo(() => {
-    return sessionTransactions
-      .filter((t) => t.transactionType === 'CASH_IN')
-      .reduce((sum, t) => sum + (t.amount || 0), 0);
+    return sessionTransactions.reduce((sum, transaction) => {
+      if (['OPENING_BALANCE', 'CLOSING_BALANCE'].includes(transaction.transactionType)) {
+        return sum;
+      }
+
+      const amountInValue = getCashAmountIn(transaction);
+      if (amountInValue > 0) {
+        return sum + amountInValue;
+      }
+
+      return sum;
+    }, 0);
   }, [sessionTransactions]);
 
   const cashOut = useMemo(() => {
-    return sessionTransactions
-      .filter((t) => t.transactionType === 'CASH_OUT' || t.transactionType === 'EXPENSE')
-      .reduce((sum, t) => sum + (t.amount || 0), 0);
+    return sessionTransactions.reduce((sum, transaction) => {
+      if (['OPENING_BALANCE', 'CLOSING_BALANCE'].includes(transaction.transactionType)) {
+        return sum;
+      }
+
+      const amountOutValue = getCashAmountOut(transaction);
+      if (amountOutValue > 0) {
+        return sum + amountOutValue;
+      }
+
+      return sum;
+    }, 0);
   }, [sessionTransactions]);
+
+  const netCashFlow = useMemo(() => {
+    return cashIn - cashOut;
+  }, [cashIn, cashOut]);
 
   useEffect(() => {
     void fetchActiveSession();
@@ -217,7 +294,6 @@ const CashierBalancingPage: React.FC = () => {
     }
     return 'bg-slate-100 text-slate-700';
   };
-
   // Filter transactions to show cash-related ones
   const cashRelatedTransactions = useMemo(() => {
     return sessionTransactions.filter((t) => {
@@ -354,11 +430,11 @@ const CashierBalancingPage: React.FC = () => {
                 </article>
 
                 <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Net Cash Flow</p>
-                  <p className={`mt-3 text-2xl font-semibold ${(todaysCashSale + cashIn - cashOut) >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                    {formatCurrency(todaysCashSale + cashIn - cashOut)}
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Cash Drawer Change</p>
+                  <p className={`mt-3 text-2xl font-semibold ${netCashFlow >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                    {formatCurrency(netCashFlow)}
                   </p>
-                  <p className="mt-2 text-sm text-slate-500">Total change this session</p>
+                  <p className="mt-2 text-sm text-slate-500">Cash in and cash out difference for this session</p>
                 </article>
               </section>
 
@@ -434,12 +510,9 @@ const CashierBalancingPage: React.FC = () => {
                       </thead>
                       <tbody className="divide-y divide-slate-200 bg-white">
                         {cashRelatedTransactions.map((transaction) => {
-                          // Determine if this is a cash in transaction (shows + sign and green)
-                          const isCashIn = ['CASH_IN', 'OPENING_BALANCE'].includes(transaction.transactionType) || 
-                            (transaction.transactionType === 'SALE' && transaction.paymentMethod?.toLowerCase() === 'cash');
-                          
-                          // Determine if this is neutral (closing balance)
+                          const netAmount = getCashNetAmount(transaction);
                           const isNeutral = transaction.transactionType === 'CLOSING_BALANCE';
+                          const isCashIn = netAmount >= 0;
                           
                           return (
                             <tr key={transaction.id} className="hover:bg-slate-50">
@@ -450,7 +523,7 @@ const CashierBalancingPage: React.FC = () => {
                               </td>
                               <td className="px-6 py-4">
                                 <span className={`text-sm font-semibold ${isNeutral ? 'text-blue-600' : isCashIn ? 'text-emerald-600' : 'text-red-600'}`}>
-                                  {isNeutral ? '' : isCashIn ? '+' : '-'}{formatCurrency(Math.abs(transaction.amount))}
+                                  {isNeutral ? '' : isCashIn ? '+' : '-'}{formatCurrency(Math.abs(netAmount))}
                                 </span>
                               </td>
                               <td className="px-6 py-4 text-sm text-slate-600">
