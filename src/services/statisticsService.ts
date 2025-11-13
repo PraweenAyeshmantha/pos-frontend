@@ -6,22 +6,31 @@ export interface DailySalesReport {
   todaysCashSale: number;
   todaysTotalSale: number;
   expectedDrawerAmount: number;
+  actualClosingBalance: number;
+  closingBalanceDifference: number;
 }
 
 export const statisticsService = {
-  async getDailySalesReport(outletId: number, date?: string): Promise<DailySalesReport> {
-    const params = new URLSearchParams({ outletId: outletId.toString() });
+  async getDailySalesReport(outletId?: number, date?: string): Promise<DailySalesReport> {
+    const params = new URLSearchParams();
+    if (typeof outletId === 'number') {
+      params.append('outletId', outletId.toString());
+    }
     if (date) {
       params.append('date', date);
     }
     const response = await apiClient.get<ApiResponse<DailySalesReport>>(
-      `/statistics/daily-sales-report?${params.toString()}`
+      params.toString()
+        ? `/statistics/daily-sales-report?${params.toString()}`
+        : '/statistics/daily-sales-report'
     );
     return response.data.data ?? { 
       openCashDrawerAmount: 0, 
       todaysCashSale: 0, 
       todaysTotalSale: 0, 
-      expectedDrawerAmount: 0 
+      expectedDrawerAmount: 0,
+      actualClosingBalance: 0,
+      closingBalanceDifference: 0
     };
   },
 
@@ -40,7 +49,9 @@ export const statisticsService = {
       openCashDrawerAmount: 0, 
       todaysCashSale: 0, 
       todaysTotalSale: 0, 
-      expectedDrawerAmount: 0 
+      expectedDrawerAmount: 0,
+      actualClosingBalance: 0,
+      closingBalanceDifference: 0
     };
   },
 
@@ -56,7 +67,9 @@ export const statisticsService = {
       openCashDrawerAmount: 0, 
       todaysCashSale: 0, 
       todaysTotalSale: 0, 
-      expectedDrawerAmount: 0 
+      expectedDrawerAmount: 0,
+      actualClosingBalance: 0,
+      closingBalanceDifference: 0
     };
   },
 };

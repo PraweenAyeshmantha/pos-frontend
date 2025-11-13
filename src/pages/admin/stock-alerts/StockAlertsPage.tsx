@@ -4,60 +4,43 @@ import AdminPageHeader from '../../../components/layout/AdminPageHeader';
 import Alert, { type AlertType } from '../../../components/common/Alert';
 import ToastContainer from '../../../components/common/ToastContainer';
 import { stockService } from '../../../services/stockService';
-import { outletService } from '../../../services/outletService';
 import type { ProductStock } from '../../../types/stock';
-import type { Outlet } from '../../../types/outlet';
+import { useOutlet } from '../../../contexts/OutletContext';
 
 const StockAlertsPage: React.FC = () => {
   const [alerts, setAlerts] = useState<ProductStock[]>([]);
-  const [outlets, setOutlets] = useState<Outlet[]>([]);
-  const [selectedOutletId, setSelectedOutletId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ type: AlertType; title: string; message: string } | null>(null);
-
-  // Load outlets on component mount
-  useEffect(() => {
-    const loadOutlets = async () => {
-      try {
-        const outletData = await outletService.getAll();
-        setOutlets(outletData);
-        // Auto-select first outlet if available
-        if (outletData.length > 0 && !selectedOutletId) {
-          setSelectedOutletId(outletData[0].id);
-        }
-      } catch (err) {
-        console.error('Failed to load outlets:', err);
-        setError('Failed to load outlets');
-      }
-    };
-    loadOutlets();
-  }, []);
-
-  // Load alerts when outlet changes
-  useEffect(() => {
-    if (selectedOutletId) {
-      loadAlerts();
-    }
-  }, [selectedOutletId]);
+  const { currentOutlet } = useOutlet();
 
   const loadAlerts = useCallback(async () => {
-    if (!selectedOutletId) return;
+    if (!currentOutlet?.id) {
+      setAlerts([]);
+      return;
+    }
 
     setLoading(true);
     setError(null);
     try {
-      const alertData = await stockService.getLowStockAlerts(selectedOutletId);
-      setAlerts(alertData);
+      const alertData = await stockService.getLowStockAlerts(currentOutlet.id);
+      const normalizedAlerts = alertData.map((alert) => ({
+        ...alert,
+        quantity: Number(alert.quantity ?? 0),
+        reorderLevel: alert.reorderLevel != null ? Number(alert.reorderLevel) : undefined,
+      }));
+      setAlerts(normalizedAlerts);
     } catch (err) {
       console.error('Failed to load stock alerts:', err);
       setError('Failed to load stock alerts');
     } finally {
       setLoading(false);
     }
-  }, [selectedOutletId]);
+  }, [currentOutlet?.id]);
 
-  const selectedOutlet = outlets.find(outlet => outlet.id === selectedOutletId);
+  useEffect(() => {
+    loadAlerts();
+  }, [loadAlerts]);
 
   const alertStats = useMemo(() => {
     const lowStockCount = alerts.filter(alert => alert.quantity > 0 && alert.quantity <= (alert.reorderLevel || 10)).length;
@@ -73,32 +56,28 @@ const StockAlertsPage: React.FC = () => {
           description="Monitor low stock and out of stock alerts across your outlets"
         />
 
-        {/* Outlet Selector */}
         <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-slate-900">Select Outlet</h3>
+              <h3 className="text-lg font-semibold text-slate-900">Outlet Context</h3>
               <p className="text-sm text-slate-600 mt-1">
-                Choose an outlet to view stock alerts
+                {currentOutlet
+                  ? `Viewing alerts for ${currentOutlet.name}`
+                  : 'Select a branch from the top navigation to view outlet-specific alerts.'}
               </p>
             </div>
-            <select
-              value={selectedOutletId || ''}
-              onChange={(e) => setSelectedOutletId(Number(e.target.value) || null)}
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-            >
-              <option value="">Select an outlet...</option>
-              {outlets.map((outlet) => (
-                <option key={outlet.id} value={outlet.id}>
-                  {outlet.name}
-                </option>
-              ))}
-            </select>
+            {currentOutlet ? (
+              <span className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700">
+                {currentOutlet.code}
+              </span>
+            ) : (
+              <span className="text-sm text-slate-500">No branch selected</span>
+            )}
           </div>
         </div>
 
         {/* Alert Statistics */}
-        {selectedOutletId && (
+        {currentOutlet && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
               <div className="flex items-center">
@@ -145,11 +124,11 @@ const StockAlertsPage: React.FC = () => {
         )}
 
         {/* Alerts Table */}
-        {selectedOutletId && (
+        {currentOutlet && (
           <div className="rounded-2xl bg-white shadow-sm border border-slate-200 overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-200">
               <h3 className="text-lg font-semibold text-slate-900">
-                Stock Alerts for {selectedOutlet?.name}
+                Stock Alerts for {currentOutlet?.name ?? "--"}
               </h3>
               <p className="text-sm text-slate-600 mt-1">
                 Products that need attention

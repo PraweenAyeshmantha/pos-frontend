@@ -29,6 +29,8 @@ class AuthService {
         requirePasswordReset: payload.requirePasswordReset === true,
         categories: payload.userCategories ?? [],
         access: payload.userAccess ?? [],
+        defaultOutlet: payload.defaultOutlet ?? null,
+        assignedOutlets: payload.assignedOutlets ?? [],
       }));
     }
     

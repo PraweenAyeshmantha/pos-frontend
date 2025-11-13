@@ -29,6 +29,8 @@ export const stockService = {
         barcode: product.barcode,
         price: product.price,
         customStock: stock?.quantity ?? 0,
+        reorderLevel: stock?.reorderLevel,
+        maxStockLevel: stock?.maxStockLevel,
         isInStock: (stock?.quantity ?? 0) > 0,
       };
     });

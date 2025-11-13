@@ -1,11 +1,12 @@
-import React, { memo, useMemo } from 'react';
+import React, { memo, useEffect, useMemo, useState } from 'react';
 import { Navigate, useLocation, useParams } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { getDefaultTenantPath, getUserRoleCodes } from '../../utils/authRoles';
+import { getDefaultTenantPath, userHasAnyScreenAccess, userHasScreenAccess } from '../../utils/authRoles';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  allowedRoles?: string[];
+  screenCode?: string;
+  permission?: 'view' | 'create' | 'edit' | 'delete';
 }
 
 // Loading component extracted for reusability
@@ -20,10 +21,11 @@ const LoadingSpinner = memo(() => (
 
 LoadingSpinner.displayName = 'LoadingSpinner';
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles }) => {
-  const { isAuthenticated, isLoading, user } = useAuth();
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, screenCode, permission = 'view' }) => {
+  const { isAuthenticated, isLoading, user, logout } = useAuth();
   const location = useLocation();
   const { tenantId } = useParams<{ tenantId: string }>();
+  const [forcedLogout, setForcedLogout] = useState(false);
 
   // Memoize password reset check to avoid recalculation
   const requirePasswordReset = useMemo(() => {
@@ -47,17 +49,20 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
     return needsReset;
   }, [user]);
 
-  const roleCodes = useMemo(() => getUserRoleCodes(user), [user]);
+  const hasAccess = useMemo(() => userHasScreenAccess(user, screenCode, permission), [permission, screenCode, user]);
+  const hasAnyAccess = useMemo(() => userHasAnyScreenAccess(user), [user]);
 
-  const hasRequiredRole = useMemo(() => {
-    if (!allowedRoles || allowedRoles.length === 0) {
-      return true;
+  useEffect(() => {
+    if (isAuthenticated && user && !hasAnyAccess && !forcedLogout) {
+      setForcedLogout(true);
+      logout();
     }
-    if (!user) {
-      return false;
-    }
-    return allowedRoles.some((role) => roleCodes.has(role.toUpperCase()));
-  }, [allowedRoles, roleCodes, user]);
+  }, [forcedLogout, hasAnyAccess, isAuthenticated, logout, user]);
+
+  if (forcedLogout) {
+    const loginPath = tenantId ? `/posai/${tenantId}/login` : '/';
+    return <Navigate to={loginPath} state={{ from: location, accessRevoked: true }} replace />;
+  }
 
   if (isLoading) {
     return <LoadingSpinner />;
@@ -76,7 +81,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
     return <Navigate to={resetPath} replace />;
   }
 
-  if (!hasRequiredRole) {
+  if (!hasAccess) {
     const fallbackPath = getDefaultTenantPath(user, tenantId);
     return <Navigate to={fallbackPath} replace />;
   }

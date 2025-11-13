@@ -18,9 +18,10 @@ const LoginPage: React.FC = () => {
 
   // Get the intended destination or default to dashboard
   // Filter out /reset-password from 'from' to avoid redirect loop after password reset
-  const fromPath = (location.state as { from?: { pathname: string }; passwordResetSuccess?: boolean })?.from?.pathname;
+  const fromPath = (location.state as { from?: { pathname: string }; passwordResetSuccess?: boolean; accessRevoked?: boolean })?.from?.pathname;
   const baseFrom = fromPath && !fromPath.includes('/reset-password') ? fromPath : undefined;
   const passwordResetSuccess = (location.state as { passwordResetSuccess?: boolean })?.passwordResetSuccess || false;
+  const accessRevoked = (location.state as { accessRevoked?: boolean })?.accessRevoked || false;
 
   const showToast = useCallback((type: AlertType, text: string) => {
     setToast({ type, text });
@@ -46,6 +47,12 @@ const LoginPage: React.FC = () => {
       showToast('success', 'Password reset successful! Please login with your new password.');
     }
   }, [passwordResetSuccess, showToast]);
+
+  useEffect(() => {
+    if (accessRevoked) {
+      showToast('warning', 'Your access permissions were removed. Please contact your administrator.');
+    }
+  }, [accessRevoked, showToast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

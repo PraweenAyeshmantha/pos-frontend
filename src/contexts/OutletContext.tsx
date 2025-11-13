@@ -1,12 +1,14 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import type { OutletSummaryDTO } from '../types/auth';
+import settingsService from '../services/settingsService';
+import type { OutletSummary } from '../types/auth';
 
 interface OutletContextType {
-  currentOutlet: OutletSummaryDTO | null;
-  setCurrentOutlet: (outlet: OutletSummaryDTO | null) => void;
-  assignedOutlets: OutletSummaryDTO[];
+  currentOutlet: OutletSummary | null;
+  assignedOutlets: OutletSummary[];
+  isSwitchingOutlet: boolean;
+  selectOutlet: (outlet: OutletSummary) => Promise<void>;
 }
 
 const OutletContext = createContext<OutletContextType | undefined>(undefined);
@@ -15,25 +17,77 @@ interface OutletProviderProps {
   children: ReactNode;
 }
 
-export const OutletProvider: React.FC<OutletProviderProps> = ({ children }) => {
-  const { user } = useAuth();
-  const [currentOutlet, setCurrentOutlet] = useState<OutletSummaryDTO | null>(null);
+const buildStorageKey = (username?: string) => (username ? `pos-selected-outlet:${username}` : null);
 
-  // Set default outlet when user changes
+export const OutletProvider: React.FC<OutletProviderProps> = ({ children }) => {
+  const { user, updateUser } = useAuth();
+  const [currentOutlet, setCurrentOutlet] = useState<OutletSummary | null>(null);
+  const [isSwitchingOutlet, setIsSwitchingOutlet] = useState(false);
+
+  const assignedOutlets = useMemo(() => user?.assignedOutlets ?? [], [user?.assignedOutlets]);
+
+  // Initialize outlet when user changes
   useEffect(() => {
-    if (user?.defaultOutlet) {
-      setCurrentOutlet(user.defaultOutlet);
-    } else if (user?.assignedOutlets && user.assignedOutlets.length > 0) {
-      setCurrentOutlet(user.assignedOutlets[0]);
-    } else {
+    if (!user) {
       setCurrentOutlet(null);
+      return;
     }
-  }, [user]);
+
+    const storageKey = buildStorageKey(user.username);
+    const storedOutletId = storageKey ? sessionStorage.getItem(storageKey) : null;
+
+    const findOutletById = (id?: number | null) =>
+      typeof id === 'number'
+        ? assignedOutlets.find((outlet) => outlet.id === id) ?? null
+        : null;
+
+    const storedOutlet = storedOutletId ? findOutletById(Number(storedOutletId)) : null;
+    const defaultOutlet = user.defaultOutlet ? findOutletById(user.defaultOutlet.id) : null;
+    const fallbackOutlet = assignedOutlets.length > 0 ? assignedOutlets[0] : null;
+
+    setCurrentOutlet(storedOutlet ?? defaultOutlet ?? fallbackOutlet);
+  }, [assignedOutlets, user]);
+
+  const selectOutlet = useCallback(async (outlet: OutletSummary) => {
+    if (!user) {
+      throw new Error('No authenticated user available to switch outlets');
+    }
+
+    if (currentOutlet?.id === outlet.id) {
+      return;
+    }
+
+    setIsSwitchingOutlet(true);
+    try {
+      if (user.cashierId) {
+        await settingsService.switchCashierOutlet(user.cashierId, { outletId: outlet.id });
+      } else if (user.userId) {
+        await settingsService.switchAdminOutlet(user.userId, { outletId: outlet.id });
+      } else {
+        throw new Error('Unable to determine user identity for outlet switching');
+      }
+
+      setCurrentOutlet(outlet);
+
+      const storageKey = buildStorageKey(user.username);
+      if (storageKey) {
+        sessionStorage.setItem(storageKey, outlet.id.toString());
+      }
+
+      updateUser({
+        ...user,
+        defaultOutlet: outlet,
+      });
+    } finally {
+      setIsSwitchingOutlet(false);
+    }
+  }, [currentOutlet?.id, updateUser, user]);
 
   const value: OutletContextType = {
     currentOutlet,
-    setCurrentOutlet,
-    assignedOutlets: user?.assignedOutlets || [],
+    assignedOutlets,
+    isSwitchingOutlet,
+    selectOutlet,
   };
 
   return (
@@ -44,7 +98,7 @@ export const OutletProvider: React.FC<OutletProviderProps> = ({ children }) => {
 };
 
 export const useOutlet = () => {
-  const context = useContext(OutletContext);
+  const context = React.useContext(OutletContext);
   if (context === undefined) {
     throw new Error('useOutlet must be used within an OutletProvider');
   }

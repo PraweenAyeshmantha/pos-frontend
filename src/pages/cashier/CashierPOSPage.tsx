@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import CashierLayout from '../../components/layout/CashierLayout';
 import Alert, { type AlertType } from '../../components/common/Alert';
 import ToastContainer from '../../components/common/ToastContainer';
+import SelectOutletReminder from '../../components/cashier/SelectOutletReminder';
 import PaymentModal from '../../components/cashier/payment/PaymentModal';
 import PaymentSuccessModal from '../../components/cashier/payment/PaymentSuccessModal';
 import ApplyCouponModal from '../../components/cashier/coupon/ApplyCouponModal';
@@ -21,6 +22,7 @@ import type { PaymentMethod } from '../../types/payment';
 import type { Order } from '../../types/order';
 import type { Coupon } from '../../types/coupon';
 import { useAuth } from '../../hooks/useAuth';
+import { useOutlet } from '../../contexts/OutletContext';
 
 type CategoryKey = 'all' | number;
 
@@ -131,6 +133,8 @@ const CashDrawerModal: React.FC<{
 
 const CashierPOSPage: React.FC = () => {
   const { user } = useAuth();
+  const { currentOutlet } = useOutlet();
+  const selectedOutletId = currentOutlet?.id ?? null;
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<CategoryOption[]>([{ id: 'all', name: 'All', icon: '🛍️' }]);
   const [selectedCategory, setSelectedCategory] = useState<CategoryKey>('all');
@@ -148,7 +152,6 @@ const CashierPOSPage: React.FC = () => {
   const [successModalOpen, setSuccessModalOpen] = useState(false);
   const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
   const [processingPayment, setProcessingPayment] = useState(false);
-  const [selectedOutletId, setSelectedOutletId] = useState<number | null>(null);
   const categoryScrollRef = React.useRef<HTMLDivElement>(null);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [enableOrderNotes, setEnableOrderNotes] = useState(true);
@@ -271,21 +274,6 @@ const CashierPOSPage: React.FC = () => {
     };
   }, [showToast, checkScrollArrows]);
 
-  // Initialize outlet from sessionStorage
-  useEffect(() => {
-    const storedOutletId = sessionStorage.getItem('selectedOutletId');
-    if (storedOutletId) {
-      setSelectedOutletId(Number(storedOutletId));
-    } else {
-      // TODO: Implement outlet selection screen
-      // For now, default to outlet 1 if not set
-      // This should be replaced with a proper outlet selection UI
-      console.warn('No outlet selected. Defaulting to outlet ID 1. Please implement outlet selection.');
-      setSelectedOutletId(1);
-      sessionStorage.setItem('selectedOutletId', '1');
-    }
-  }, []);
-
   // Fetch configuration settings
   useEffect(() => {
     const fetchConfigurations = async () => {
@@ -341,7 +329,7 @@ const CashierPOSPage: React.FC = () => {
         setCheckingOpeningBalance(true);
 
         // Check if there's an active cashier session with opening balance already set
-        const activeSession = await cashierSessionService.getMyActiveSession();
+        const activeSession = await cashierSessionService.getMyActiveSession(selectedOutletId);
 
         if (!mounted) return;
 
@@ -468,7 +456,7 @@ const CashierPOSPage: React.FC = () => {
             imageUrl: product.imageUrl,
             weight,
             isWeightBased: product.isWeightBased,
-            taxRate: product.taxRate ?? 0, // Include product's tax rate
+            taxRate: product.taxRate ?? 0,
           },
         ];
       });
@@ -516,17 +504,22 @@ const CashierPOSPage: React.FC = () => {
     );
   }, []);
 
+  if (!selectedOutletId) {
+    return (
+      <CashierLayout>
+        <SelectOutletReminder message="Choose a branch from the top navigation before using the POS." />
+      </CashierLayout>
+    );
+  }
+
   const subtotal = useMemo(
     () => {
       const sum = cartItems.reduce((accumulator, item) => {
         if (item.isWeightBased && item.weight) {
-          // For weight-based products: price per unit × weight
           return accumulator + item.price * item.weight;
         }
-        // For regular products: price × quantity
         return accumulator + item.price * item.quantity;
       }, 0);
-      // Round to 2 decimals to avoid floating point precision issues
       return Math.round(sum * 100) / 100;
     },
     [cartItems],
@@ -600,7 +593,6 @@ const CashierPOSPage: React.FC = () => {
 
   const totalDue = useMemo(() => {
     const total = subtotal + taxAmount - discountAmount;
-    // Round to 2 decimals
     return Math.round(total * 100) / 100;
   }, [subtotal, taxAmount, discountAmount]);
 

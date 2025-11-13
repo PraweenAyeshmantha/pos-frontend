@@ -1,6 +1,6 @@
 import apiClient from './apiClient';
 import type { ApiResponse } from '../types/configuration';
-import type { Cashier, CreateCashierRequest, UpdateCashierRequest } from '../types/cashier';
+import type { Cashier, CreateCashierRequest, UpdateCashierRequest, CashierCandidate } from '../types/cashier';
 import type { Outlet } from '../types/outlet';
 
 export const cashierService = {
@@ -31,6 +31,11 @@ export const cashierService = {
 
   async getCurrentOutlets(): Promise<Outlet[]> {
     const response = await apiClient.get<ApiResponse<Outlet[]>>('/admin/cashiers/current/outlets');
+    return response.data.data ?? [];
+  },
+
+  async getCandidates(): Promise<CashierCandidate[]> {
+    const response = await apiClient.get<ApiResponse<CashierCandidate[]>>('/admin/cashiers/candidates');
     return response.data.data ?? [];
   },
 };

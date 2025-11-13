@@ -2,10 +2,12 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import CashierLayout from '../../components/layout/CashierLayout';
 import Alert from '../../components/common/Alert';
 import ToastContainer from '../../components/common/ToastContainer';
+import SelectOutletReminder from '../../components/cashier/SelectOutletReminder';
 import { orderService } from '../../services/orderService';
-import type { Order } from '../../types/order';
+import type { Order, OrderFilters } from '../../types/order';
 import { useAuth } from '../../hooks/useAuth';
 import { formatCurrency, formatNumber, getTodayRange } from '../../utils/dashboardFormatting';
+import { useOutlet } from '../../contexts/OutletContext';
 
 const activityIcons: Record<string, string> = {
   COMPLETED: '✅',
@@ -20,6 +22,10 @@ const activityIcons: Record<string, string> = {
 
 const CashierDashboardPage: React.FC = () => {
   const { user } = useAuth();
+  const { currentOutlet } = useOutlet();
+  const selectedOutletId = currentOutlet?.id ?? null;
+  const isCashier = Boolean(user?.cashierId);
+  const requiresOutletSelection = isCashier;
   const [{ startIso, endIso }] = useState(getTodayRange);
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -34,30 +40,47 @@ const CashierDashboardPage: React.FC = () => {
   }, []);
 
   const loadOrders = useCallback(async () => {
+    if (requiresOutletSelection && !selectedOutletId) {
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await orderService.getAll({
+      const filters: OrderFilters = {
         startDate: startIso,
         endDate: endIso,
-        ...(user?.cashierId ? { cashierId: user.cashierId } : {}),
-        ...(user?.cashierId ? {} : user?.username ? { cashierUsername: user.username } : {}),
-      });
+      };
+      if (selectedOutletId) {
+        filters.outletId = selectedOutletId;
+      }
+
+      if (isCashier && user?.cashierId) {
+        filters.cashierId = user.cashierId;
+      }
+
+      const response = await orderService.getAll(filters);
 
       if (!isMountedRef.current) {
         return;
       }
 
-      const matchesUser = (order: Order) => {
-        const idMatch = user?.cashierId !== undefined && user?.cashierId !== null
-          ? order.cashierId === user?.cashierId
-          : false;
-        const usernameMatch = user?.username ? order.cashierUsername === user.username : false;
-        return idMatch || usernameMatch;
-      };
+      const filtered = response.filter((order: Order) => {
+        if (isCashier) {
+          const idMatch = user?.cashierId !== undefined && user?.cashierId !== null
+            ? order.cashierId === user.cashierId
+            : false;
+          const usernameMatch = user?.username ? order.cashierUsername === user.username : false;
+          return (idMatch || usernameMatch) && (!selectedOutletId || order.outletId === selectedOutletId);
+        }
 
-      const filtered = response.filter(matchesUser);
+        if (selectedOutletId) {
+          return order.outletId === selectedOutletId;
+        }
+        return true;
+      });
       setOrders(filtered);
     } catch (err) {
       console.error('Failed to load cashier dashboard data', err);
@@ -69,7 +92,7 @@ const CashierDashboardPage: React.FC = () => {
         setIsLoading(false);
       }
     }
-  }, [endIso, startIso, user]);
+  }, [endIso, requiresOutletSelection, selectedOutletId, startIso, user]);
 
   useEffect(() => {
     void loadOrders();
@@ -114,6 +137,14 @@ const CashierDashboardPage: React.FC = () => {
       .sort((a, b) => new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime())
       .slice(0, 6);
   }, [orders]);
+
+  if (requiresOutletSelection && !selectedOutletId) {
+    return (
+      <CashierLayout>
+        <SelectOutletReminder message="Choose a branch from the top navigation to view your cashier home metrics." />
+      </CashierLayout>
+    );
+  }
 
   return (
     <CashierLayout>
