@@ -19,6 +19,12 @@ export interface UserAccess {
   canCreate: boolean;
   canEdit: boolean;
   canDelete: boolean;
+  category?: string;
+  section?: string;
+  routePath?: string;
+  navigationItem?: boolean;
+  sortOrder?: number;
+  description?: string;
 }
 
 export interface LoginResponse {
@@ -37,12 +43,12 @@ export interface LoginResponse {
     token: string;
     userCategories?: UserCategory[];
     userAccess?: UserAccess[];
-    defaultOutlet?: OutletSummaryDTO;
-    assignedOutlets?: OutletSummaryDTO[];
+    defaultOutlet?: OutletSummary;
+    assignedOutlets?: OutletSummary[];
   };
 }
 
-export interface OutletSummaryDTO {
+export interface OutletSummary {
   id: number;
   name: string;
   code: string;
@@ -81,8 +87,8 @@ export interface User {
   requirePasswordReset: boolean;
   categories?: UserCategory[];
   access?: UserAccess[];
-  defaultOutlet?: OutletSummaryDTO;
-  assignedOutlets?: OutletSummaryDTO[];
+  defaultOutlet?: OutletSummary;
+  assignedOutlets?: OutletSummary[];
 }
 
 export interface AuthState {

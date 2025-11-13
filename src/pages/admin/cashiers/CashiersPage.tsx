@@ -8,13 +8,6 @@ import AddCashierModal from '../../../components/admin/cashiers/AddCashierModal'
 import { cashierService } from '../../../services/cashierService';
 import type { Cashier } from '../../../types/cashier';
 
-const ROLE_LABELS: Record<string, string> = {
-  POS_CASHIER: 'POS Cashier',
-  ADMINISTRATOR: 'Administrator',
-};
-
-const formatRoleLabel = (role: Cashier['role']): string => ROLE_LABELS[role] ?? role;
-
 const formatDateTime = (value?: string): string => {
   if (!value) {
     return '-';
@@ -71,14 +64,17 @@ const CashiersPage: React.FC = () => {
     }
 
     return cashiers.filter((cashier) => {
-      const roleMatch = formatRoleLabel(cashier.role).toLowerCase().includes(query);
       const outletMatch = cashier.assignedOutlets.some((outlet) => outlet.name.toLowerCase().includes(query));
+      const categoryMatch = cashier.categories.some((category) =>
+        category.categoryName.toLowerCase().includes(query) ||
+        category.categoryCode.toLowerCase().includes(query),
+      );
       return (
         cashier.username.toLowerCase().includes(query) ||
         cashier.name.toLowerCase().includes(query) ||
         (cashier.email ?? '').toLowerCase().includes(query) ||
         (cashier.phone ?? '').toLowerCase().includes(query) ||
-        roleMatch ||
+        categoryMatch ||
         outletMatch
       );
     });
@@ -197,19 +193,13 @@ const CashiersPage: React.FC = () => {
                 Cashier
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Username
+                Contact
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Email
+                Categories
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Phone
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Role
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Outlets
+                Branches
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Status
@@ -233,12 +223,27 @@ const CashiersPage: React.FC = () => {
                   <td className="px-6 py-4 align-top">
                     <div className="space-y-1">
                       <span className="block text-sm font-semibold text-slate-900">{cashier.name || '—'}</span>
+                      <div className="text-xs text-slate-500">{cashier.username}</div>
+                      {cashier.defaultOutlet && (
+                        <div className="text-xs text-slate-400">Default: {cashier.defaultOutlet.name}</div>
+                      )}
                     </div>
                   </td>
-                  <td className="px-6 py-4 align-top text-sm text-slate-600">{cashier.username}</td>
-                  <td className="px-6 py-4 align-top text-sm text-slate-600">{cashier.email || '—'}</td>
-                  <td className="px-6 py-4 align-top text-sm text-slate-600">{cashier.phone || '—'}</td>
-                  <td className="px-6 py-4 align-top text-sm text-slate-600">{formatRoleLabel(cashier.role)}</td>
+                  <td className="px-6 py-4 align-top text-sm text-slate-600">
+                    <div className="space-y-1 text-xs text-slate-500">
+                      <div>{cashier.email || '—'}</div>
+                      <div>{cashier.phone || '—'}</div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 align-top text-sm text-slate-600">
+                    <div className="flex flex-wrap gap-1">
+                      {cashier.categories.map((category) => (
+                        <span key={category.id} className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
+                          {category.categoryName}
+                        </span>
+                      ))}
+                    </div>
+                  </td>
                   <td className="px-6 py-4 align-top text-sm text-slate-600">
                     {cashier.assignedOutlets.length > 0 ? (
                       <div className="flex flex-wrap gap-2">
@@ -260,7 +265,7 @@ const CashiersPage: React.FC = () => {
                       {statusLabel}
                     </span>
                   </td>
-                  <td className="px-6 py-4 align-top text-sm text-slate-600">{formatDateTime(cashier.updatedAt)}</td>
+                  <td className="px-6 py-4 align-top text-sm text-slate-600">{formatDateTime(cashier.modifiedDate ?? cashier.createdDate)}</td>
                   <td className="px-6 py-4 align-top">
                     <div className="flex items-center justify-end gap-3 text-sm font-semibold">
                       <button

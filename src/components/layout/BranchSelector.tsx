@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { useOutlet } from '../../contexts/OutletContext';
-import type { OutletSummaryDTO } from '../../types/auth';
+import type { OutletSummary } from '../../types/auth';
 
 interface BranchSelectorProps {
   className?: string;
@@ -11,7 +11,7 @@ const BranchSelector: React.FC<BranchSelectorProps> = ({ className = '' }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [switchError, setSwitchError] = useState<string | null>(null);
 
-  const handleSelectOutlet = useCallback(async (outlet: OutletSummaryDTO) => {
+  const handleSelectOutlet = useCallback(async (outlet: OutletSummary) => {
     setSwitchError(null);
     try {
       await selectOutlet(outlet);

@@ -18,7 +18,6 @@ const AdminPage = lazy(() => import('./pages/admin/AdminPage'));
 const DashboardPage = lazy(() => import('./pages/admin/dashboard/DashboardPage'));
 const CustomersPage = lazy(() => import('./pages/admin/customers/CustomersPage'));
 const OrdersPage = lazy(() => import('./pages/admin/orders/OrdersPage'));
-const StatisticsPage = lazy(() => import('./pages/admin/statistics/StatisticsPage'));
 const SettingsPage = lazy(() => import('./pages/admin/settings/SettingsPage'));
 const POSAdminPage = lazy(() => import('./pages/admin/pos-admin/POSAdminPage'));
 const OutletsPage = lazy(() => import('./pages/admin/outlets/OutletsPage'));
@@ -35,9 +34,11 @@ const SuppliersPage = lazy(() => import('./pages/admin/suppliers/SuppliersPage')
 const BrandsPage = lazy(() => import('./pages/admin/taxonomy/BrandsPage'));
 const TagsPage = lazy(() => import('./pages/admin/taxonomy/TagsPage'));
 const ProductCategoriesPage = lazy(() => import('./pages/admin/taxonomy/ProductCategoriesPage'));
+const UsersPage = lazy(() => import('./pages/admin/users/UsersPage'));
+const UserAccessPage = lazy(() => import('./pages/admin/access/UserAccessPage'));
 const CashierPOSPage = lazy(() => import('./pages/cashier/CashierPOSPage'));
 const CashierDashboardPage = lazy(() => import('./pages/cashier/CashierDashboardPage'));
-const CashierStatisticsPage = lazy(() => import('./pages/cashier/StatisticsPage'));
+const SharedStatisticsPage = lazy(() => import('./pages/cashier/StatisticsPage'));
 const CashierBalancingPageCashier = lazy(() => import('./pages/cashier/CashierBalancingPage'));
 const GoodsReceivedNotesPage = lazy(() => import('./pages/cashier/GoodsReceivedNotesPage'));
 
@@ -99,159 +100,171 @@ function App() {
                     } />
                     
                     <Route path="admin/dashboard" element={
-                      <ProtectedRoute allowedRoles={['ADMIN']}>
+                      <ProtectedRoute screenCode="ADMIN_DASHBOARD">
                         <DashboardPage />
                       </ProtectedRoute>
                     } />
                     
                     <Route path="admin/customers" element={
-                      <ProtectedRoute allowedRoles={['ADMIN', 'CASHIER']}>
+                      <ProtectedRoute screenCode="SHARED_CUSTOMERS">
                         <CustomersPage />
                       </ProtectedRoute>
                     } />
 
                     <Route path="admin/cashiers" element={
-                      <ProtectedRoute allowedRoles={['ADMIN']}>
+                      <ProtectedRoute screenCode="ADMIN_CASHIERS">
                         <CashiersPage />
                       </ProtectedRoute>
                     } />
 
                     <Route path="admin/cashier-balancing" element={
-                      <ProtectedRoute allowedRoles={['ADMIN']}>
+                      <ProtectedRoute screenCode="ADMIN_CASHIER_BALANCING">
                         <CashierBalancingPage />
                       </ProtectedRoute>
                     } />
                    
                     <Route path="admin/orders" element={
-                      <ProtectedRoute allowedRoles={['ADMIN', 'CASHIER']}>
+                      <ProtectedRoute screenCode="SHARED_ORDERS">
                         <OrdersPage />
                       </ProtectedRoute>
                     } />
                    
                     <Route path="admin/pos-admin" element={
-                      <ProtectedRoute allowedRoles={['ADMIN']}>
+                      <ProtectedRoute screenCode="ADMIN_POS_ADMIN">
                         <POSAdminPage />
                       </ProtectedRoute>
                     } />
 
                     <Route path="admin/outlets" element={
-                      <ProtectedRoute allowedRoles={['ADMIN']}>
+                      <ProtectedRoute screenCode="ADMIN_OUTLETS">
                         <OutletsPage />
                       </ProtectedRoute>
                     } />
 
                     <Route path="admin/tables" element={
-                      <ProtectedRoute allowedRoles={['ADMIN']}>
+                      <ProtectedRoute screenCode="ADMIN_TABLES">
                         <TablesPage />
                       </ProtectedRoute>
                     } />
 
                     <Route path="admin/products" element={
-                      <ProtectedRoute allowedRoles={['ADMIN']}>
+                      <ProtectedRoute screenCode="ADMIN_PRODUCTS">
                         <ProductsPage />
                       </ProtectedRoute>
                     } />
 
                     <Route path="admin/suppliers" element={
-                      <ProtectedRoute allowedRoles={['ADMIN']}>
+                      <ProtectedRoute screenCode="ADMIN_SUPPLIERS">
                         <SuppliersPage />
                       </ProtectedRoute>
                     } />
 
                     <Route path="admin/coupons" element={
-                      <ProtectedRoute allowedRoles={['ADMIN']}>
+                      <ProtectedRoute screenCode="ADMIN_COUPONS">
                         <CouponsPage />
                       </ProtectedRoute>
                     } />
 
                     <Route path="admin/assign-barcodes" element={
-                      <ProtectedRoute allowedRoles={['ADMIN']}>
+                      <ProtectedRoute screenCode="ADMIN_ASSIGN_BARCODES">
                         <AssignBarcodesPage />
                       </ProtectedRoute>
                     } />
 
                     <Route path="admin/assign-stocks" element={
-                      <ProtectedRoute allowedRoles={['ADMIN']}>
+                      <ProtectedRoute screenCode="ADMIN_ASSIGN_STOCKS">
                         <AssignStocksPage />
                       </ProtectedRoute>
                     } />
 
                     <Route path="admin/stock-alerts" element={
-                      <ProtectedRoute allowedRoles={['ADMIN']}>
+                      <ProtectedRoute screenCode="ADMIN_STOCK_ALERTS">
                         <StockAlertsPage />
                       </ProtectedRoute>
                     } />
 
                     <Route path="admin/stock-config" element={
-                      <ProtectedRoute allowedRoles={['ADMIN']}>
+                      <ProtectedRoute screenCode="ADMIN_STOCK_CONFIG">
                         <StockConfigPage />
                       </ProtectedRoute>
                     } />
 
                     <Route path="admin/pos-admin/brands" element={
-                      <ProtectedRoute allowedRoles={['ADMIN']}>
+                      <ProtectedRoute screenCode="ADMIN_POS_ADMIN_BRANDS">
                         <BrandsPage />
                       </ProtectedRoute>
                     } />
 
                     <Route path="admin/pos-admin/tags" element={
-                      <ProtectedRoute allowedRoles={['ADMIN']}>
+                      <ProtectedRoute screenCode="ADMIN_POS_ADMIN_TAGS">
                         <TagsPage />
                       </ProtectedRoute>
                     } />
 
                     <Route path="admin/pos-admin/categories" element={
-                      <ProtectedRoute allowedRoles={['ADMIN']}>
+                      <ProtectedRoute screenCode="ADMIN_POS_ADMIN_CATEGORIES">
                         <ProductCategoriesPage />
                       </ProtectedRoute>
                     } />
 
                     <Route path="admin/statistics" element={
-                      <ProtectedRoute allowedRoles={['ADMIN']}>
-                        <StatisticsPage />
+                      <ProtectedRoute screenCode="ADMIN_STATISTICS">
+                        <SharedStatisticsPage />
                       </ProtectedRoute>
                     } />
                    
                     <Route path="admin/configuration/general" element={
-                      <ProtectedRoute allowedRoles={['ADMIN']}>
+                      <ProtectedRoute screenCode="ADMIN_CONFIGURATION_GENERAL">
                         <AdminPage />
                       </ProtectedRoute>
                     } />
                    
                     <Route path="admin/settings" element={
-                      <ProtectedRoute allowedRoles={['ADMIN', 'CASHIER']}>
+                      <ProtectedRoute screenCode="SHARED_SETTINGS">
                         <SettingsPage />
+                      </ProtectedRoute>
+                    } />
+                    
+                    <Route path="admin/users" element={
+                      <ProtectedRoute screenCode="ADMIN_USERS">
+                        <UsersPage />
+                      </ProtectedRoute>
+                    } />
+
+                    <Route path="admin/access" element={
+                      <ProtectedRoute screenCode="ADMIN_USER_ACCESS">
+                        <UserAccessPage />
                       </ProtectedRoute>
                     } />
 
                     <Route path="cashier" element={<Navigate to="cashier/dashboard" replace />} />
 
                     <Route path="cashier/dashboard" element={
-                      <ProtectedRoute allowedRoles={['CASHIER']}>
+                      <ProtectedRoute screenCode="CASHIER_DASHBOARD">
                         <CashierDashboardPage />
                       </ProtectedRoute>
                     } />
 
                     <Route path="cashier/statistics" element={
-                      <ProtectedRoute allowedRoles={['CASHIER']}>
-                        <CashierStatisticsPage />
+                      <ProtectedRoute screenCode="CASHIER_STATISTICS">
+                        <SharedStatisticsPage />
                       </ProtectedRoute>
                     } />
 
                     <Route path="cashier/pos" element={
-                      <ProtectedRoute allowedRoles={['CASHIER']}>
+                      <ProtectedRoute screenCode="CASHIER_POS">
                         <CashierPOSPage />
                       </ProtectedRoute>
                     } />
 
                     <Route path="cashier/goods-received" element={
-                      <ProtectedRoute allowedRoles={['CASHIER']}>
+                      <ProtectedRoute screenCode="CASHIER_GOODS_RECEIVED">
                         <GoodsReceivedNotesPage />
                       </ProtectedRoute>
                     } />
 
                     <Route path="cashier/balancing" element={
-                      <ProtectedRoute allowedRoles={['CASHIER']}>
+                      <ProtectedRoute screenCode="CASHIER_BALANCING">
                         <CashierBalancingPageCashier />
                       </ProtectedRoute>
                     } />

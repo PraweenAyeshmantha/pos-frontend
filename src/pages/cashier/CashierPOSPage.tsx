@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import CashierLayout from '../../components/layout/CashierLayout';
 import Alert, { type AlertType } from '../../components/common/Alert';
 import ToastContainer from '../../components/common/ToastContainer';
+import SelectOutletReminder from '../../components/cashier/SelectOutletReminder';
 import PaymentModal from '../../components/cashier/payment/PaymentModal';
 import PaymentSuccessModal from '../../components/cashier/payment/PaymentSuccessModal';
 import ApplyCouponModal from '../../components/cashier/coupon/ApplyCouponModal';
@@ -506,13 +507,7 @@ const CashierPOSPage: React.FC = () => {
   if (!selectedOutletId) {
     return (
       <CashierLayout>
-        <div className="p-6">
-          <Alert
-            type="info"
-            title="Select Outlet"
-            message="Choose a branch from the top navigation before using the POS."
-          />
-        </div>
+        <SelectOutletReminder message="Choose a branch from the top navigation before using the POS." />
       </CashierLayout>
     );
   }

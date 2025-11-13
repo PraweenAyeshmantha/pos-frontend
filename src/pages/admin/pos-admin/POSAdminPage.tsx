@@ -2,6 +2,8 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import AdminLayout from '../../../components/layout/AdminLayout';
 import AdminPageHeader from '../../../components/layout/AdminPageHeader';
+import { useAuth } from '../../../hooks/useAuth';
+import { userHasScreenAccess } from '../../../utils/authRoles';
 
 interface AdminTile {
   id: string;
@@ -10,6 +12,7 @@ interface AdminTile {
   path: string;
   icon: string;
   accentClass: string;
+  screenCode: string;
 }
 
 interface AdminCategory {
@@ -22,6 +25,7 @@ interface AdminCategory {
 const POSAdminPage: React.FC = () => {
   const navigate = useNavigate();
   const { tenantId } = useParams<{ tenantId: string }>();
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
 
   const categories = useMemo<AdminCategory[]>(
@@ -38,6 +42,7 @@ const POSAdminPage: React.FC = () => {
             path: '/admin/statistics',
             icon: '📊',
             accentClass: 'bg-indigo-100 text-indigo-600',
+            screenCode: 'ADMIN_STATISTICS',
           },
           {
             id: 'configuration',
@@ -46,6 +51,7 @@ const POSAdminPage: React.FC = () => {
             path: '/admin/configuration/general',
             icon: '🛠️',
             accentClass: 'bg-emerald-100 text-emerald-600',
+            screenCode: 'ADMIN_CONFIGURATION_GENERAL',
           },
           {
             id: 'stock-config',
@@ -54,6 +60,7 @@ const POSAdminPage: React.FC = () => {
             path: '/admin/stock-config',
             icon: '⚙️',
             accentClass: 'bg-slate-100 text-slate-600',
+            screenCode: 'ADMIN_STOCK_CONFIG',
           },
         ],
       },
@@ -69,6 +76,7 @@ const POSAdminPage: React.FC = () => {
             path: '/admin/outlets',
             icon: '🏪',
             accentClass: 'bg-amber-100 text-amber-600',
+            screenCode: 'ADMIN_OUTLETS',
           },
           {
             id: 'tables',
@@ -77,6 +85,7 @@ const POSAdminPage: React.FC = () => {
             path: '/admin/tables',
             icon: '🍽️',
             accentClass: 'bg-rose-100 text-rose-600',
+            screenCode: 'ADMIN_TABLES',
           },
         ],
       },
@@ -92,6 +101,7 @@ const POSAdminPage: React.FC = () => {
             path: '/admin/products',
             icon: '🛍️',
             accentClass: 'bg-cyan-100 text-cyan-600',
+            screenCode: 'ADMIN_PRODUCTS',
           },
           {
             id: 'categories',
@@ -100,6 +110,7 @@ const POSAdminPage: React.FC = () => {
             path: '/admin/pos-admin/categories',
             icon: '📂',
             accentClass: 'bg-slate-100 text-slate-600',
+            screenCode: 'ADMIN_POS_ADMIN_CATEGORIES',
           },
           {
             id: 'brands',
@@ -108,6 +119,7 @@ const POSAdminPage: React.FC = () => {
             path: '/admin/pos-admin/brands',
             icon: '🏷️',
             accentClass: 'bg-fuchsia-100 text-fuchsia-600',
+            screenCode: 'ADMIN_POS_ADMIN_BRANDS',
           },
           {
             id: 'tags',
@@ -116,6 +128,7 @@ const POSAdminPage: React.FC = () => {
             path: '/admin/pos-admin/tags',
             icon: '🔖',
             accentClass: 'bg-lime-100 text-lime-600',
+            screenCode: 'ADMIN_POS_ADMIN_TAGS',
           },
         ],
       },
@@ -131,6 +144,7 @@ const POSAdminPage: React.FC = () => {
             path: '/admin/assign-barcodes',
             icon: '📊',
             accentClass: 'bg-purple-100 text-purple-600',
+            screenCode: 'ADMIN_ASSIGN_BARCODES',
           },
           {
             id: 'assign-stocks',
@@ -139,6 +153,7 @@ const POSAdminPage: React.FC = () => {
             path: '/admin/assign-stocks',
             icon: '📦',
             accentClass: 'bg-teal-100 text-teal-600',
+            screenCode: 'ADMIN_ASSIGN_STOCKS',
           },
           {
             id: 'stock-alerts',
@@ -147,6 +162,7 @@ const POSAdminPage: React.FC = () => {
             path: '/admin/stock-alerts',
             icon: '🚨',
             accentClass: 'bg-amber-100 text-amber-600',
+            screenCode: 'ADMIN_STOCK_ALERTS',
           },
         ],
       },
@@ -162,6 +178,7 @@ const POSAdminPage: React.FC = () => {
             path: '/admin/suppliers',
             icon: '🤝',
             accentClass: 'bg-emerald-100 text-emerald-600',
+            screenCode: 'ADMIN_SUPPLIERS',
           },
         ],
       },
@@ -177,6 +194,7 @@ const POSAdminPage: React.FC = () => {
             path: '/admin/coupons',
             icon: '🎟️',
             accentClass: 'bg-orange-100 text-orange-600',
+            screenCode: 'ADMIN_COUPONS',
           },
         ],
       },
@@ -186,12 +204,31 @@ const POSAdminPage: React.FC = () => {
         description: 'Control staff access and reconcile daily balances.',
         tiles: [
           {
+            id: 'users',
+            title: 'Users',
+            description: 'Create users, assign categories, and manage branch access.',
+            path: '/admin/users',
+            icon: '👤',
+            accentClass: 'bg-blue-100 text-blue-600',
+            screenCode: 'ADMIN_USERS',
+          },
+          {
+            id: 'access-control',
+            title: 'Access Control',
+            description: 'Grant access to pages and UI capabilities.',
+            path: '/admin/access',
+            icon: '🔐',
+            accentClass: 'bg-slate-100 text-slate-600',
+            screenCode: 'ADMIN_USER_ACCESS',
+          },
+          {
             id: 'cashiers',
             title: 'Cashiers',
             description: 'Manage cashier accounts, credentials, and outlet assignments.',
             path: '/admin/cashiers',
             icon: '👥',
             accentClass: 'bg-sky-100 text-sky-600',
+            screenCode: 'ADMIN_CASHIERS',
           },
           {
             id: 'cashier-balancing',
@@ -200,6 +237,7 @@ const POSAdminPage: React.FC = () => {
             path: '/admin/cashier-balancing',
             icon: '💰',
             accentClass: 'bg-green-100 text-green-600',
+            screenCode: 'ADMIN_CASHIER_BALANCING',
           },
         ],
       },
@@ -208,23 +246,28 @@ const POSAdminPage: React.FC = () => {
   );
 
   const filteredCategories = useMemo(() => {
-    if (!searchTerm.trim()) {
-      return categories;
-    }
-
     const keyword = searchTerm.trim().toLowerCase();
+    const hasKeyword = keyword.length > 0;
+
     return categories
       .map((category) => ({
         ...category,
-        tiles: category.tiles.filter(
-          (tile) =>
+        tiles: category.tiles.filter((tile) => {
+          if (!userHasScreenAccess(user, tile.screenCode)) {
+            return false;
+          }
+          if (!hasKeyword) {
+            return true;
+          }
+          return (
             tile.title.toLowerCase().includes(keyword) ||
             tile.description.toLowerCase().includes(keyword) ||
-            category.title.toLowerCase().includes(keyword),
-        ),
+            category.title.toLowerCase().includes(keyword)
+          );
+        }),
       }))
       .filter((category) => category.tiles.length > 0);
-  }, [categories, searchTerm]);
+  }, [categories, searchTerm, user]);
 
   const handleTileClick = useCallback(
     (path: string) => {

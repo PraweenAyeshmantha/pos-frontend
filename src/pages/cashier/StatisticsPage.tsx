@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import CashierLayout from '../../components/layout/CashierLayout';
 import Alert, { type AlertType } from '../../components/common/Alert';
 import ToastContainer from '../../components/common/ToastContainer';
+import SelectOutletReminder from '../../components/cashier/SelectOutletReminder';
 import { transactionService, type Transaction, type CreateTransactionRequest } from '../../services/transactionService';
 import { statisticsService, type DailySalesReport } from '../../services/statisticsService';
 import { useAuth } from '../../hooks/useAuth';
@@ -46,8 +47,9 @@ const getTransactionLabel = (type: string): string => {
 
 const StatisticsPage: React.FC = () => {
   const { user } = useAuth();
+  const isBackOfficeUser = useMemo(() => Boolean(user?.userId), [user?.userId]);
   const { currentOutlet } = useOutlet();
-  const selectedOutletId = currentOutlet?.id ?? null;
+  const selectedOutletId = isBackOfficeUser ? null : currentOutlet?.id ?? null;
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [dailySalesReport, setDailySalesReport] = useState<DailySalesReport | null>(null);
   const [loading, setLoading] = useState(true);
@@ -65,21 +67,23 @@ const StatisticsPage: React.FC = () => {
 
   // Keep the new transaction form aligned with the active outlet
   useEffect(() => {
-    if (selectedOutletId) {
-      setNewTransaction((prev) => ({
-        ...prev,
-        outletId: selectedOutletId,
-      }));
+    if (isBackOfficeUser || !selectedOutletId) {
+      return;
     }
-  }, [selectedOutletId]);
+
+    setNewTransaction((prev) => ({
+      ...prev,
+      outletId: selectedOutletId,
+    }));
+  }, [isBackOfficeUser, selectedOutletId]);
 
   const showToast = useCallback((type: AlertType, title: string, message: string) => {
     setAlert({ type, title, message });
   }, []);
 
   const fetchData = useCallback(async () => {
-    if (!selectedOutletId || !user?.cashierId) {
-      setLoadError('No outlet selected or cashier not found');
+    if (!user) {
+      setLoadError('Unable to determine the active user.');
       setLoading(false);
       return;
     }
@@ -92,21 +96,35 @@ const StatisticsPage: React.FC = () => {
       const startOfDay = `${today}T00:00:00Z`;
       const endOfDay = `${today}T23:59:59Z`;
 
-      console.log('Fetching transactions and sales report for outlet:', selectedOutletId, 'cashier:', user.cashierId);
+      if (isBackOfficeUser) {
+        const [transactionsData, salesReport] = await Promise.all([
+          transactionService.getAll({
+            startDate: startOfDay,
+            endDate: endOfDay,
+          }),
+          statisticsService.getDailySalesReport(),
+        ]);
 
-      // Fetch transactions for this cashier only
-      const transactionsData = await transactionService.getAll({
-        outletId: selectedOutletId,
-        cashierId: user.cashierId,
-        startDate: startOfDay,
-        endDate: endOfDay,
-      });
+        setTransactions(transactionsData);
+        setDailySalesReport(salesReport);
+        return;
+      }
 
-      // Fetch daily sales report from backend API (for the entire day)
-      const salesReport = await statisticsService.getCashierDailySalesReport(selectedOutletId, user.cashierId);
+      if (!selectedOutletId || !user.cashierId) {
+        setLoadError('Choose an outlet to view statistics.');
+        setLoading(false);
+        return;
+      }
 
-      console.log('Transactions received:', transactionsData.length);
-      console.log('Sales report received:', salesReport);
+      const [transactionsData, salesReport] = await Promise.all([
+        transactionService.getAll({
+          outletId: selectedOutletId,
+          cashierId: user.cashierId,
+          startDate: startOfDay,
+          endDate: endOfDay,
+        }),
+        statisticsService.getCashierDailySalesReport(selectedOutletId, user.cashierId),
+      ]);
 
       setTransactions(transactionsData);
       setDailySalesReport(salesReport);
@@ -116,7 +134,7 @@ const StatisticsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedOutletId, user?.cashierId]);
+  }, [isBackOfficeUser, selectedOutletId, user]);
 
   useEffect(() => {
     void fetchData();
@@ -127,39 +145,6 @@ const StatisticsPage: React.FC = () => {
   const todaysTotalSale = dailySalesReport?.todaysTotalSale ?? 0;
   const backendExpectedDrawerAmount = dailySalesReport?.expectedDrawerAmount ?? 0;
   const backendOpenCashDrawerAmount = dailySalesReport?.openCashDrawerAmount ?? 0;
-
-  const latestOpeningBalanceAmount = useMemo(() => {
-    const openingTransactions = transactions.filter(
-      (transaction) => transaction.transactionType === 'OPENING_BALANCE'
-    );
-
-    if (openingTransactions.length === 0) {
-      return 0;
-    }
-
-    const latest = openingTransactions.reduce((latestTx, currentTx) => {
-      const latestDate = new Date(latestTx.transactionDate).getTime();
-      const currentDate = new Date(currentTx.transactionDate).getTime();
-
-      if (Number.isNaN(currentDate)) {
-        return latestTx;
-      }
-      if (Number.isNaN(latestDate) || currentDate > latestDate) {
-        return currentTx;
-      }
-      return latestTx;
-    }, openingTransactions[0]);
-
-    return Math.abs(latest.amount ?? 0);
-  }, [transactions]);
-
-  const expectedDrawerAmount = useMemo(() => {
-    if (!dailySalesReport) {
-      return latestOpeningBalanceAmount;
-    }
-
-    return backendExpectedDrawerAmount - backendOpenCashDrawerAmount + latestOpeningBalanceAmount;
-  }, [dailySalesReport, backendExpectedDrawerAmount, backendOpenCashDrawerAmount, latestOpeningBalanceAmount]);
 
   const filteredTransactions = useMemo(() => {
     // All transactions are now properly filtered at the backend level
@@ -183,21 +168,20 @@ const StatisticsPage: React.FC = () => {
     });
   }, [transactions, searchQuery]);
 
-  if (!selectedOutletId) {
+  if (!isBackOfficeUser && !selectedOutletId) {
     return (
       <CashierLayout>
-        <div className="p-6">
-          <Alert
-            type="info"
-            title="Select Outlet"
-            message="Choose a branch from the top navigation before viewing cashier statistics."
-          />
-        </div>
+        <SelectOutletReminder message="Choose a branch from the top navigation before viewing cashier statistics." />
       </CashierLayout>
     );
   }
 
   const handleAddTransaction = useCallback(async () => {
+    if (isBackOfficeUser) {
+      showToast('error', 'Unavailable', 'Transactions can only be added while operating from a specific outlet.');
+      return;
+    }
+
     if (!selectedOutletId) {
       showToast('error', 'Error', 'No outlet selected');
       return;
@@ -230,7 +214,7 @@ const StatisticsPage: React.FC = () => {
       console.error('Error creating transaction', err);
       showToast('error', 'Error', 'Failed to create transaction');
     }
-  }, [newTransaction, selectedOutletId, user, showToast, fetchData]);
+  }, [fetchData, isBackOfficeUser, newTransaction, selectedOutletId, showToast, user]);
 
   const renderLoading = () => (
     <div className="flex min-h-screen items-center justify-center">
@@ -270,7 +254,9 @@ const StatisticsPage: React.FC = () => {
               Daily Statistics 📊
             </h1>
             <p className="text-sm text-slate-500">
-              Complete day statistics for all your transactions and sales across all shifts.
+              {isBackOfficeUser
+                ? 'Aggregated statistics across every outlet for today.'
+                : 'Complete day statistics for all your transactions and sales across all shifts.'}
             </p>
           </header>
 
@@ -291,7 +277,7 @@ const StatisticsPage: React.FC = () => {
             <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
               <p className="text-sm font-medium text-slate-600">Open Cash Drawer Amount</p>
               <p className="mt-3 text-3xl font-bold text-red-600">
-                {formatCurrency(latestOpeningBalanceAmount)}
+                {formatCurrency(backendOpenCashDrawerAmount)}
               </p>
               <p className="mt-2 text-xs text-slate-500">Most recent opening balance</p>
             </div>
@@ -315,7 +301,7 @@ const StatisticsPage: React.FC = () => {
             <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
               <p className="text-sm font-medium text-slate-600">Expected Drawer Amount</p>
               <p className="mt-3 text-3xl font-bold text-amber-600">
-                {formatCurrency(expectedDrawerAmount)}
+                {formatCurrency(backendExpectedDrawerAmount)}
               </p>
               <p className="mt-2 text-xs text-slate-500">Calculated end-of-day balance</p>
             </div>
@@ -325,14 +311,16 @@ const StatisticsPage: React.FC = () => {
           <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-semibold text-slate-900">Today's Transactions</h2>
-              <button
-                type="button"
-                onClick={() => setShowAddModal(true)}
-                className="flex h-10 w-10 items-center justify-center rounded-lg border border-blue-600 bg-white text-2xl text-blue-600 transition hover:bg-blue-50"
-                title="Add Transaction"
-              >
-                +
-              </button>
+              {!isBackOfficeUser && (
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(true)}
+                  className="flex h-10 w-10 items-center justify-center rounded-lg border border-blue-600 bg-white text-2xl text-blue-600 transition hover:bg-blue-50"
+                  title="Add Transaction"
+                >
+                  +
+                </button>
+              )}
             </div>
           </section>
 
@@ -449,7 +437,7 @@ const StatisticsPage: React.FC = () => {
     </div>
 
       {/* Add Transaction Modal */}
-      {showAddModal && (
+      {!isBackOfficeUser && showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
           <div
             className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"

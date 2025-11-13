@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import CashierLayout from '../../components/layout/CashierLayout';
 import Alert, { type AlertType } from '../../components/common/Alert';
 import ToastContainer from '../../components/common/ToastContainer';
+import SelectOutletReminder from '../../components/cashier/SelectOutletReminder';
 import { supplierService } from '../../services/supplierService';
 import { productService } from '../../services/productService';
 import { goodsReceivedNoteService } from '../../services/goodsReceivedNoteService';
@@ -240,13 +241,7 @@ const GoodsReceivedNotesPage: React.FC = () => {
   if (!currentOutlet?.id) {
     return (
       <CashierLayout>
-        <div className="p-6">
-          <Alert
-            type="info"
-            title="Select Outlet"
-            message="Choose an outlet from the top bar to receive stock into inventory."
-          />
-        </div>
+        <SelectOutletReminder message="Choose an outlet from the top bar to receive stock into inventory." />
       </CashierLayout>
     );
   }

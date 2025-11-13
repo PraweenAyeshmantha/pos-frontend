@@ -2,13 +2,13 @@ import React, { createContext, useCallback, useEffect, useMemo, useState } from 
 import type { ReactNode } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import settingsService from '../services/settingsService';
-import type { OutletSummaryDTO } from '../types/auth';
+import type { OutletSummary } from '../types/auth';
 
 interface OutletContextType {
-  currentOutlet: OutletSummaryDTO | null;
-  assignedOutlets: OutletSummaryDTO[];
+  currentOutlet: OutletSummary | null;
+  assignedOutlets: OutletSummary[];
   isSwitchingOutlet: boolean;
-  selectOutlet: (outlet: OutletSummaryDTO) => Promise<void>;
+  selectOutlet: (outlet: OutletSummary) => Promise<void>;
 }
 
 const OutletContext = createContext<OutletContextType | undefined>(undefined);
@@ -21,7 +21,7 @@ const buildStorageKey = (username?: string) => (username ? `pos-selected-outlet:
 
 export const OutletProvider: React.FC<OutletProviderProps> = ({ children }) => {
   const { user, updateUser } = useAuth();
-  const [currentOutlet, setCurrentOutlet] = useState<OutletSummaryDTO | null>(null);
+  const [currentOutlet, setCurrentOutlet] = useState<OutletSummary | null>(null);
   const [isSwitchingOutlet, setIsSwitchingOutlet] = useState(false);
 
   const assignedOutlets = useMemo(() => user?.assignedOutlets ?? [], [user?.assignedOutlets]);
@@ -48,7 +48,7 @@ export const OutletProvider: React.FC<OutletProviderProps> = ({ children }) => {
     setCurrentOutlet(storedOutlet ?? defaultOutlet ?? fallbackOutlet);
   }, [assignedOutlets, user]);
 
-  const selectOutlet = useCallback(async (outlet: OutletSummaryDTO) => {
+  const selectOutlet = useCallback(async (outlet: OutletSummary) => {
     if (!user) {
       throw new Error('No authenticated user available to switch outlets');
     }

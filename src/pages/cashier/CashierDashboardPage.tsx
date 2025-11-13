@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import CashierLayout from '../../components/layout/CashierLayout';
 import Alert from '../../components/common/Alert';
 import ToastContainer from '../../components/common/ToastContainer';
+import SelectOutletReminder from '../../components/cashier/SelectOutletReminder';
 import { orderService } from '../../services/orderService';
 import type { Order, OrderFilters } from '../../types/order';
 import { useAuth } from '../../hooks/useAuth';
@@ -23,6 +24,8 @@ const CashierDashboardPage: React.FC = () => {
   const { user } = useAuth();
   const { currentOutlet } = useOutlet();
   const selectedOutletId = currentOutlet?.id ?? null;
+  const isCashier = Boolean(user?.cashierId);
+  const requiresOutletSelection = isCashier;
   const [{ startIso, endIso }] = useState(getTodayRange);
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -37,7 +40,7 @@ const CashierDashboardPage: React.FC = () => {
   }, []);
 
   const loadOrders = useCallback(async () => {
-    if (!selectedOutletId) {
+    if (requiresOutletSelection && !selectedOutletId) {
       setIsLoading(false);
       return;
     }
@@ -47,15 +50,15 @@ const CashierDashboardPage: React.FC = () => {
 
     try {
       const filters: OrderFilters = {
-        outletId: selectedOutletId,
         startDate: startIso,
         endDate: endIso,
       };
+      if (selectedOutletId) {
+        filters.outletId = selectedOutletId;
+      }
 
-      if (user?.cashierId) {
+      if (isCashier && user?.cashierId) {
         filters.cashierId = user.cashierId;
-      } else if (user?.username) {
-        filters.cashierUsername = user.username;
       }
 
       const response = await orderService.getAll(filters);
@@ -64,15 +67,20 @@ const CashierDashboardPage: React.FC = () => {
         return;
       }
 
-      const matchesUser = (order: Order) => {
-        const idMatch = user?.cashierId !== undefined && user?.cashierId !== null
-          ? order.cashierId === user?.cashierId
-          : false;
-        const usernameMatch = user?.username ? order.cashierUsername === user.username : false;
-        return idMatch || usernameMatch;
-      };
+      const filtered = response.filter((order: Order) => {
+        if (isCashier) {
+          const idMatch = user?.cashierId !== undefined && user?.cashierId !== null
+            ? order.cashierId === user.cashierId
+            : false;
+          const usernameMatch = user?.username ? order.cashierUsername === user.username : false;
+          return (idMatch || usernameMatch) && (!selectedOutletId || order.outletId === selectedOutletId);
+        }
 
-      const filtered = response.filter(matchesUser);
+        if (selectedOutletId) {
+          return order.outletId === selectedOutletId;
+        }
+        return true;
+      });
       setOrders(filtered);
     } catch (err) {
       console.error('Failed to load cashier dashboard data', err);
@@ -84,7 +92,7 @@ const CashierDashboardPage: React.FC = () => {
         setIsLoading(false);
       }
     }
-  }, [endIso, selectedOutletId, startIso, user]);
+  }, [endIso, requiresOutletSelection, selectedOutletId, startIso, user]);
 
   useEffect(() => {
     void loadOrders();
@@ -130,16 +138,10 @@ const CashierDashboardPage: React.FC = () => {
       .slice(0, 6);
   }, [orders]);
 
-  if (!selectedOutletId) {
+  if (requiresOutletSelection && !selectedOutletId) {
     return (
       <CashierLayout>
-        <div className="p-6">
-          <Alert
-            type="info"
-            title="Select Outlet"
-            message="Choose a branch from the top navigation to view your cashier home metrics."
-          />
-        </div>
+        <SelectOutletReminder message="Choose a branch from the top navigation to view your cashier home metrics." />
       </CashierLayout>
     );
   }

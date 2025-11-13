@@ -11,13 +11,18 @@ export interface DailySalesReport {
 }
 
 export const statisticsService = {
-  async getDailySalesReport(outletId: number, date?: string): Promise<DailySalesReport> {
-    const params = new URLSearchParams({ outletId: outletId.toString() });
+  async getDailySalesReport(outletId?: number, date?: string): Promise<DailySalesReport> {
+    const params = new URLSearchParams();
+    if (typeof outletId === 'number') {
+      params.append('outletId', outletId.toString());
+    }
     if (date) {
       params.append('date', date);
     }
     const response = await apiClient.get<ApiResponse<DailySalesReport>>(
-      `/statistics/daily-sales-report?${params.toString()}`
+      params.toString()
+        ? `/statistics/daily-sales-report?${params.toString()}`
+        : '/statistics/daily-sales-report'
     );
     return response.data.data ?? { 
       openCashDrawerAmount: 0, 

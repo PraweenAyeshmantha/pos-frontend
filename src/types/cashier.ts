@@ -1,66 +1,58 @@
-import type { OutletMode } from './outlet';
 import type { RecordStatus } from './configuration';
-
-export type CashierRole = 'POS_CASHIER' | 'ADMINISTRATOR';
-
-export interface CashierOutlet {
-  id: number;
-  name: string;
-  code?: string;
-  mode?: OutletMode;
-}
+import type { OutletSummary } from './auth';
+import type { UserCategory } from './auth';
 
 export interface Cashier {
   id: number;
+  userId?: number | null;
   name: string;
   username: string;
-  email: string;
+  email?: string;
   phone?: string;
-  role: CashierRole;
   recordStatus: RecordStatus;
   requirePasswordReset: boolean;
-  assignedOutlets: CashierOutlet[];
-  createdAt?: string;
-  updatedAt?: string;
+  otpEnabled: boolean;
+  otpPhoneNumber?: string;
+  categories: UserCategory[];
+  assignedOutlets: OutletSummary[];
+  defaultOutlet?: OutletSummary | null;
+  createdDate?: string;
+  modifiedDate?: string;
+}
+
+export interface CashierCandidate {
+  userId: number;
+  name: string;
+  username: string;
+  email?: string;
+  phone?: string;
+  categories: UserCategory[];
+  assignedOutlets: OutletSummary[];
 }
 
 export interface CashierFormValues {
-  username: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  phone: string;
-  role: CashierRole;
-  password: string;
+  userId: number | null;
+  otpPhoneNumber: string;
+  otpEnabled: boolean;
   recordStatus: RecordStatus;
   requirePasswordReset: boolean;
-  sendCredentials: boolean;
-  assignedOutletIds: number[];
+  defaultOutletId: number | null;
 }
 
 export interface CreateCashierRequest {
-  name: string;
-  username: string;
-  email: string;
-  phone?: string;
-  password: string;
-  role: CashierRole;
+  userId: number;
+  otpPhoneNumber?: string;
+  otpEnabled?: boolean;
   recordStatus: RecordStatus;
-  requirePasswordReset: boolean;
-  assignedOutletIds: number[];
-  sendCredentials?: boolean;
+  requirePasswordReset?: boolean;
+  defaultOutletId?: number | null;
 }
 
 export interface UpdateCashierRequest {
   id: number;
-  name: string;
-  username: string;
-  email: string;
-  phone?: string;
-  password?: string;
-  role: CashierRole;
-  recordStatus: RecordStatus;
-  requirePasswordReset: boolean;
-  assignedOutletIds: number[];
-  sendCredentials?: boolean;
+  otpPhoneNumber?: string;
+  otpEnabled?: boolean;
+  recordStatus?: RecordStatus;
+  requirePasswordReset?: boolean;
+  defaultOutletId?: number | null;
 }

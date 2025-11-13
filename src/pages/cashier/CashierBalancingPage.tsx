@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import CashierLayout from '../../components/layout/CashierLayout';
 import Alert, { type AlertType } from '../../components/common/Alert';
 import ToastContainer from '../../components/common/ToastContainer';
+import SelectOutletReminder from '../../components/cashier/SelectOutletReminder';
 import StartCashierSessionModal from '../../components/cashier/cashier-balancing/StartCashierSessionModal';
 import CloseCashierSessionModal from '../../components/cashier/cashier-balancing/CloseCashierSessionModal';
 import CashTransactionModal from '../../components/cashier/cashier-balancing/CashTransactionModal';
@@ -342,13 +343,7 @@ const CashierBalancingPage: React.FC = () => {
   if (!selectedOutletId) {
     return (
       <CashierLayout>
-        <div className="p-6">
-          <Alert
-            type="info"
-            title="Select Outlet"
-            message="Choose a branch from the top navigation before viewing cashier balancing."
-          />
-        </div>
+        <SelectOutletReminder message="Choose a branch from the top navigation before viewing cashier balancing." />
       </CashierLayout>
     );
   }
