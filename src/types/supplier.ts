@@ -15,6 +15,11 @@ export interface Supplier {
   postalCode?: string;
   country?: string;
   notes?: string;
+  defaultLeadTimeDays?: number;
+  defaultPaymentTerms?: string;
+  preferredCurrency?: string;
+  preferredIncoterms?: string;
+  orderingNotes?: string;
   recordStatus: RecordStatus;
   createdDate?: string;
   modifiedDate?: string;
@@ -34,6 +39,11 @@ export interface SupplierRequest {
   postalCode?: string;
   country?: string;
   notes?: string;
+  defaultLeadTimeDays?: number;
+  defaultPaymentTerms?: string;
+  preferredCurrency?: string;
+  preferredIncoterms?: string;
+  orderingNotes?: string;
   recordStatus?: RecordStatus;
 }
 
@@ -51,5 +61,10 @@ export interface SupplierFormValues {
   postalCode: string;
   country: string;
   notes: string;
+  defaultLeadTimeDays: string;
+  defaultPaymentTerms: string;
+  preferredCurrency: string;
+  preferredIncoterms: string;
+  orderingNotes: string;
   recordStatus: RecordStatus;
 }

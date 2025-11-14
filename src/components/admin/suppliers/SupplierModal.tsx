@@ -30,6 +30,11 @@ const DEFAULT_FORM: SupplierFormValues = {
   postalCode: '',
   country: '',
   notes: '',
+  defaultLeadTimeDays: '',
+  defaultPaymentTerms: '',
+  preferredCurrency: '',
+  preferredIncoterms: '',
+  orderingNotes: '',
   recordStatus: 'ACTIVE',
 };
 
@@ -63,6 +68,11 @@ const SupplierModal: React.FC<SupplierModalProps> = ({ mode, supplier, onClose, 
         postalCode: supplier.postalCode ?? '',
         country: supplier.country ?? '',
         notes: supplier.notes ?? '',
+        defaultLeadTimeDays: supplier.defaultLeadTimeDays?.toString() ?? '',
+        defaultPaymentTerms: supplier.defaultPaymentTerms ?? '',
+        preferredCurrency: supplier.preferredCurrency ?? '',
+        preferredIncoterms: supplier.preferredIncoterms ?? '',
+        orderingNotes: supplier.orderingNotes ?? '',
         recordStatus: supplier.recordStatus ?? 'ACTIVE',
       });
     } else {
@@ -96,6 +106,14 @@ const SupplierModal: React.FC<SupplierModalProps> = ({ mode, supplier, onClose, 
 
   const buildPayload = useCallback((): SupplierRequest => {
     const trimmed = (value?: string) => value?.trim() || undefined;
+    const toInteger = (value: string) => {
+      if (!value.trim()) {
+        return undefined;
+      }
+      const parsed = Number(value);
+      return Number.isNaN(parsed) ? undefined : Math.max(0, Math.round(parsed));
+    };
+    const normalizeCurrency = (value: string) => trimmed(value)?.toUpperCase();
     return {
       supplierCode: trimmed(formData.supplierCode),
       name: formData.name.trim(),
@@ -110,6 +128,11 @@ const SupplierModal: React.FC<SupplierModalProps> = ({ mode, supplier, onClose, 
       postalCode: trimmed(formData.postalCode),
       country: trimmed(formData.country),
       notes: trimmed(formData.notes),
+      defaultLeadTimeDays: toInteger(formData.defaultLeadTimeDays),
+      defaultPaymentTerms: trimmed(formData.defaultPaymentTerms),
+      preferredCurrency: normalizeCurrency(formData.preferredCurrency),
+      preferredIncoterms: trimmed(formData.preferredIncoterms)?.toUpperCase(),
+      orderingNotes: trimmed(formData.orderingNotes),
       recordStatus: formData.recordStatus,
     };
   }, [formData]);
@@ -338,6 +361,71 @@ const SupplierModal: React.FC<SupplierModalProps> = ({ mode, supplier, onClose, 
                   ))}
                 </select>
               </label>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-slate-50/60">
+              <div className="border-b border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700">
+                Procurement Preferences
+              </div>
+              <div className="space-y-4 px-4 py-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
+                    <span>Lead Time (days)</span>
+                    <input
+                      type="number"
+                      min={0}
+                      value={formData.defaultLeadTimeDays}
+                      onChange={(event) => handleChange('defaultLeadTimeDays', event.target.value)}
+                      disabled={saving || isReadOnly}
+                      className="h-11 rounded-lg border border-slate-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100"
+                    />
+                  </label>
+                  <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
+                    <span>Payment Terms</span>
+                    <input
+                      type="text"
+                      value={formData.defaultPaymentTerms}
+                      onChange={(event) => handleChange('defaultPaymentTerms', event.target.value)}
+                      disabled={saving || isReadOnly}
+                      className="h-11 rounded-lg border border-slate-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100"
+                    />
+                  </label>
+                  <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
+                    <span>Currency</span>
+                    <input
+                      type="text"
+                      inputMode="text"
+                      maxLength={3}
+                      value={formData.preferredCurrency}
+                      onChange={(event) => handleChange('preferredCurrency', event.target.value.toUpperCase())}
+                      disabled={saving || isReadOnly}
+                      className="h-11 rounded-lg border border-slate-200 px-3 uppercase text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100"
+                    />
+                  </label>
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
+                    <span>Incoterms</span>
+                    <input
+                      type="text"
+                      value={formData.preferredIncoterms}
+                      onChange={(event) => handleChange('preferredIncoterms', event.target.value.toUpperCase())}
+                      disabled={saving || isReadOnly}
+                      className="h-11 rounded-lg border border-slate-200 px-3 uppercase text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100"
+                    />
+                  </label>
+                  <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
+                    <span>Ordering Notes</span>
+                    <input
+                      type="text"
+                      value={formData.orderingNotes}
+                      onChange={(event) => handleChange('orderingNotes', event.target.value)}
+                      disabled={saving || isReadOnly}
+                      className="h-11 rounded-lg border border-slate-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100"
+                    />
+                  </label>
+                </div>
+              </div>
             </div>
 
             <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">

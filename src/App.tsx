@@ -31,6 +31,8 @@ const AssignStocksPage = lazy(() => import('./pages/admin/assign-stocks/AssignSt
 const StockAlertsPage = lazy(() => import('./pages/admin/stock-alerts/StockAlertsPage'));
 const StockConfigPage = lazy(() => import('./pages/admin/stock-config/StockConfigPage'));
 const SuppliersPage = lazy(() => import('./pages/admin/suppliers/SuppliersPage'));
+const PurchaseOrdersPage = lazy(() => import('./pages/admin/purchasing/PurchaseOrdersPage'));
+const SupplierCatalogPage = lazy(() => import('./pages/admin/purchasing/SupplierCatalogPage'));
 const BrandsPage = lazy(() => import('./pages/admin/taxonomy/BrandsPage'));
 const TagsPage = lazy(() => import('./pages/admin/taxonomy/TagsPage'));
 const ProductCategoriesPage = lazy(() => import('./pages/admin/taxonomy/ProductCategoriesPage'));
@@ -156,6 +158,16 @@ function App() {
                     <Route path="admin/suppliers" element={
                       <ProtectedRoute screenCode="ADMIN_SUPPLIERS">
                         <SuppliersPage />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="admin/procurement/purchase-orders" element={
+                      <ProtectedRoute screenCode="ADMIN_PURCHASE_ORDERS">
+                        <PurchaseOrdersPage />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="admin/procurement/vendor-catalog" element={
+                      <ProtectedRoute screenCode="ADMIN_VENDOR_CATALOG">
+                        <SupplierCatalogPage />
                       </ProtectedRoute>
                     } />
 

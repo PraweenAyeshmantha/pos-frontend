@@ -68,6 +68,20 @@ export const getDefaultTenantPath = (user?: User | null, tenantId?: string) => {
   return buildTenantPath(getDefaultRelativePathForUser(user), tenantId);
 };
 
+export const getPosPortalLabel = (user?: User | null) => {
+  const roles = getUserRoleCodes(user);
+  if (roles.has('ADMIN')) {
+    return 'POS Admin';
+  }
+  if (roles.has('MANAGER')) {
+    return 'POS Manager';
+  }
+  if (roles.has('CASHIER')) {
+    return 'POS Cashier';
+  }
+  return 'POS Admin';
+};
+
 const buildScreenAccessMap = (user?: User | null): Map<string, UserAccess> => {
   const map = new Map<string, UserAccess>();
   if (!user || !Array.isArray(user.access)) {

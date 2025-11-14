@@ -1,5 +1,5 @@
 import type { User } from '../../types/auth';
-import { userHasScreenAccess } from '../../utils/authRoles';
+import { getPosPortalLabel, userHasScreenAccess } from '../../utils/authRoles';
 
 export type NavigationArea = 'admin' | 'cashier';
 
@@ -28,6 +28,8 @@ const POS_ADMIN_PAGE_PATHS = new Set<string>([
   '/admin/assign-stocks',
   '/admin/stock-alerts',
   '/admin/suppliers',
+  '/admin/procurement/purchase-orders',
+  '/admin/procurement/vendor-catalog',
   '/admin/coupons',
   '/admin/users',
   '/admin/access',
@@ -46,10 +48,9 @@ const BASE_ITEMS: NavigationItemConfig[] = [
   { id: 'cashier-home', label: 'POS Home', icon: '🏠', path: '/cashier/dashboard', screenCode: 'CASHIER_DASHBOARD', area: 'cashier', priority: 10 },
   { id: 'cashier-pos', label: 'POS', icon: '🛒', path: '/cashier/pos', screenCode: 'CASHIER_POS', area: 'cashier', priority: 20 },
   { id: 'cashier-balancing', label: 'Balance', icon: '💰', path: '/cashier/balancing', screenCode: 'CASHIER_BALANCING', area: 'cashier', priority: 30 },
-  { id: 'cashier-goods-received', label: 'Goods In', icon: '📦', path: '/cashier/goods-received', screenCode: 'CASHIER_GOODS_RECEIVED', area: 'cashier', priority: 40 },
-  { id: 'cashier-orders', label: 'Sales', icon: '🛍️', path: '/admin/orders', screenCode: 'SHARED_ORDERS', area: 'cashier', priority: 50 },
-  { id: 'cashier-customers', label: 'Customers', icon: '👥', path: '/admin/customers', screenCode: 'SHARED_CUSTOMERS', area: 'cashier', priority: 60 },
-  { id: 'cashier-statistics', label: 'Statistics', icon: '$', path: '/cashier/statistics', screenCode: 'CASHIER_STATISTICS', area: 'cashier', priority: 70 },
+  { id: 'cashier-orders', label: 'Sales', icon: '🛍️', path: '/admin/orders', screenCode: 'SHARED_ORDERS', area: 'cashier', priority: 40 },
+  { id: 'cashier-customers', label: 'Customers', icon: '👥', path: '/admin/customers', screenCode: 'SHARED_CUSTOMERS', area: 'cashier', priority: 50 },
+  { id: 'cashier-statistics', label: 'Statistics', icon: '$', path: '/cashier/statistics', screenCode: 'CASHIER_STATISTICS', area: 'cashier', priority: 60 },
   { id: 'cashier-settings', label: 'Settings', icon: '⚙️', path: '/admin/settings', screenCode: 'SHARED_SETTINGS', area: 'cashier', priority: 90 },
 ];
 
@@ -68,6 +69,7 @@ export const buildNavigationItems = (user: User | null, areas: NavigationArea[] 
 
   const seenPaths = new Set<string>();
   return workingItems
+    .map((item) => (item.id === 'admin-pos-admin' ? { ...item, label: getPosPortalLabel(user) } : item))
     .sort((a, b) => a.priority - b.priority)
     .filter((item) => {
       if (seenPaths.has(item.path)) {

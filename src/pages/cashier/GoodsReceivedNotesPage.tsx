@@ -6,6 +6,7 @@ import SelectOutletReminder from '../../components/cashier/SelectOutletReminder'
 import { supplierService } from '../../services/supplierService';
 import { productService } from '../../services/productService';
 import { goodsReceivedNoteService } from '../../services/goodsReceivedNoteService';
+import { purchaseOrderService } from '../../services/purchaseOrderService';
 import { useOutlet } from '../../contexts/OutletContext';
 import type { Supplier } from '../../types/supplier';
 import type { Product } from '../../types/product';
@@ -15,6 +16,7 @@ import type {
   GoodsReceivedNoteFormState,
   GoodsReceivedNoteRequest,
 } from '../../types/goodsReceivedNote';
+import type { PurchaseOrder } from '../../types/purchaseOrder';
 
 const currencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -55,14 +57,18 @@ const generateLineItemId = () => {
 const createLineItem = (): GoodsReceivedNoteFormItem => ({
   id: generateLineItemId(),
   productId: '',
+  purchaseOrderItemId: '',
   quantity: '1',
   unitCost: '',
   unitPrice: '',
   batchNumber: '',
+  orderedQuantity: undefined,
+  remainingQuantity: undefined,
 });
 
 const DEFAULT_FORM: GoodsReceivedNoteFormState = {
   supplierId: '',
+  purchaseOrderId: '',
   referenceNumber: '',
   remarks: '',
   status: 'POSTED',
@@ -74,10 +80,13 @@ const GoodsReceivedNotesPage: React.FC = () => {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [grns, setGrns] = useState<GoodsReceivedNote[]>([]);
+  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
+  const [selectedPurchaseOrder, setSelectedPurchaseOrder] = useState<PurchaseOrder | null>(null);
   const [formState, setFormState] = useState<GoodsReceivedNoteFormState>(DEFAULT_FORM);
   const [loadingSuppliers, setLoadingSuppliers] = useState(true);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [loadingGrns, setLoadingGrns] = useState(false);
+  const [loadingPurchaseOrders, setLoadingPurchaseOrders] = useState(false);
   const [saving, setSaving] = useState(false);
   const [alert, setAlert] = useState<{ type: AlertType; title: string; message: string } | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -112,6 +121,27 @@ const GoodsReceivedNotesPage: React.FC = () => {
     }
   }, [showToast]);
 
+  const loadPurchaseOrders = useCallback(async () => {
+    if (!currentOutlet?.id) {
+      setPurchaseOrders([]);
+      return;
+    }
+    try {
+      setLoadingPurchaseOrders(true);
+      const data = await purchaseOrderService.list({
+        outletId: currentOutlet.id,
+        statuses: ['SUBMITTED', 'PARTIALLY_RECEIVED'],
+        limit: 20,
+      });
+      setPurchaseOrders(data);
+    } catch (err) {
+      console.error('Failed to load purchase orders', err);
+      showToast('error', 'Purchase Orders', 'Unable to load open purchase orders.');
+    } finally {
+      setLoadingPurchaseOrders(false);
+    }
+  }, [currentOutlet?.id, showToast]);
+
   const loadGrns = useCallback(async () => {
     if (!currentOutlet?.id) {
       setGrns([]);
@@ -132,7 +162,8 @@ const GoodsReceivedNotesPage: React.FC = () => {
   useEffect(() => {
     void loadSuppliers();
     void loadProducts();
-  }, [loadSuppliers, loadProducts]);
+    void loadPurchaseOrders();
+  }, [loadSuppliers, loadProducts, loadPurchaseOrders]);
 
   useEffect(() => {
     void loadGrns();
@@ -156,6 +187,48 @@ const GoodsReceivedNotesPage: React.FC = () => {
       items: prev.items.length === 1 ? prev.items : prev.items.filter((item) => item.id !== itemId),
     }));
   }, []);
+
+  const applyPurchaseOrder = useCallback((order: PurchaseOrder) => {
+    const outstandingItems = order.items
+      .filter((item) => (item.remainingQuantity ?? item.orderedQuantity) > 0)
+      .map((item) => ({
+        id: generateLineItemId(),
+        productId: item.productId.toString(),
+        purchaseOrderItemId: item.id.toString(),
+        quantity: (item.remainingQuantity ?? item.orderedQuantity).toString(),
+        unitCost: item.unitCost.toString(),
+        unitPrice: '',
+        batchNumber: '',
+        orderedQuantity: item.orderedQuantity,
+        remainingQuantity: item.remainingQuantity,
+      }));
+
+    setSelectedPurchaseOrder(order);
+    setFormState((prev) => ({
+      ...prev,
+      purchaseOrderId: order.id.toString(),
+      supplierId: order.supplierId?.toString() ?? '',
+      items: outstandingItems.length ? outstandingItems : [createLineItem()],
+    }));
+  }, []);
+
+  const handlePurchaseOrderChange = useCallback(
+    async (value: string) => {
+      if (!value) {
+        setSelectedPurchaseOrder(null);
+        setFormState((prev) => ({ ...prev, purchaseOrderId: '', items: [createLineItem()] }));
+        return;
+      }
+      try {
+        const order = await purchaseOrderService.getById(Number(value));
+        applyPurchaseOrder(order);
+      } catch (err) {
+        console.error('Failed to load purchase order details', err);
+        showToast('error', 'Purchase Orders', 'Unable to load purchase order. Try again later.');
+      }
+    },
+    [applyPurchaseOrder, showToast]
+  );
 
   const totals = useMemo(() => {
     return formState.items.reduce(
@@ -191,10 +264,14 @@ const GoodsReceivedNotesPage: React.FC = () => {
         return 'Enter a valid cost for each line item.';
       }
     }
+    if (formState.purchaseOrderId && formState.items.some((item) => !item.purchaseOrderItemId)) {
+      return 'All line items must reference the selected purchase order.';
+    }
     return null;
   };
 
   const resetForm = () => {
+    setSelectedPurchaseOrder(null);
     setFormState({ ...DEFAULT_FORM, items: [createLineItem()] });
   };
 
@@ -213,12 +290,14 @@ const GoodsReceivedNotesPage: React.FC = () => {
       const payload: GoodsReceivedNoteRequest = {
         outletId: currentOutlet.id,
         supplierId: formState.supplierId ? Number(formState.supplierId) : undefined,
+        purchaseOrderId: formState.purchaseOrderId ? Number(formState.purchaseOrderId) : undefined,
         referenceNumber: formState.referenceNumber.trim() || undefined,
         remarks: formState.remarks.trim() || undefined,
         status: formState.status,
         receivedDate: new Date().toISOString(),
         items: formState.items.map((item) => ({
           productId: Number(item.productId),
+          purchaseOrderItemId: item.purchaseOrderItemId ? Number(item.purchaseOrderItemId) : undefined,
           quantity: Number(item.quantity),
           unitCost: Number(item.unitCost),
           unitPrice: item.unitPrice ? Number(item.unitPrice) : undefined,
@@ -230,13 +309,14 @@ const GoodsReceivedNotesPage: React.FC = () => {
       showToast('success', 'Goods Received', `GRN ${created.grnNumber} recorded.`);
       resetForm();
       await loadGrns();
+      void loadPurchaseOrders();
     } catch (err) {
       console.error('Failed to record goods received note', err);
       setFormError(err instanceof Error ? err.message : 'Unable to save goods received note.');
     } finally {
       setSaving(false);
     }
-  }, [currentOutlet?.id, formState.items, formState.referenceNumber, formState.remarks, formState.status, formState.supplierId, loadGrns, showToast]);
+  }, [currentOutlet?.id, formState.items, formState.purchaseOrderId, formState.referenceNumber, formState.remarks, formState.status, formState.supplierId, loadGrns, loadPurchaseOrders, showToast]);
 
   if (!currentOutlet?.id) {
     return (
@@ -283,12 +363,38 @@ const GoodsReceivedNotesPage: React.FC = () => {
                 <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{formError}</div>
               )}
 
+              {purchaseOrders.length > 0 && (
+                <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
+                  <span>Purchase Order (optional)</span>
+                  <select
+                    value={formState.purchaseOrderId}
+                    onChange={(event) => handlePurchaseOrderChange(event.target.value)}
+                    disabled={saving || loadingPurchaseOrders}
+                    className="h-11 rounded-lg border border-slate-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50"
+                  >
+                    <option value="">
+                      {loadingPurchaseOrders ? 'Loading purchase orders...' : 'Manual receiving'}
+                    </option>
+                    {purchaseOrders.map((order) => (
+                      <option key={order.id} value={order.id}>
+                        {order.poNumber} • {order.supplierName}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="text-xs text-slate-500">
+                    {selectedPurchaseOrder
+                      ? `Linked to ${selectedPurchaseOrder.poNumber}`
+                      : 'Link a PO to prefill supplier and quantities.'}
+                  </span>
+                </label>
+              )}
+
               <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
                 <span>Supplier</span>
                 <select
                   value={formState.supplierId}
                   onChange={(event) => setFormState((prev) => ({ ...prev, supplierId: event.target.value }))}
-                  disabled={loadingSuppliers || saving}
+                  disabled={loadingSuppliers || saving || Boolean(formState.purchaseOrderId)}
                   className="h-11 rounded-lg border border-slate-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                 >
                   <option value="">Walk-in / Misc Supplier</option>
@@ -358,7 +464,7 @@ const GoodsReceivedNotesPage: React.FC = () => {
                         <select
                           value={item.productId}
                           onChange={(event) => handleItemChange(item.id, 'productId', event.target.value)}
-                          disabled={loadingProducts || saving}
+                          disabled={loadingProducts || saving || Boolean(formState.purchaseOrderId)}
                           className="h-10 rounded-lg border border-slate-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                         >
                           <option value="">Select product</option>
@@ -368,6 +474,15 @@ const GoodsReceivedNotesPage: React.FC = () => {
                             </option>
                           ))}
                         </select>
+                        {item.purchaseOrderItemId && (
+                          <span className="text-[11px] text-slate-500">
+                            PO line #{item.purchaseOrderItemId} • Remaining{' '}
+                            {typeof item.remainingQuantity === 'number'
+                              ? item.remainingQuantity.toFixed(2)
+                              : item.orderedQuantity?.toFixed(2) ?? '—'}{' '}
+                            units
+                          </span>
+                        )}
                       </label>
                       <label className="flex flex-col gap-2 text-xs font-semibold text-slate-600">
                         <span>Batch # (optional)</span>
@@ -425,7 +540,8 @@ const GoodsReceivedNotesPage: React.FC = () => {
               <button
                 type="button"
                 onClick={handleAddItem}
-                className="w-full rounded-2xl border border-dashed border-slate-300 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+                disabled={saving || Boolean(formState.purchaseOrderId)}
+                className="w-full rounded-2xl border border-dashed border-slate-300 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-400"
               >
                 + Add another product
               </button>
@@ -493,6 +609,9 @@ const GoodsReceivedNotesPage: React.FC = () => {
                         <p>
                           Supplier: <span className="font-semibold">{grn.supplierName ?? 'Walk-in / Misc'}</span>
                         </p>
+                        {grn.purchaseOrderNumber && (
+                          <p className="mt-1 text-xs text-slate-500">Linked PO: {grn.purchaseOrderNumber}</p>
+                        )}
                         {grn.referenceNumber && <p className="mt-1">Reference: {grn.referenceNumber}</p>}
                         {grn.remarks && <p className="mt-1">Notes: {grn.remarks}</p>}
                       </div>
