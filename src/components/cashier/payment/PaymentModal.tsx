@@ -1,16 +1,26 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import type { PaymentMethod } from '../../../types/payment';
+import type { GiftCardLookupResponse } from '../../../types/giftCard';
+import { giftCardService } from '../../../services/giftCardService';
 
 interface PaymentEntry {
   id: string;
   paymentMethodId: number;
   amount: string;
+  giftCardCode?: string;
+  isStoredValue?: boolean;
+}
+
+interface LookupEntryState {
+  loading: boolean;
+  data?: GiftCardLookupResponse;
+  error?: string;
 }
 
 interface PaymentModalProps {
   open: boolean;
   totalDue: number;
-  onConfirm: (payments: { paymentMethodId: number; amount: number }[], notes: string) => void;
+  onConfirm: (payments: { paymentMethodId: number; amount: number; giftCardCode?: string }[], notes: string) => void;
   onClose: () => void;
   paymentMethods: PaymentMethod[];
   enableOrderNotes?: boolean;
@@ -35,20 +45,14 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   enableSplitPayment = true,
 }) => {
   const [payments, setPayments] = useState<PaymentEntry[]>([
-    { id: '1', paymentMethodId: paymentMethods[0]?.id ?? 1, amount: '' },
+    { id: '1', paymentMethodId: paymentMethods[0]?.id ?? 1, amount: '', giftCardCode: '', isStoredValue: false },
   ]);
   const [orderNotes, setOrderNotes] = useState('');
   const [currentAmount, setCurrentAmount] = useState('');
+  const [formError, setFormError] = useState<string | null>(null);
+  const [lookupState, setLookupState] = useState<Record<string, LookupEntryState>>({});
 
   // Reset state when modal opens
-  useEffect(() => {
-    if (open) {
-      setPayments([{ id: '1', paymentMethodId: paymentMethods[0]?.id ?? 1, amount: '' }]);
-      setOrderNotes('');
-      setCurrentAmount('');
-    }
-  }, [open, paymentMethods]);
-
   const totalPaying = useMemo(() => {
     return payments.reduce((sum, payment) => {
       const amount = parseFloat(payment.amount) || 0;
@@ -69,34 +73,150 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     ];
   }, [totalDue]);
 
+  const getPaymentMethodById = useCallback(
+    (methodId: number) => paymentMethods.find((method) => method.id === methodId),
+    [paymentMethods]
+  );
+
+  const isStoredValueMethod = useCallback(
+    (methodId: number) => {
+      const method = getPaymentMethodById(methodId);
+      if (!method?.slug) {
+        return false;
+      }
+      const slug = method.slug.toLowerCase();
+      return slug === 'gift-card' || slug === 'store-credit';
+    },
+    [getPaymentMethodById]
+  );
+
+  useEffect(() => {
+    if (open) {
+      const defaultMethodId = paymentMethods[0]?.id ?? 1;
+      setPayments([{
+        id: '1',
+        paymentMethodId: defaultMethodId,
+        amount: '',
+        giftCardCode: '',
+        isStoredValue: isStoredValueMethod(defaultMethodId),
+      }]);
+      setOrderNotes('');
+      setCurrentAmount('');
+      setFormError(null);
+      setLookupState({});
+    }
+  }, [open, paymentMethods, isStoredValueMethod]);
+
   const handleAddPaymentMethod = useCallback(() => {
     if (!enableSplitPayment) return;
     
     const nextId = (Math.max(...payments.map((payment) => parseInt(payment.id))) + 1).toString();
+    const defaultMethodId = paymentMethods[0]?.id ?? 1;
     setPayments((prev) => [
       ...prev,
-      { id: nextId, paymentMethodId: paymentMethods[0]?.id ?? 1, amount: '' },
+      { id: nextId, paymentMethodId: defaultMethodId, amount: '', giftCardCode: '', isStoredValue: isStoredValueMethod(defaultMethodId) },
     ]);
-  }, [payments, paymentMethods, enableSplitPayment]);
+    setFormError(null);
+  }, [payments, paymentMethods, enableSplitPayment, isStoredValueMethod]);
 
   const handleRemovePayment = useCallback((id: string) => {
     setPayments((prev) => prev.filter((payment) => payment.id !== id));
+    setLookupState((prev) => {
+      if (!prev[id]) return prev;
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+    setFormError(null);
   }, []);
 
   const handlePaymentMethodChange = useCallback((id: string, methodId: number) => {
     setPayments((prev) =>
-      prev.map((payment) => (payment.id === id ? { ...payment, paymentMethodId: methodId } : payment)),
+      prev.map((payment) =>
+        payment.id === id
+          ? { ...payment, paymentMethodId: methodId, isStoredValue: isStoredValueMethod(methodId), giftCardCode: '' }
+          : payment,
+      ),
     );
-  }, []);
+    setLookupState((prev) => {
+      if (!prev[id]) {
+        return prev;
+      }
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+    setFormError(null);
+  }, [isStoredValueMethod]);
 
   const handleAmountChange = useCallback((id: string, amount: string) => {
     setPayments((prev) =>
       prev.map((payment) => (payment.id === id ? { ...payment, amount } : payment)),
     );
+    setFormError(null);
   }, []);
+
+  const handleGiftCardCodeChange = useCallback((id: string, code: string) => {
+    setPayments((prev) =>
+      prev.map((payment) => (payment.id === id ? { ...payment, giftCardCode: code } : payment)),
+    );
+    setLookupState((prev) => {
+      if (!prev[id]) {
+        return prev;
+      }
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+    setFormError(null);
+  }, []);
+
+  const handleVerifyGiftCard = useCallback(async (id: string) => {
+    const entry = payments.find((payment) => payment.id === id);
+    if (!entry) {
+      return;
+    }
+    if (!entry.giftCardCode || entry.giftCardCode.trim() === '') {
+      setFormError('Enter a gift card or store credit code to verify.');
+      return;
+    }
+    try {
+      setLookupState((prev) => ({
+        ...prev,
+        [id]: { ...(prev[id] ?? {}), loading: true, error: undefined },
+      }));
+      const lookup = await giftCardService.lookup(entry.giftCardCode.trim());
+      setLookupState((prev) => ({ ...prev, [id]: { loading: false, data: lookup } }));
+      if (lookup.redeemable) {
+        const otherTotal = payments
+          .filter((payment) => payment.id !== id)
+          .reduce((sum, payment) => sum + (parseFloat(payment.amount) || 0), 0);
+        const dueLeft = Math.max(0, totalDue - otherTotal);
+        const autoAmount = Math.min(dueLeft, lookup.currentBalance);
+        const formatted = autoAmount > 0 ? autoAmount.toFixed(2) : entry.amount;
+        setPayments((prev) =>
+          prev.map((payment) => (payment.id === id ? { ...payment, amount: formatted } : payment)),
+        );
+        if (payments[payments.length - 1]?.id === id) {
+          setCurrentAmount(formatted);
+        }
+        setFormError(null);
+      } else {
+        setFormError(lookup.message);
+      }
+    } catch (error) {
+      console.error('Failed to lookup gift card', error);
+      const message =
+        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        'Unable to lookup gift card. Try again.';
+      setLookupState((prev) => ({ ...prev, [id]: { loading: false, error: message } }));
+      setFormError(message);
+    }
+  }, [payments, totalDue]);
 
   const handleNumPadClick = useCallback((value: string) => {
     if (payments.length === 0) return;
+    setFormError(null);
     
     const currentPayment = payments[payments.length - 1];
     let newAmount = currentAmount;
@@ -130,6 +250,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
   const handleQuickAmount = useCallback((amount: number) => {
     if (payments.length === 0) return;
+    setFormError(null);
     const currentPayment = payments[payments.length - 1];
     const amountStr = amount.toFixed(2);
     setCurrentAmount(amountStr);
@@ -141,19 +262,40 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       return;
     }
 
+    for (const payment of payments) {
+      if (payment.isStoredValue) {
+        if (!payment.giftCardCode) {
+          setFormError('Enter a gift card or store credit code.');
+          return;
+        }
+        const lookup = lookupState[payment.id]?.data;
+        if (!lookup || !lookup.redeemable) {
+          setFormError('Verify the stored value balance before applying it.');
+          return;
+        }
+        const amountValue = parseFloat(payment.amount) || 0;
+        if (amountValue > lookup.currentBalance + 0.0001) {
+          setFormError('Stored value amount exceeds available balance.');
+          return;
+        }
+      }
+    }
+
     const validPayments = payments
       .filter((payment) => parseFloat(payment.amount) > 0)
       .map((payment) => ({
         paymentMethodId: payment.paymentMethodId,
         amount: parseFloat(payment.amount),
+        giftCardCode: payment.giftCardCode?.trim() || undefined,
       }));
 
     if (validPayments.length === 0) {
       return;
     }
 
+    setFormError(null);
     onConfirm(validPayments, orderNotes);
-  }, [payments, payLeft, orderNotes, onConfirm]);
+  }, [payments, payLeft, orderNotes, onConfirm, lookupState]);
 
   const handleCancel = useCallback(() => {
     onClose();
@@ -270,6 +412,47 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                       </div>
                     </div>
                   </div>
+                  {payment.isStoredValue && (
+                    <div className="col-span-2 mt-3 rounded-lg border border-violet-100 bg-white/80 p-3">
+                      <label className="block text-xs font-medium text-slate-700">Gift Card / Store Credit Code</label>
+                      <div className="mt-2 flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={payment.giftCardCode ?? ''}
+                          onChange={(e) => handleGiftCardCodeChange(payment.id, e.target.value.toUpperCase())}
+                          placeholder="GC-XXXXXX"
+                          className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-100"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleVerifyGiftCard(payment.id)}
+                          disabled={!payment.giftCardCode || lookupState[payment.id]?.loading}
+                          className={`rounded-lg px-3 py-2 text-xs font-semibold text-white transition ${
+                            !payment.giftCardCode || lookupState[payment.id]?.loading
+                              ? 'bg-slate-300'
+                              : 'bg-violet-600 hover:bg-violet-700'
+                          }`}
+                        >
+                          {lookupState[payment.id]?.loading ? 'Checking...' : 'Check Balance'}
+                        </button>
+                      </div>
+                      <p
+                        className={`mt-2 text-[11px] ${
+                          lookupState[payment.id]?.error
+                            ? 'text-rose-600'
+                            : lookupState[payment.id]?.data?.redeemable
+                              ? 'text-emerald-600'
+                              : 'text-slate-500'
+                        }`}
+                      >
+                        {lookupState[payment.id]?.error
+                          ? lookupState[payment.id]?.error
+                          : lookupState[payment.id]?.data
+                            ? lookupState[payment.id]?.data?.message
+                            : 'Verify the code to fetch available balance.'}
+                      </p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -354,6 +537,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             </div>
           </div>
         </div>
+
+        {formError && (
+          <div className="bg-rose-50 px-6 py-3 text-xs font-semibold text-rose-700">
+            {formError}
+          </div>
+        )}
 
         {/* Footer Actions */}
         <div className="flex items-center justify-end gap-3 border-t border-slate-200 px-6 py-4">

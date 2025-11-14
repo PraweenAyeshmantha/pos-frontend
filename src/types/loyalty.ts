@@ -45,14 +45,17 @@ export interface LoyaltyTransactionSummary {
 
 export interface LoyaltySummary {
   customerId: number;
-  availablePoints: number;
-  tierName: string;
+  availablePoints?: number;
+  tierName?: string;
   nextTierAt?: number | null;
   pointsToNextTier?: number | null;
   expiringPoints?: number | null;
   expiringOn?: string | null;
   lifetimePointsEarned?: number;
   lifetimePointsRedeemed?: number;
+  currencyPerPoint?: number;
+  minPointsToRedeem?: number | null;
+  maxPointsToRedeem?: number | null;
   rewards: Array<{
     id: number;
     name: string;

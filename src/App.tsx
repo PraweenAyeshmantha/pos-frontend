@@ -28,6 +28,7 @@ const TablesPage = lazy(() => import('./pages/admin/tables/TablesPage'));
 const ProductsPage = lazy(() => import('./pages/admin/products/ProductsPage'));
 const CouponsPage = lazy(() => import('./pages/admin/coupons/CouponsPage'));
 const LoyaltyProgramPage = lazy(() => import('./pages/admin/loyalty/LoyaltyProgramPage'));
+const GiftCardsPage = lazy(() => import('./pages/admin/gift-cards/GiftCardsPage'));
 const AssignBarcodesPage = lazy(() => import('./pages/admin/assign-barcodes/AssignBarcodesPage'));
 const AssignStocksPage = lazy(() => import('./pages/admin/assign-stocks/AssignStocksPage'));
 const StockAlertsPage = lazy(() => import('./pages/admin/stock-alerts/StockAlertsPage'));
@@ -184,6 +185,12 @@ function App() {
                     <Route path="admin/loyalty" element={
                       <ProtectedRoute screenCode="ADMIN_LOYALTY">
                         <LoyaltyProgramPage />
+                      </ProtectedRoute>
+                    } />
+
+                    <Route path="admin/gift-cards" element={
+                      <ProtectedRoute screenCode="ADMIN_GIFT_CARDS">
+                        <GiftCardsPage />
                       </ProtectedRoute>
                     } />
 

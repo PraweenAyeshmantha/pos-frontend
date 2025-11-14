@@ -171,13 +171,23 @@ const CashierBalancingPage: React.FC = () => {
   }, [sessionTransactions]);
 
   // Use backend data for today's cash sale or calculate from transactions
+  const cashRefundAmount = useMemo(() => {
+    return sessionTransactions.reduce((sum, transaction) => {
+      if (transaction.transactionType === 'REFUND' && transaction.paymentMethod?.toLowerCase() === 'cash') {
+        return sum + Math.abs(getCashNetAmount(transaction));
+      }
+      return sum;
+    }, 0);
+  }, [sessionTransactions]);
+
   const todaysCashSale = useMemo(() => {
     if (balanceData) {
       return balanceData.todaysCashSale;
     }
     
-    return saleTransactions.reduce((sum, transaction) => sum + getCashNetAmount(transaction), 0);
-  }, [saleTransactions, balanceData]);
+    const grossCashSales = saleTransactions.reduce((sum, transaction) => sum + getCashNetAmount(transaction), 0);
+    return grossCashSales - cashRefundAmount;
+  }, [saleTransactions, balanceData, cashRefundAmount]);
 
   const cashIn = useMemo(() => {
     return sessionTransactions.reduce((sum, transaction) => {
@@ -306,19 +316,26 @@ const CashierBalancingPage: React.FC = () => {
     }
     return 'bg-slate-100 text-slate-700';
   };
+  const getTransactionTimestamp = (transaction: Transaction): number => {
+    const timestamp = transaction.transactionDate ?? transaction.createdDate;
+    const date = timestamp ? new Date(timestamp) : null;
+    return date?.getTime() ?? 0;
+  };
   // Filter transactions to show cash-related ones
   const cashRelatedTransactions = useMemo(() => {
-    return sessionTransactions.filter((t) => {
-      // Include all cash transaction types
-      if (['OPENING_BALANCE', 'CLOSING_BALANCE', 'CASH_IN', 'CASH_OUT', 'EXPENSE', 'REFUND'].includes(t.transactionType)) {
-        return true;
-      }
-      // Include SALE transactions with cash payment
-      if (t.transactionType === 'SALE' && t.paymentMethod?.toLowerCase() === 'cash') {
-        return true;
-      }
-      return false;
-    });
+    return sessionTransactions
+      .filter((t) => {
+        // Include all cash transaction types
+        if (['OPENING_BALANCE', 'CLOSING_BALANCE', 'CASH_IN', 'CASH_OUT', 'EXPENSE', 'REFUND'].includes(t.transactionType)) {
+          return true;
+        }
+        // Include SALE transactions with cash payment
+        if (t.transactionType === 'SALE' && t.paymentMethod?.toLowerCase() === 'cash') {
+          return true;
+        }
+        return false;
+      })
+      .sort((a, b) => getTransactionTimestamp(b) - getTransactionTimestamp(a));
   }, [sessionTransactions]);
 
   const renderNoSessionState = () => (

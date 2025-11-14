@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import CashierLayout from '../../components/layout/CashierLayout';
 import Alert, { type AlertType } from '../../components/common/Alert';
 import ToastContainer from '../../components/common/ToastContainer';
@@ -9,18 +10,26 @@ import ApplyCouponModal from '../../components/cashier/coupon/ApplyCouponModal';
 import DiscountModal from '../../components/cashier/discount/DiscountModal';
 import CustomProductModal from '../../components/cashier/custom-product/CustomProductModal';
 import WeightInputModal from '../../components/cashier/weight-input/WeightInputModal';
+import QuickCustomerModal from '../../components/cashier/customer/QuickCustomerModal';
+import RedeemLoyaltyModal from '../../components/cashier/customer/RedeemLoyaltyModal';
 import { productService } from '../../services/productService';
 import { productCategoryService } from '../../services/productCategoryService';
-import { posService } from '../../services/posService';
+import { posService, type CreateOrderRequest } from '../../services/posService';
+import env from '../../config/env';
+import { productCacheService } from '../../services/productCacheService';
 import { cashierSessionService } from '../../services/cashierSessionService';
 import { orderService } from '../../services/orderService';
 import { configurationService } from '../../services/configurationService';
 import { stockService } from '../../services/stockService';
+import { offlineQueueService, type OfflineOrderQueueItem } from '../../services/offlineQueueService';
+import { customerService } from '../../services/customerService';
 import type { Product } from '../../types/product';
 import type { ProductCategory } from '../../types/taxonomy';
 import type { PaymentMethod } from '../../types/payment';
 import type { Order } from '../../types/order';
 import type { Coupon } from '../../types/coupon';
+import type { Customer } from '../../types/customer';
+import type { LoyaltySummary } from '../../types/loyalty';
 import { useAuth } from '../../hooks/useAuth';
 import { useOutlet } from '../../contexts/OutletContext';
 
@@ -50,6 +59,93 @@ const currencyFormatter = new Intl.NumberFormat('en-US', {
 });
 
 const formatCurrency = (value: number): string => currencyFormatter.format(value);
+
+const buildOfflineReceiptHtml = (order: Order): string => {
+  const itemsRows = (order.items ?? [])
+    .map(
+      (item) => `
+        <tr>
+          <td>${item.productName}</td>
+          <td style="text-align:center;">${item.quantity}</td>
+          <td style="text-align:right;">${formatCurrency(item.unitPrice)}</td>
+          <td style="text-align:right;">${formatCurrency(item.totalAmount)}</td>
+        </tr>`
+    )
+    .join('');
+
+  const paymentsRows = (order.payments ?? [])
+    .map(
+      (payment) => `
+        <tr>
+          <td>${payment.paymentMethodName}</td>
+          <td style="text-align:right;">${formatCurrency(payment.amount)}</td>
+        </tr>`
+    )
+    .join('');
+
+  const completedDate = new Date(order.completedDate ?? order.createdDate).toLocaleString();
+
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8" />
+        <title>Receipt ${order.orderNumber}</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 24px; }
+          h1, h2 { margin: 0; }
+          table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+          th, td { padding: 6px 4px; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
+          th { text-align: left; }
+        </style>
+      </head>
+      <body>
+        <h1>${order.outletName ?? 'Offline Receipt'}</h1>
+        <p>Order #${order.orderNumber}<br/>${completedDate}</p>
+        <h2>Items</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th style="text-align:center;">Qty</th>
+              <th style="text-align:right;">Price</th>
+              <th style="text-align:right;">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsRows}
+          </tbody>
+        </table>
+        <h2>Summary</h2>
+        <table>
+          <tbody>
+            <tr><td>Subtotal</td><td style="text-align:right;">${formatCurrency(order.subtotal)}</td></tr>
+            <tr><td>Discount</td><td style="text-align:right;">${formatCurrency(order.discountAmount)}</td></tr>
+            <tr><td>Tax</td><td style="text-align:right;">${formatCurrency(order.taxAmount)}</td></tr>
+            <tr><td><strong>Total</strong></td><td style="text-align:right;"><strong>${formatCurrency(order.totalAmount)}</strong></td></tr>
+            <tr><td>Paid</td><td style="text-align:right;">${formatCurrency(order.paidAmount)}</td></tr>
+            <tr><td>Change</td><td style="text-align:right;">${formatCurrency(order.changeAmount)}</td></tr>
+          </tbody>
+        </table>
+        ${
+          paymentsRows
+            ? `<h2>Payments</h2>
+        <table>
+          <tbody>
+            ${paymentsRows}
+          </tbody>
+        </table>`
+            : ''
+        }
+        <script>
+          window.onload = function() {
+            window.print();
+          };
+        </script>
+      </body>
+    </html>
+  `;
+};
 
 const categoryIconFor = (name: string): string => {
   const normalized = name.toLowerCase();
@@ -134,6 +230,8 @@ const CashDrawerModal: React.FC<{
 const CashierPOSPage: React.FC = () => {
   const { user } = useAuth();
   const { currentOutlet } = useOutlet();
+  const navigate = useNavigate();
+  const { tenantId } = useParams<{ tenantId: string }>();
   const selectedOutletId = currentOutlet?.id ?? null;
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<CategoryOption[]>([{ id: 'all', name: 'All', icon: '🛍️' }]);
@@ -142,7 +240,21 @@ const CashierPOSPage: React.FC = () => {
   const [productLoading, setProductLoading] = useState(true);
   const [categoryLoading, setCategoryLoading] = useState(true);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [toast, setToast] = useState<{ type: AlertType; title: string; message: string } | null>(null);
+  const [toasts, setToasts] = useState<Array<{ id: string; type: AlertType; title: string; message: string }>>([]);
+  const showToast = useCallback((type: AlertType, title: string, message: string) => {
+    setToasts((prev) => [
+      ...prev,
+      {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        type,
+        title,
+        message,
+      },
+    ]);
+  }, []);
+  const dismissToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+  }, []);
   const [drawerAmount, setDrawerAmount] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerMandatory, setDrawerMandatory] = useState(false);
@@ -153,6 +265,8 @@ const CashierPOSPage: React.FC = () => {
   const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
   const [processingPayment, setProcessingPayment] = useState(false);
   const categoryScrollRef = React.useRef<HTMLDivElement>(null);
+  const cartScrollRef = React.useRef<HTMLDivElement>(null);
+  const paymentMethodsToastShownRef = React.useRef(false);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [enableOrderNotes, setEnableOrderNotes] = useState(true);
   const [enableSplitPayment, setEnableSplitPayment] = useState(true);
@@ -164,6 +278,17 @@ const CashierPOSPage: React.FC = () => {
   // @ts-ignore - TODO: Use to conditionally show weight input for products
   const [enableWeightBasedPricing, setEnableWeightBasedPricing] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(false);
+  const [enableOfflineOrders, setEnableOfflineOrders] = useState(() => {
+    if (typeof window === 'undefined') {
+      return true;
+    }
+    const cached = window.localStorage.getItem('posEnableOfflineOrders');
+    return cached === null ? true : cached === 'true';
+  });
+  const [isOnline, setIsOnline] = useState<boolean>(window.navigator.onLine);
+  const [offlineQueue, setOfflineQueue] = useState<OfflineOrderQueueItem[]>([]);
+  const [syncingOfflineOrders, setSyncingOfflineOrders] = useState(false);
+  const [lastOfflineError, setLastOfflineError] = useState<string | null>(null);
   
   // Coupon and Discount state
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
@@ -173,10 +298,208 @@ const CashierPOSPage: React.FC = () => {
   const [customProductModalOpen, setCustomProductModalOpen] = useState(false);
   const [weightInputModalOpen, setWeightInputModalOpen] = useState(false);
   const [weightInputProduct, setWeightInputProduct] = useState<Product | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [customerLookupMode, setCustomerLookupMode] = useState<'PHONE' | 'LOYALTY'>('PHONE');
+  const [customerLookupValue, setCustomerLookupValue] = useState('');
+  const [customerLookupLoading, setCustomerLookupLoading] = useState(false);
+  const [customerLookupError, setCustomerLookupError] = useState<string | null>(null);
+  const [quickCustomerModalOpen, setQuickCustomerModalOpen] = useState(false);
+  const [redeemModalOpen, setRedeemModalOpen] = useState(false);
+  const [loyaltySummary, setLoyaltySummary] = useState<LoyaltySummary | null>(null);
+  const [loyaltyLoading, setLoyaltyLoading] = useState(false);
+  const [pendingLoyaltyRedemption, setPendingLoyaltyRedemption] = useState<number | null>(null);
+  const [customerManagerOpen, setCustomerManagerOpen] = useState(false);
 
-  const showToast = useCallback((type: AlertType, title: string, message: string) => {
-    setToast({ type, title, message });
+  const resetOrderState = useCallback(() => {
+    setCartItems([]);
+    setAppliedCoupon(null);
+    setAppliedDiscount(null);
+    setSelectedCustomer(null);
+    setLoyaltySummary(null);
+    setPendingLoyaltyRedemption(null);
   }, []);
+
+  const refreshOfflineQueue = useCallback(async (): Promise<OfflineOrderQueueItem[]> => {
+    const items = await offlineQueueService.getAll();
+    setOfflineQueue(items);
+    return items;
+  }, []);
+
+  const queueOrderOffline = useCallback(
+    async (orderRequest: CreateOrderRequest, reason: string, existingReference?: string): Promise<string> => {
+      const reference = existingReference ?? (window.crypto?.randomUUID ? window.crypto.randomUUID() : `offline-${Date.now()}`);
+      const offlinePayload: CreateOrderRequest = {
+        ...orderRequest,
+        isOffline: true,
+        offlineReference: reference,
+        offlineCapturedAt: new Date().toISOString(),
+      };
+      await offlineQueueService.enqueue(offlinePayload);
+      const items = await refreshOfflineQueue();
+      setLastOfflineError(null);
+      showToast(
+        'info',
+        'Offline Order Saved',
+        `${reason} We will sync ${items.length} pending order${items.length === 1 ? '' : 's'} when connected.`
+      );
+      return reference;
+    },
+    [refreshOfflineQueue, showToast]
+  );
+
+  const attemptOfflineSync = useCallback(async () => {
+    if (!enableOfflineOrders) {
+      return;
+    }
+    const pending = await offlineQueueService.getAll();
+    if (pending.length === 0 || !window.navigator.onLine) {
+      return;
+    }
+    setSyncingOfflineOrders(true);
+    try {
+      const response = await posService.syncOfflineOrders(
+        pending.map((item) => ({
+          clientReference: item.payload.offlineReference ?? item.id,
+          capturedAt: item.payload.offlineCapturedAt ?? item.createdAt,
+          order: item.payload,
+        }))
+      );
+
+      const removable = response.results
+        .filter((result) => (result.status === 'CREATED' || result.status === 'DUPLICATE') && result.clientReference)
+        .map((result) => result.clientReference as string);
+      await Promise.all(removable.map((ref) => offlineQueueService.remove(ref)));
+
+      await Promise.all(
+        response.results
+          .filter((result) => result.status === 'FAILED' && result.clientReference)
+          .map((result) => offlineQueueService.markFailure(result.clientReference as string, result.message))
+      );
+
+      const items = await refreshOfflineQueue();
+      setLastOfflineError(response.failedCount > 0 ? 'Some offline orders need review.' : null);
+
+      if (response.createdCount > 0) {
+        showToast(
+          'success',
+          'Offline Orders Synced',
+          `${response.createdCount} order${response.createdCount === 1 ? '' : 's'} synced successfully.`
+        );
+      }
+
+      if (response.failedCount > 0) {
+        showToast(
+          'warning',
+          'Offline Sync Issues',
+          'Some orders could not be synced. Please verify totals and retry.'
+        );
+      }
+
+      if (items.length === 0 && response.failedCount === 0) {
+        showToast('info', 'Offline Queue Empty', 'All offline orders are now online.');
+      }
+    } catch (error) {
+      console.error('Failed to sync offline orders', error);
+      setLastOfflineError('Failed to sync offline orders. We will retry automatically.');
+    } finally {
+      setSyncingOfflineOrders(false);
+    }
+  }, [enableOfflineOrders, refreshOfflineQueue, showToast]);
+
+  useEffect(() => {
+    void refreshOfflineQueue();
+  }, [refreshOfflineQueue]);
+
+  useEffect(() => {
+    if (isOnline) {
+      paymentMethodsToastShownRef.current = false;
+    }
+  }, [isOnline]);
+
+  const healthCheckUrl = React.useMemo(() => {
+    if (!env.apiBaseUrl) {
+      return null;
+    }
+    try {
+      const baseUrl = new URL(env.apiBaseUrl, window.location.origin);
+      // Remove trailing /api if present
+      if (baseUrl.pathname.endsWith('/api')) {
+        baseUrl.pathname = baseUrl.pathname.replace(/\/api\/?$/, '/');
+      }
+      return new URL('actuator/health', baseUrl).toString();
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const checkConnectivity = useCallback(async () => {
+    const hasNetwork = window.navigator.onLine;
+    if (!hasNetwork) {
+      setIsOnline(false);
+      return;
+    }
+    if (!healthCheckUrl) {
+      setIsOnline(true);
+      return;
+    }
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 4000);
+    try {
+      await fetch(healthCheckUrl, {
+        method: 'HEAD',
+        cache: 'no-store',
+        mode: 'no-cors',
+        signal: controller.signal,
+        credentials: 'omit',
+      });
+      // In no-cors mode, success translates to opaque response, so treat as online
+      setIsOnline(true);
+    } catch {
+      setIsOnline(false);
+    } finally {
+      window.clearTimeout(timeoutId);
+    }
+  }, [healthCheckUrl]);
+
+  useEffect(() => {
+    const handleOnline = () => {
+      void checkConnectivity();
+      if (enableOfflineOrders) {
+        void attemptOfflineSync();
+      }
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+    };
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [attemptOfflineSync, enableOfflineOrders, checkConnectivity]);
+
+  useEffect(() => {
+    void checkConnectivity();
+    const intervalId = window.setInterval(() => {
+      void checkConnectivity();
+    }, 10000);
+    return () => window.clearInterval(intervalId);
+  }, [checkConnectivity]);
+
+  useEffect(() => {
+    if (enableOfflineOrders && isOnline && offlineQueue.length > 0 && !syncingOfflineOrders) {
+      void attemptOfflineSync();
+    }
+  }, [attemptOfflineSync, enableOfflineOrders, isOnline, offlineQueue.length, syncingOfflineOrders]);
+  useEffect(() => {
+    if (cartScrollRef.current) {
+      cartScrollRef.current.scrollTo({
+        top: cartScrollRef.current.scrollHeight,
+        behavior: 'smooth',
+      });
+    }
+  }, [cartItems]);
 
   const checkScrollArrows = useCallback(() => {
     if (categoryScrollRef.current) {
@@ -217,10 +540,17 @@ const CashierPOSPage: React.FC = () => {
         );
         
         setProducts(activeProducts);
+        await productCacheService.saveProducts(activeProducts);
       } catch (error) {
         console.error('Failed to load products for POS', error);
         if (mounted) {
-          showToast('error', 'Products', 'Unable to load products. Please try again.');
+          const cachedProducts = await productCacheService.getProducts();
+          if (cachedProducts && cachedProducts.length > 0) {
+            setProducts(cachedProducts);
+            showToast('warning', 'Offline Products', 'Showing last synced products while offline.');
+          } else {
+            showToast('error', 'Products', 'Unable to load products. Please try again.');
+          }
         }
       } finally {
         if (mounted) {
@@ -236,6 +566,93 @@ const CashierPOSPage: React.FC = () => {
     };
   }, [showToast]);
 
+  const loadLoyaltySummary = useCallback(async (customerId: number, notify = false) => {
+    try {
+      setLoyaltyLoading(true);
+      const summary = await customerService.getLoyaltySummary(customerId);
+      setLoyaltySummary(summary);
+      setPendingLoyaltyRedemption((current) => {
+        if (!current || summary.availablePoints === undefined) {
+          return current;
+        }
+        return Math.min(current, summary.availablePoints);
+      });
+      if (notify) {
+        showToast('success', 'Loyalty Updated', 'Latest loyalty balance retrieved.');
+      }
+    } catch (err) {
+      console.error('Failed to load loyalty summary', err);
+      setLoyaltySummary(null);
+      showToast('error', 'Loyalty', 'Unable to load loyalty summary.');
+    } finally {
+      setLoyaltyLoading(false);
+    }
+  }, [showToast]);
+
+  const handleCustomerLookup = useCallback(async () => {
+    if (!customerLookupValue.trim()) {
+      setCustomerLookupError(
+        `Enter a ${customerLookupMode === 'PHONE' ? 'phone number' : 'loyalty number'} to search.`,
+      );
+      return;
+    }
+    try {
+      setCustomerLookupLoading(true);
+      setCustomerLookupError(null);
+      const params =
+        customerLookupMode === 'PHONE'
+          ? { phone: customerLookupValue.trim() }
+          : { loyaltyNumber: customerLookupValue.trim() };
+      const customer = await customerService.lookup(params);
+      setSelectedCustomer(customer);
+      setPendingLoyaltyRedemption(null);
+      setCustomerLookupValue('');
+      await loadLoyaltySummary(customer.id);
+      showToast('success', 'Customer Linked', `${customer.name} selected for this order.`);
+    } catch (err) {
+      console.error('Customer lookup failed', err);
+      const apiError = err as { response?: { data?: { message?: string } } };
+      setCustomerLookupError(apiError.response?.data?.message ?? 'Customer not found.');
+    } finally {
+      setCustomerLookupLoading(false);
+    }
+  }, [customerLookupMode, customerLookupValue, loadLoyaltySummary, showToast]);
+
+  const handleClearCustomer = useCallback(() => {
+    setSelectedCustomer(null);
+    setLoyaltySummary(null);
+    setPendingLoyaltyRedemption(null);
+  }, []);
+
+  const handleQuickCustomerSuccess = useCallback(async (customer: Customer) => {
+    setQuickCustomerModalOpen(false);
+    setSelectedCustomer(customer);
+    setCustomerLookupValue('');
+    setCustomerLookupError(null);
+    setPendingLoyaltyRedemption(null);
+    await loadLoyaltySummary(customer.id);
+    showToast('success', 'Customer Added', `${customer.name} registered and selected.`);
+  }, [loadLoyaltySummary, showToast]);
+
+  const handleRedeemConfirm = useCallback((points: number) => {
+    if (!loyaltySummary) {
+      setRedeemModalOpen(false);
+      return;
+    }
+    const available = loyaltySummary.availablePoints ?? 0;
+    if (points > available) {
+      showToast('error', 'Loyalty', 'Cannot redeem more points than available.');
+      return;
+    }
+    setPendingLoyaltyRedemption(points);
+    setRedeemModalOpen(false);
+    showToast('success', 'Loyalty Applied', `${points} points will discount this order.`);
+  }, [loyaltySummary, showToast]);
+
+  const handleRemoveLoyaltyRedemption = useCallback(() => {
+    setPendingLoyaltyRedemption(null);
+  }, []);
+
   useEffect(() => {
     let mounted = true;
 
@@ -246,18 +663,29 @@ const CashierPOSPage: React.FC = () => {
         if (!mounted) {
           return;
         }
-        const mapped = data
-          .filter((category) => category.recordStatus !== 'INACTIVE')
-          .map((category: ProductCategory) => ({
-            id: category.id,
-            name: category.name,
-            icon: categoryIconFor(category.name),
-          }));
+        const activeCategories = data.filter((category) => category.recordStatus !== 'INACTIVE');
+        const mapped = activeCategories.map((category: ProductCategory) => ({
+          id: category.id,
+          name: category.name,
+          icon: categoryIconFor(category.name),
+        }));
         setCategories([{ id: 'all', name: 'All', icon: '🛍️' }, ...mapped]);
+        await productCacheService.saveCategories(activeCategories);
       } catch (error) {
         console.error('Failed to load categories for POS', error);
         if (mounted) {
-          showToast('error', 'Categories', 'Unable to load categories. Showing all products.');
+          const cachedCategories = await productCacheService.getCategories();
+          if (cachedCategories && cachedCategories.length > 0) {
+            const mappedCached = cachedCategories.map((category) => ({
+              id: category.id,
+              name: category.name,
+              icon: categoryIconFor(category.name),
+            }));
+            setCategories([{ id: 'all', name: 'All', icon: '🛍️' }, ...mappedCached]);
+            showToast('warning', 'Categories', 'Showing last synced categories while offline.');
+          } else {
+            showToast('error', 'Categories', 'Unable to load categories. Showing all products.');
+          }
         }
       } finally {
         if (mounted) {
@@ -289,6 +717,9 @@ const CashierPOSPage: React.FC = () => {
         setEnableCustomProduct(configMap.enable_custom_product !== 'false');
         setShowVariationsAsProducts(configMap.show_variations_as_products === 'true');
         setEnableWeightBasedPricing(configMap.enable_weight_based_pricing === 'true');
+        const offlineFlag = configMap.enable_offline_orders === 'true';
+        setEnableOfflineOrders(offlineFlag);
+        window.localStorage.setItem('posEnableOfflineOrders', String(offlineFlag));
 
         // Fetch stock configurations
         const stockConfigs = await stockService.getStockConfigurations();
@@ -311,7 +742,10 @@ const CashierPOSPage: React.FC = () => {
         setEnableStockValidation(stockValidationEnabled);
       } catch (error) {
         console.error('Failed to fetch configurations:', error);
-        // Keep default values (true) on error
+        const cachedOfflineFlag = window.localStorage.getItem('posEnableOfflineOrders');
+        if (cachedOfflineFlag !== null) {
+          setEnableOfflineOrders(cachedOfflineFlag === 'true');
+        }
       }
     };
 
@@ -370,10 +804,20 @@ const CashierPOSPage: React.FC = () => {
         }
         const activeMethods = data.filter((method) => method.recordStatus !== 'INACTIVE');
         setPaymentMethods(activeMethods);
+        await productCacheService.savePaymentMethods(activeMethods);
       } catch (error) {
         console.error('Failed to load payment methods', error);
         if (mounted) {
-          showToast('error', 'Payment Methods', 'Unable to load payment methods.');
+          const cachedMethods = await productCacheService.getPaymentMethods();
+          if (cachedMethods && cachedMethods.length > 0) {
+            setPaymentMethods(cachedMethods);
+            if (!paymentMethodsToastShownRef.current) {
+              showToast('warning', 'Payment Methods', 'Showing last synced payment methods while offline.');
+              paymentMethodsToastShownRef.current = true;
+            }
+          } else {
+            showToast('error', 'Payment Methods', 'Unable to load payment methods.');
+          }
         }
       }
     };
@@ -591,10 +1035,100 @@ const CashierPOSPage: React.FC = () => {
     return Math.min(discount, subtotal);
   }, [subtotal, appliedCoupon, appliedDiscount, cartItems]);
 
+  const loyaltyDiscountAmount = useMemo(() => {
+    if (!pendingLoyaltyRedemption || !loyaltySummary) {
+      return 0;
+    }
+    const rate = loyaltySummary.currencyPerPoint ?? 0;
+    const amount = pendingLoyaltyRedemption * rate;
+    return Math.max(0, Math.round(amount * 100) / 100);
+  }, [pendingLoyaltyRedemption, loyaltySummary]);
+
   const totalDue = useMemo(() => {
-    const total = subtotal + taxAmount - discountAmount;
-    return Math.round(total * 100) / 100;
-  }, [subtotal, taxAmount, discountAmount]);
+    const total = subtotal + taxAmount - discountAmount - loyaltyDiscountAmount;
+    return Math.max(Math.round(total * 100) / 100, 0);
+  }, [subtotal, taxAmount, discountAmount, loyaltyDiscountAmount]);
+
+  const createOfflineOrder = useCallback(
+    (
+      reference: string,
+      paymentsInput: { paymentMethodId: number; amount: number; giftCardCode?: string }[],
+      notesValue: string | null,
+    ): Order => {
+      const now = new Date().toISOString();
+      const paidAmount = paymentsInput.reduce((sum, payment) => sum + Number(payment.amount), 0);
+      const changeAmount = Math.max(paidAmount - totalDue, 0);
+      const paymentSummaries = paymentsInput.map((payment) => ({
+        paymentMethodName:
+          paymentMethods.find((method) => method.id === payment.paymentMethodId)?.name ?? 'Payment',
+        amount: Number(payment.amount),
+      }));
+
+      const itemsSummary = cartItems.map((item, index) => {
+        const quantity = item.isWeightBased ? 1 : item.quantity;
+        const unitPrice = item.isWeightBased && item.weight ? item.price * item.weight : item.price;
+        const total = quantity * unitPrice;
+        const taxRate = item.taxRate ?? 0;
+        const taxAmountPerItem = taxRate > 0 ? (taxRate / 100) * total : 0;
+        return {
+          id: index + 1,
+          productId: item.productId,
+          productName: item.name,
+          quantity,
+          unitPrice,
+          discountAmount: 0,
+          taxRate,
+          taxAmount: taxAmountPerItem,
+          totalAmount: total,
+          weight: item.weight ?? undefined,
+          notes: undefined,
+          isCustom: item.productId === 0,
+        };
+      });
+
+      return {
+        id: Date.now(),
+        orderNumber: reference,
+        orderType: 'COUNTER',
+        status: 'COMPLETED',
+        subtotal,
+        discountAmount,
+        taxAmount,
+        totalAmount: totalDue,
+        paidAmount,
+        changeAmount,
+        notes: notesValue ?? undefined,
+        createdDate: now,
+        completedDate: now,
+        isOnline: false,
+        offlineReference: reference,
+        outletId: selectedOutletId ?? 0,
+        outletName: currentOutlet?.name ?? 'Offline Outlet',
+        outletCode: currentOutlet?.code ?? '',
+        cashierId: user?.cashierId ?? undefined,
+        cashierName: user?.name ?? undefined,
+        cashierUsername: user?.username ?? undefined,
+        customerId: selectedCustomer?.id ?? undefined,
+        customerName: selectedCustomer?.name,
+        customerEmail: selectedCustomer?.email,
+        customerPhone: selectedCustomer?.phone,
+        items: itemsSummary,
+        payments: paymentSummaries,
+      };
+    },
+    [
+      cartItems,
+      currentOutlet,
+      discountAmount,
+      paymentMethods,
+      selectedCustomer,
+      selectedOutletId,
+      subtotal,
+      taxAmount,
+      totalDue,
+      user,
+    ],
+  );
 
   const handleDrawerConfirm = useCallback(async () => {
     if (!drawerAmount || Number.isNaN(Number.parseFloat(drawerAmount))) {
@@ -656,36 +1190,38 @@ const CashierPOSPage: React.FC = () => {
   }, [cartItems, paymentMethods.length, showToast]);
 
   const handlePaymentConfirm = useCallback(
-    async (payments: { paymentMethodId: number; amount: number }[], notes: string) => {
+    async (payments: { paymentMethodId: number; amount: number; giftCardCode?: string }[], notes: string) => {
       if (processingPayment) return;
-      
-      try {
-        setProcessingPayment(true);
 
+      setProcessingPayment(true);
+      let orderRequest: CreateOrderRequest | null = null;
+
+      try {
         // Validate we have the required IDs
         if (!user?.cashierId) {
           showToast('error', 'Error', 'Cashier ID not found. Please log in again.');
-          setProcessingPayment(false);
           return;
         }
 
         if (!selectedOutletId) {
           showToast('error', 'Error', 'Please select an outlet before completing a sale.');
-          setProcessingPayment(false);
           return;
         }
 
-        // Prepare order request
-        const orderRequest = {
+        if (pendingLoyaltyRedemption && !selectedCustomer) {
+          showToast('error', 'Loyalty', 'Select a customer before redeeming loyalty points.');
+          return;
+        }
+
+        orderRequest = {
           outletId: selectedOutletId,
           cashierId: user.cashierId,
+          customerId: selectedCustomer?.id,
           orderType: 'COUNTER' as const,
           items: cartItems.map((item) => ({
             productId: item.productId,
             productName: item.name,
-            // For weight-based products, quantity should always be 1
             quantity: item.isWeightBased ? 1 : item.quantity,
-            // For weight-based products, unitPrice is calculated as price per unit × weight
             unitPrice: item.isWeightBased && item.weight ? item.price * item.weight : item.price,
             discountAmount: 0,
             notes: null,
@@ -694,34 +1230,53 @@ const CashierPOSPage: React.FC = () => {
           discountAmount: discountAmount > 0 ? discountAmount : undefined,
           discountType: appliedDiscount ? appliedDiscount.type : undefined,
           couponCode: appliedCoupon ? appliedCoupon.code : null,
-          payments: payments,
+          payments,
           notes: notes || null,
+          loyaltyPointsRedeemed: pendingLoyaltyRedemption ?? undefined,
         };
 
+        if (enableOfflineOrders && !isOnline) {
+          const reference = await queueOrderOffline(orderRequest, 'No internet connection detected. Order saved offline.');
+          const offlineOrder = createOfflineOrder(reference, payments, notes || null);
+          setCompletedOrder(offlineOrder);
+          setPaymentModalOpen(false);
+          setSuccessModalOpen(true);
+          resetOrderState();
+          return;
+        }
+
         const order = await posService.createOrder(orderRequest);
-        
+
         setCompletedOrder(order);
         setPaymentModalOpen(false);
         setSuccessModalOpen(true);
-        setCartItems([]);
-        setAppliedCoupon(null);
-        setAppliedDiscount(null);
-        
+        resetOrderState();
+
         showToast('success', 'Order Complete', `Order #${order.orderNumber} completed successfully!`);
       } catch (err) {
         console.error('Failed to create order', err);
         const error = err as { response?: { data?: { message?: string }; status?: number } };
+
+        const status = error.response?.status;
+        if (enableOfflineOrders && orderRequest && (!isOnline || !error.response || (status !== undefined && status >= 500))) {
+          const reference = await queueOrderOffline(orderRequest, 'Connection interrupted. Order stored offline.');
+          const offlineOrder = createOfflineOrder(reference, payments, notes || null);
+          setCompletedOrder(offlineOrder);
+          setPaymentModalOpen(false);
+          setSuccessModalOpen(true);
+          resetOrderState();
+          return;
+        }
+
         let message = 'Failed to complete the order. Please try again.';
         let title = 'Order Failed';
 
         if (error.response?.data?.message) {
           const errorMessage = error.response.data.message;
 
-          // Check for stock-related errors
           if (errorMessage.includes('Insufficient stock') || errorMessage.includes('stock')) {
             title = 'Stock Issue';
             message = errorMessage;
-            // You could also highlight the problematic items in the cart here
           } else {
             message = errorMessage;
           }
@@ -732,7 +1287,25 @@ const CashierPOSPage: React.FC = () => {
         setProcessingPayment(false);
       }
     },
-    [cartItems, discountAmount, appliedCoupon, appliedDiscount, processingPayment, showToast, user?.cashierId, selectedOutletId],
+    [
+      appliedCoupon,
+      appliedDiscount,
+      cartItems,
+      createOfflineOrder,
+      discountAmount,
+      enableOfflineOrders,
+      pendingLoyaltyRedemption,
+      createOfflineOrder,
+      isOnline,
+      processingPayment,
+      queueOrderOffline,
+      resetOrderState,
+      selectedCustomer,
+      selectedOutletId,
+      showToast,
+      totalDue,
+      user?.cashierId,
+    ],
   );
 
   const handlePaymentCancel = useCallback(() => {
@@ -747,13 +1320,25 @@ const CashierPOSPage: React.FC = () => {
   const handleNewOrder = useCallback(() => {
     setSuccessModalOpen(false);
     setCompletedOrder(null);
-    setCartItems([]);
+    resetOrderState();
     showToast('info', 'New Order', 'Ready for next order.');
-  }, [showToast]);
+  }, [resetOrderState, showToast]);
 
   const handlePrintReceipt = useCallback(async () => {
     if (!completedOrder) {
       showToast('warning', 'No Order', 'No completed order to print.');
+      return;
+    }
+
+    if (!completedOrder.isOnline) {
+      const receiptHtml = buildOfflineReceiptHtml(completedOrder);
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(receiptHtml);
+        printWindow.document.close();
+      } else {
+        showToast('error', 'Print Failed', 'Please allow pop-ups to print receipts.');
+      }
       return;
     }
 
@@ -863,12 +1448,26 @@ const CashierPOSPage: React.FC = () => {
 
   return (
     <CashierLayout>
-      <div className="flex h-[calc(100vh-4rem)] flex-col overflow-hidden p-6">
+      <div className="flex h-screen flex-col overflow-hidden p-6">
         <div className="flex flex-1 flex-col gap-6 overflow-hidden lg:flex-row">
           <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
             <div className="border-b border-slate-100 bg-slate-50/70 px-6 py-5">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div className="flex items-center gap-3">
+              <div className="flex w-full flex-wrap items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const dashboardPath = tenantId ? `/posai/${tenantId}/cashier/dashboard` : '/cashier/dashboard';
+                      navigate(dashboardPath);
+                    }}
+                    className="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                  >
+                    <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 12H5m0 0l6-6m-6 6l6 6" />
+                    </svg>
+                    Exit POS
+                  </button>
                   <button
                     type="button"
                     onClick={() => {
@@ -884,9 +1483,37 @@ const CashierPOSPage: React.FC = () => {
                     </svg>
                     Open Drawer
                   </button>
+                </div>
+                {enableOfflineOrders ? (
+                  <div className="ml-auto flex flex-col items-end gap-1 text-right">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
+                          isOnline ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                        }`}
+                      >
+                        {isOnline ? 'Online' : 'Offline'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => void attemptOfflineSync()}
+                        disabled={!isOnline || offlineQueue.length === 0 || syncingOfflineOrders}
+                        className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+                      >
+                        <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        {syncingOfflineOrders ? 'Syncing…' : `Sync Offline (${offlineQueue.length})`}
+                      </button>
+                    </div>
+                    {lastOfflineError && (
+                      <p className="text-[11px] text-amber-600 font-medium">{lastOfflineError}</p>
+                    )}
+                  </div>
+                ) : (
                   <button
                     type="button"
-                    className="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-slate-300 hover:bg-slate-100"
+                    className="ml-auto inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-slate-300 hover:bg-slate-100"
                     onClick={() => showToast('info', 'Sync', 'Product sync will be available soon.')}
                   >
                     <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
@@ -894,7 +1521,8 @@ const CashierPOSPage: React.FC = () => {
                     </svg>
                     Sync
                   </button>
-                </div>
+                )}
+              </div>
               </div>
             </div>
 
@@ -1126,6 +1754,94 @@ const CashierPOSPage: React.FC = () => {
           </section>
 
           <aside className="flex min-h-0 w-full max-w-full flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-lg lg:w-[380px] xl:w-[420px]">
+            <div className="border-b border-slate-100 px-6 py-5">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Customer</p>
+                  <p className="text-base font-semibold text-slate-900">
+                    {selectedCustomer ? selectedCustomer.name : 'Walk-in customer'}
+                  </p>
+                  {selectedCustomer && (
+                    <p className="text-xs text-slate-500">
+                      {selectedCustomer.phone ?? 'No phone'} · {selectedCustomer.loyaltyNumber ?? 'No loyalty #'}
+                    </p>
+                  )}
+                </div>
+                <div className="flex flex-wrap justify-end gap-2">
+                  {selectedCustomer && (
+                    <button
+                      type="button"
+                      onClick={handleClearCustomer}
+                      className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                    >
+                      Clear
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setCustomerManagerOpen(true)}
+                    className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                  >
+                    Manage
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setQuickCustomerModalOpen(true)}
+                    className="rounded-full border border-blue-200 px-3 py-1 text-xs font-semibold text-blue-600 hover:bg-blue-50"
+                  >
+                    Register
+                  </button>
+                </div>
+              </div>
+              {selectedCustomer && loyaltySummary && (
+                <div className="mt-4 flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
+                  <div>
+                    <p className="text-[11px] uppercase tracking-wide text-slate-500">Available</p>
+                    <p className="text-xl font-semibold text-slate-900">{loyaltySummary.availablePoints ?? 0} pts</p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => loadLoyaltySummary(selectedCustomer.id, true)}
+                      className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-white disabled:opacity-50"
+                      disabled={loyaltyLoading}
+                    >
+                      {loyaltyLoading ? 'Refreshing…' : 'Update'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRedeemModalOpen(true)}
+                      className="rounded-full border border-emerald-200 px-3 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
+                      disabled={(loyaltySummary.availablePoints ?? 0) === 0 || loyaltyLoading}
+                    >
+                      Redeem
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCustomerManagerOpen(true)}
+                      className="rounded-full border border-blue-200 px-3 py-1 text-xs font-semibold text-blue-600 hover:bg-blue-50"
+                    >
+                      Details
+                    </button>
+                  </div>
+                </div>
+              )}
+              {pendingLoyaltyRedemption && loyaltySummary && (
+                <div className="mt-3 flex items-center justify-between rounded-xl bg-blue-50 px-3 py-2 text-xs text-blue-900">
+                  <div>
+                    <p className="font-semibold">{pendingLoyaltyRedemption} pts applied</p>
+                    <p className="text-[11px]">≈ {formatCurrency(loyaltyDiscountAmount)} discount</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleRemoveLoyaltyRedemption}
+                    className="rounded-full border border-blue-200 px-3 py-1 font-semibold text-blue-700 hover:bg-white"
+                  >
+                    Remove
+                  </button>
+                </div>
+              )}
+            </div>
             <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5">
               <div>
                 <h2 className="text-lg font-semibold text-slate-900">Cart Items</h2>
@@ -1154,7 +1870,7 @@ const CashierPOSPage: React.FC = () => {
             </div>
 
             <div className="flex flex-1 flex-col overflow-hidden">
-              <div className="flex-1 overflow-y-auto px-6 py-4">
+              <div ref={cartScrollRef} className="flex-1 overflow-y-auto px-6 py-4">
                 {cartItems.length === 0 ? (
                   <div className="mt-16 flex flex-col items-center text-center text-slate-500">
                     <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-2xl">🛒</div>
@@ -1261,6 +1977,12 @@ const CashierPOSPage: React.FC = () => {
                     <div className="flex items-center justify-between text-slate-600">
                       <span>Discount</span>
                       <span className="font-semibold text-slate-900">-{formatCurrency(discountAmount)}</span>
+                    </div>
+                  )}
+                  {loyaltyDiscountAmount > 0 && (
+                    <div className="flex items-center justify-between text-slate-600">
+                      <span>Loyalty</span>
+                      <span className="font-semibold text-slate-900">-{formatCurrency(loyaltyDiscountAmount)}</span>
                     </div>
                   )}
                   
@@ -1392,6 +2114,192 @@ const CashierPOSPage: React.FC = () => {
         onSuccess={handleAddCustomProduct}
       />
 
+      {customerManagerOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-2xl rounded-3xl bg-white p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900">Manage Customer</h2>
+                <p className="text-sm text-slate-500">
+                  Search, select, or register a customer for this sale.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setQuickCustomerModalOpen(true)}
+                  className="rounded-xl border border-blue-200 px-4 py-2 text-xs font-semibold text-blue-600 hover:bg-blue-50"
+                >
+                  Register
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCustomerManagerOpen(false)}
+                  className="rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                >
+                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-6 space-y-4">
+              <div>
+                <div className="mb-3 inline-flex rounded-full bg-slate-100 p-1 text-xs font-semibold text-slate-600">
+                  <button
+                    type="button"
+                    onClick={() => setCustomerLookupMode('PHONE')}
+                    className={`rounded-full px-4 py-1 transition ${
+                      customerLookupMode === 'PHONE' ? 'bg-white text-slate-900 shadow-sm' : ''
+                    }`}
+                  >
+                    Phone
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCustomerLookupMode('LOYALTY')}
+                    className={`rounded-full px-4 py-1 transition ${
+                      customerLookupMode === 'LOYALTY' ? 'bg-white text-slate-900 shadow-sm' : ''
+                    }`}
+                  >
+                    Loyalty #
+                  </button>
+                </div>
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <input
+                    type="text"
+                    value={customerLookupValue}
+                    onChange={(event) => {
+                      setCustomerLookupValue(event.target.value);
+                      setCustomerLookupError(null);
+                    }}
+                    placeholder={
+                      customerLookupMode === 'PHONE' ? 'Search by phone number' : 'Search by loyalty number'
+                    }
+                    className="flex-1 rounded-2xl border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => void handleCustomerLookup()}
+                    disabled={customerLookupLoading}
+                    className="rounded-2xl bg-blue-600 px-6 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
+                  >
+                    {customerLookupLoading ? 'Finding…' : 'Find'}
+                  </button>
+                </div>
+                {customerLookupError && (
+                  <p className="mt-1 text-xs text-rose-600">{customerLookupError}</p>
+                )}
+              </div>
+
+              {selectedCustomer ? (
+                <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm text-slate-700">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">{selectedCustomer.name}</p>
+                      <p className="text-xs text-slate-500">
+                        {selectedCustomer.phone ?? 'No phone'} · {selectedCustomer.loyaltyNumber ?? 'No loyalty #'}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => loadLoyaltySummary(selectedCustomer.id)}
+                        className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-white disabled:opacity-50"
+                        disabled={loyaltyLoading}
+                      >
+                        {loyaltyLoading ? 'Loading…' : 'Refresh'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleClearCustomer}
+                        className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-white"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  </div>
+                  {loyaltySummary ? (
+                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                      <div className="rounded-xl bg-white px-4 py-3">
+                        <p className="text-xs uppercase tracking-wide text-slate-500">Available</p>
+                        <p className="text-xl font-semibold text-slate-900">
+                          {loyaltySummary.availablePoints ?? 0} pts
+                        </p>
+                      </div>
+                      <div className="rounded-xl bg-white px-4 py-3">
+                        <p className="text-xs uppercase tracking-wide text-slate-500">Tier</p>
+                        <p className="text-xl font-semibold text-slate-900">
+                          {loyaltySummary.tierName ?? 'General'}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="mt-4 text-xs text-slate-500">
+                      {loyaltyLoading ? 'Loading loyalty details…' : 'Refresh to view loyalty summary.'}
+                    </p>
+                  )}
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setRedeemModalOpen(true)}
+                      disabled={
+                        !loyaltySummary || (loyaltySummary.availablePoints ?? 0) === 0 || loyaltyLoading
+                      }
+                      className="flex-1 rounded-2xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-60"
+                    >
+                      Redeem Points
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => loadLoyaltySummary(selectedCustomer.id, true)}
+                      className="flex-1 rounded-2xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-white disabled:opacity-50"
+                      disabled={loyaltyLoading}
+                    >
+                      {loyaltyLoading ? 'Refreshing…' : 'Update Summary'}
+                    </button>
+                  </div>
+                  {pendingLoyaltyRedemption && loyaltySummary && (
+                    <div className="mt-3 flex items-center justify-between rounded-xl bg-blue-50 px-3 py-2 text-xs text-blue-900">
+                      <div>
+                        <p className="font-semibold">{pendingLoyaltyRedemption} pts applied</p>
+                        <p className="text-[11px]">≈ {formatCurrency(loyaltyDiscountAmount)} discount</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleRemoveLoyaltyRedemption}
+                        className="rounded-full border border-blue-200 px-3 py-1 font-semibold text-blue-700 hover:bg-white"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className="text-sm text-slate-500">
+                  No customer selected. Search by phone or loyalty number, or register a new customer.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <QuickCustomerModal
+        open={quickCustomerModalOpen}
+        onClose={() => setQuickCustomerModalOpen(false)}
+        onSuccess={handleQuickCustomerSuccess}
+      />
+
+      <RedeemLoyaltyModal
+        open={redeemModalOpen}
+        summary={loyaltySummary}
+        onClose={() => setRedeemModalOpen(false)}
+        onConfirm={handleRedeemConfirm}
+        pendingPoints={pendingLoyaltyRedemption ?? undefined}
+      />
+
       <WeightInputModal
         open={weightInputModalOpen}
         onClose={() => {
@@ -1422,14 +2330,15 @@ const CashierPOSPage: React.FC = () => {
       />
 
       <ToastContainer>
-        {toast && (
+        {toasts.map((toast) => (
           <Alert
+            key={toast.id}
             type={toast.type}
             title={toast.title}
             message={toast.message}
-            onClose={() => setToast(null)}
+            onClose={() => dismissToast(toast.id)}
           />
-        )}
+        ))}
       </ToastContainer>
     </CashierLayout>
   );

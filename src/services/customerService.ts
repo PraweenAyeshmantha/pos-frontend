@@ -1,6 +1,7 @@
 import apiClient from './apiClient';
 import type { ApiResponse } from '../types/configuration';
 import type { Customer, CreateCustomerRequest } from '../types/customer';
+import type { LoyaltySummary } from '../types/loyalty';
 
 const basePath = '/pos/customers';
 
@@ -33,5 +34,23 @@ export const customerService = {
 
   async delete(id: number): Promise<void> {
     await apiClient.delete(`${basePath}/${id}`);
+  },
+
+  async lookup(params: { phone?: string; loyaltyNumber?: string }): Promise<Customer> {
+    const searchParams = new URLSearchParams();
+    if (params.phone) {
+      searchParams.set('phone', params.phone);
+    }
+    if (params.loyaltyNumber) {
+      searchParams.set('loyaltyNumber', params.loyaltyNumber);
+    }
+    const query = searchParams.toString();
+    const response = await apiClient.get<ApiResponse<Customer>>(`${basePath}/lookup?${query}`);
+    return response.data.data;
+  },
+
+  async getLoyaltySummary(customerId: number): Promise<LoyaltySummary> {
+    const response = await apiClient.get<ApiResponse<LoyaltySummary>>(`${basePath}/${customerId}/loyalty`);
+    return response.data.data;
   },
 };

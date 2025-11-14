@@ -25,6 +25,9 @@ export interface Order {
   createdDate: string;
   completedDate?: string;
   isOnline: boolean;
+  offlineReference?: string;
+  offlineCreatedDate?: string;
+  syncedAt?: string;
   
   // Customer details
   customerId?: number;
@@ -44,6 +47,7 @@ export interface Order {
 
   // Order items
   items?: OrderItem[];
+  payments?: OrderPayment[];
 }
 
 export interface OrderFilters {
@@ -69,6 +73,11 @@ export interface OrderItem {
   weight?: number;
   notes?: string;
   isCustom: boolean;
+}
+
+export interface OrderPayment {
+  paymentMethodName: string;
+  amount: number;
 }
 
 export interface PartialRefundRequest {

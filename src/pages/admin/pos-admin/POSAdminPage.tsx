@@ -242,6 +242,15 @@ const POSAdminPage: React.FC = () => {
             accentClass: 'bg-violet-100 text-violet-600',
             screenCode: 'ADMIN_LOYALTY',
           },
+          {
+            id: 'gift-cards',
+            title: 'Gift Cards & Store Credit',
+            description: 'Issue and reconcile stored value balances and breakage.',
+            path: '/admin/gift-cards',
+            icon: '🎁',
+            accentClass: 'bg-amber-100 text-amber-600',
+            screenCode: 'ADMIN_GIFT_CARDS',
+          },
         ],
       },
       {
