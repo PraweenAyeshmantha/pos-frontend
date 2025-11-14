@@ -10,6 +10,7 @@ import InvalidUrlErrorPage from './components/errors/InvalidUrlErrorPage';
 import env from './config/env';
 import { useAuth } from './hooks/useAuth';
 import { getDefaultTenantPath } from './utils/authRoles';
+import ScrollToTop from './components/layout/ScrollToTop';
 
 // Lazy load pages for better performance
 const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
@@ -26,10 +27,12 @@ const CashierBalancingPage = lazy(() => import('./pages/admin/cashier-balancing/
 const TablesPage = lazy(() => import('./pages/admin/tables/TablesPage'));
 const ProductsPage = lazy(() => import('./pages/admin/products/ProductsPage'));
 const CouponsPage = lazy(() => import('./pages/admin/coupons/CouponsPage'));
+const LoyaltyProgramPage = lazy(() => import('./pages/admin/loyalty/LoyaltyProgramPage'));
 const AssignBarcodesPage = lazy(() => import('./pages/admin/assign-barcodes/AssignBarcodesPage'));
 const AssignStocksPage = lazy(() => import('./pages/admin/assign-stocks/AssignStocksPage'));
 const StockAlertsPage = lazy(() => import('./pages/admin/stock-alerts/StockAlertsPage'));
 const StockConfigPage = lazy(() => import('./pages/admin/stock-config/StockConfigPage'));
+const InventoryControlPage = lazy(() => import('./pages/admin/inventory-control/InventoryControlPage'));
 const SuppliersPage = lazy(() => import('./pages/admin/suppliers/SuppliersPage'));
 const PurchaseOrdersPage = lazy(() => import('./pages/admin/purchasing/PurchaseOrdersPage'));
 const SupplierCatalogPage = lazy(() => import('./pages/admin/purchasing/SupplierCatalogPage'));
@@ -69,6 +72,7 @@ function App() {
 
   return (
     <Router>
+      <ScrollToTop />
       <AuthProvider>
         <OutletProvider>
           <Suspense fallback={<LoadingFallback />}>
@@ -177,6 +181,12 @@ function App() {
                       </ProtectedRoute>
                     } />
 
+                    <Route path="admin/loyalty" element={
+                      <ProtectedRoute screenCode="ADMIN_LOYALTY">
+                        <LoyaltyProgramPage />
+                      </ProtectedRoute>
+                    } />
+
                     <Route path="admin/assign-barcodes" element={
                       <ProtectedRoute screenCode="ADMIN_ASSIGN_BARCODES">
                         <AssignBarcodesPage />
@@ -198,6 +208,11 @@ function App() {
                     <Route path="admin/stock-config" element={
                       <ProtectedRoute screenCode="ADMIN_STOCK_CONFIG">
                         <StockConfigPage />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="admin/inventory/control" element={
+                      <ProtectedRoute screenCode="ADMIN_INVENTORY_CONTROL">
+                        <InventoryControlPage />
                       </ProtectedRoute>
                     } />
 

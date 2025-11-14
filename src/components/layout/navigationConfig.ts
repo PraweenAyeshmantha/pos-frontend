@@ -27,6 +27,7 @@ const POS_ADMIN_PAGE_PATHS = new Set<string>([
   '/admin/assign-barcodes',
   '/admin/assign-stocks',
   '/admin/stock-alerts',
+  '/admin/inventory/control',
   '/admin/suppliers',
   '/admin/procurement/purchase-orders',
   '/admin/procurement/vendor-catalog',

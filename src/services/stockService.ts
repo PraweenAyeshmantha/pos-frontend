@@ -2,6 +2,15 @@ import apiClient from './apiClient';
 import type { ApiResponse } from '../types/configuration';
 import type { ProductStock, ProductWithStock, UpdateStockRequest, StockConfiguration, StockBatch } from '../types/stock';
 import type { Product } from '../types/product';
+import type {
+  StockAdjustment,
+  StockAdjustmentRequest,
+  CycleCountRequest,
+  CycleCountTask,
+  StockTransferRequest,
+  StockTransfer,
+  StockTransferStatus,
+} from '../types/inventory';
 
 export const stockService = {
   async getProductStocks(outletId?: number): Promise<ProductWithStock[]> {
@@ -91,6 +100,89 @@ export const stockService = {
   async getStockBatches(productId: number, outletId: number): Promise<StockBatch[]> {
     const response = await apiClient.get<ApiResponse<StockBatch[]>>(
       `/admin/stocks/product/${productId}/outlet/${outletId}/batches`
+    );
+    return response.data.data ?? [];
+  },
+
+  async recordAdjustment(data: StockAdjustmentRequest): Promise<StockAdjustment> {
+    const response = await apiClient.post<ApiResponse<StockAdjustment>>('/admin/stocks/adjustments', data);
+    if (!response.data.data) {
+      throw new Error('Failed to record stock adjustment');
+    }
+    return response.data.data;
+  },
+
+  async getAdjustments(params?: {
+    outletId?: number;
+    productId?: number;
+    reason?: string;
+    limit?: number;
+  }): Promise<StockAdjustment[]> {
+    const search = new URLSearchParams();
+    if (params?.outletId) search.append('outletId', params.outletId.toString());
+    if (params?.productId) search.append('productId', params.productId.toString());
+    if (params?.reason) search.append('reason', params.reason);
+    if (params?.limit) search.append('limit', params.limit.toString());
+    const qs = search.toString();
+    const response = await apiClient.get<ApiResponse<StockAdjustment[]>>(
+      `/admin/stocks/adjustments${qs ? `?${qs}` : ''}`
+    );
+    return response.data.data ?? [];
+  },
+
+  async recordCycleCount(request: CycleCountRequest): Promise<CycleCountTask> {
+    const response = await apiClient.post<ApiResponse<CycleCountTask>>('/admin/stocks/cycle-counts', request);
+    if (!response.data.data) {
+      throw new Error('Failed to record cycle count');
+    }
+    return response.data.data;
+  },
+
+  async getCycleCounts(params?: { outletId?: number; status?: string; limit?: number }): Promise<CycleCountTask[]> {
+    const search = new URLSearchParams();
+    if (params?.outletId) search.append('outletId', params.outletId.toString());
+    if (params?.status) search.append('status', params.status);
+    if (params?.limit) search.append('limit', params.limit.toString());
+    const qs = search.toString();
+    const response = await apiClient.get<ApiResponse<CycleCountTask[]>>(
+      `/admin/stocks/cycle-counts${qs ? `?${qs}` : ''}`
+    );
+    return response.data.data ?? [];
+  },
+
+  async createTransfer(request: StockTransferRequest): Promise<StockTransfer> {
+    const response = await apiClient.post<ApiResponse<StockTransfer>>('/admin/stocks/transfers', request);
+    if (!response.data.data) {
+      throw new Error('Failed to create transfer');
+    }
+    return response.data.data;
+  },
+
+  async updateTransferStatus(id: number, status: StockTransferStatus): Promise<StockTransfer> {
+    const response = await apiClient.post<ApiResponse<StockTransfer>>(
+      `/admin/stocks/transfers/${id}/status`,
+      { status }
+    );
+    if (!response.data.data) {
+      throw new Error('Failed to update transfer status');
+    }
+    return response.data.data;
+  },
+
+  async getTransfers(params?: {
+    sourceOutletId?: number;
+    targetOutletId?: number;
+    status?: StockTransferStatus;
+    limit?: number;
+  }): Promise<StockTransfer[]> {
+    const search = new URLSearchParams();
+    if (params?.sourceOutletId) search.append('sourceOutletId', params.sourceOutletId.toString());
+    if (params?.targetOutletId) search.append('targetOutletId', params.targetOutletId.toString());
+    if (params?.status) search.append('status', params.status);
+    if (params?.limit) search.append('limit', params.limit.toString());
+    const qs = search.toString();
+    const response = await apiClient.get<ApiResponse<StockTransfer[]>>(
+      `/admin/stocks/transfers${qs ? `?${qs}` : ''}`
     );
     return response.data.data ?? [];
   },
