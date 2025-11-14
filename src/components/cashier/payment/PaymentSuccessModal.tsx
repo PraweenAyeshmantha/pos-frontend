@@ -40,6 +40,11 @@ const PaymentSuccessModal: React.FC<PaymentSuccessModalProps> = ({
           </div>
           <h2 className="mt-6 text-2xl font-bold text-slate-900">Payment Successful!</h2>
           <p className="mt-2 text-sm text-slate-500">Order #{order.orderNumber}</p>
+          {!order.isOnline && (
+            <p className="mt-2 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
+              Saved offline - will sync automatically
+            </p>
+          )}
         </div>
 
         {/* Change Amount (if applicable) */}

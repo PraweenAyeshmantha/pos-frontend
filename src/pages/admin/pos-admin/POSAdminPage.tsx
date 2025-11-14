@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import AdminLayout from '../../../components/layout/AdminLayout';
 import AdminPageHeader from '../../../components/layout/AdminPageHeader';
 import { useAuth } from '../../../hooks/useAuth';
-import { userHasScreenAccess } from '../../../utils/authRoles';
+import { getPosPortalLabel, userHasScreenAccess } from '../../../utils/authRoles';
 
 interface AdminTile {
   id: string;
@@ -27,6 +27,7 @@ const POSAdminPage: React.FC = () => {
   const { tenantId } = useParams<{ tenantId: string }>();
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
+  const posPortalLabel = getPosPortalLabel(user);
 
   const categories = useMemo<AdminCategory[]>(
     () => [
@@ -156,6 +157,15 @@ const POSAdminPage: React.FC = () => {
             screenCode: 'ADMIN_ASSIGN_STOCKS',
           },
           {
+            id: 'goods-in',
+            title: 'Goods In',
+            description: 'Create goods received notes to capture stock arrivals and reconcile deliveries.',
+            path: '/cashier/goods-received',
+            icon: '📥',
+            accentClass: 'bg-yellow-100 text-yellow-600',
+            screenCode: 'CASHIER_GOODS_RECEIVED',
+          },
+          {
             id: 'stock-alerts',
             title: 'Stock Alerts',
             description: 'Monitor low stock and out of stock alerts across your outlets.',
@@ -163,6 +173,15 @@ const POSAdminPage: React.FC = () => {
             icon: '🚨',
             accentClass: 'bg-amber-100 text-amber-600',
             screenCode: 'ADMIN_STOCK_ALERTS',
+          },
+          {
+            id: 'inventory-control',
+            title: 'Inventory Control',
+            description: 'Record adjustments, cycle counts, and transfer stock between outlets.',
+            path: '/admin/inventory/control',
+            icon: '🔄',
+            accentClass: 'bg-sky-100 text-sky-600',
+            screenCode: 'ADMIN_INVENTORY_CONTROL',
           },
         ],
       },
@@ -180,6 +199,24 @@ const POSAdminPage: React.FC = () => {
             accentClass: 'bg-emerald-100 text-emerald-600',
             screenCode: 'ADMIN_SUPPLIERS',
           },
+          {
+            id: 'purchase-orders',
+            title: 'Purchase Orders',
+            description: 'Raise and track purchase orders and keep replenishment on schedule.',
+            path: '/admin/procurement/purchase-orders',
+            icon: '📦',
+            accentClass: 'bg-blue-100 text-blue-600',
+            screenCode: 'ADMIN_PURCHASE_ORDERS',
+          },
+          {
+            id: 'vendor-catalog',
+            title: 'Vendor Catalog',
+            description: 'Capture supplier-specific SKUs, costs, and lead times.',
+            path: '/admin/procurement/vendor-catalog',
+            icon: '📚',
+            accentClass: 'bg-rose-100 text-rose-600',
+            screenCode: 'ADMIN_VENDOR_CATALOG',
+          },
         ],
       },
       {
@@ -195,6 +232,24 @@ const POSAdminPage: React.FC = () => {
             icon: '🎟️',
             accentClass: 'bg-orange-100 text-orange-600',
             screenCode: 'ADMIN_COUPONS',
+          },
+          {
+            id: 'loyalty',
+            title: 'Loyalty Program',
+            description: 'Define tiers, rewards, and earn/burn rules to increase retention.',
+            path: '/admin/loyalty',
+            icon: '💎',
+            accentClass: 'bg-violet-100 text-violet-600',
+            screenCode: 'ADMIN_LOYALTY',
+          },
+          {
+            id: 'gift-cards',
+            title: 'Gift Cards & Store Credit',
+            description: 'Issue and reconcile stored value balances and breakage.',
+            path: '/admin/gift-cards',
+            icon: '🎁',
+            accentClass: 'bg-amber-100 text-amber-600',
+            screenCode: 'ADMIN_GIFT_CARDS',
           },
         ],
       },
@@ -281,7 +336,7 @@ const POSAdminPage: React.FC = () => {
     <AdminLayout>
       <div className="flex flex-col gap-8">
         <AdminPageHeader
-          title="POS Admin"
+          title={posPortalLabel}
           description="Centralize your administrative tasks, fine-tune configuration, and keep operations running smoothly."
         />
 

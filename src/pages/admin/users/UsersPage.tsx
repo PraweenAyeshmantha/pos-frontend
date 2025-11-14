@@ -3,6 +3,7 @@ import AdminLayout from '../../../components/layout/AdminLayout';
 import AdminPageHeader from '../../../components/layout/AdminPageHeader';
 import ToastContainer from '../../../components/common/ToastContainer';
 import Alert, { type AlertType } from '../../../components/common/Alert';
+import ConfirmationDialog from '../../../components/common/ConfirmationDialog';
 import { userService } from '../../../services/userService';
 import { outletService } from '../../../services/outletService';
 import type { UserAccount, UserFormValues, CreateUserRequestPayload, UpdateUserRequestPayload } from '../../../types/user';
@@ -28,22 +29,26 @@ const DEFAULT_BRANCH_ROLES = new Set(['CASHIER', 'MANAGER']);
 const UsersPage: React.FC = () => {
   const [users, setUsers] = useState<UserAccount[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [alert, setAlert] = useState<{ type: AlertType; title: string; message: string } | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
   const [editingUser, setEditingUser] = useState<UserAccount | null>(null);
+  const [confirmDeactivate, setConfirmDeactivate] = useState<{ open: boolean; user: UserAccount | null }>({
+    open: false,
+    user: null,
+  });
 
   const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
-      setError(null);
+      setLoadError(null);
       const data = await userService.getAll();
       setUsers(data);
     } catch (err) {
       console.error('Failed to load users', err);
-      setError('Unable to load users. Please try again.');
+      setLoadError('Unable to load users. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -85,19 +90,29 @@ const UsersPage: React.FC = () => {
     setEditingUser(null);
   }, []);
 
-  const handleDeactivate = useCallback(async (user: UserAccount) => {
-    if (!window.confirm(`Deactivate ${user.name}?`)) {
+  const handleDeactivateRequest = useCallback((user: UserAccount) => {
+    setConfirmDeactivate({ open: true, user });
+  }, []);
+
+  const handleDeactivateCancel = useCallback(() => {
+    setConfirmDeactivate({ open: false, user: null });
+  }, []);
+
+  const handleDeactivateConfirm = useCallback(async () => {
+    if (!confirmDeactivate.user) {
       return;
     }
     try {
-      await userService.deactivate(user.id);
+      await userService.deactivate(confirmDeactivate.user.id);
       setAlert({ type: 'success', title: 'Saved', message: 'User deactivated successfully.' });
       void fetchUsers();
     } catch (err) {
       console.error('Failed to deactivate user', err);
       setAlert({ type: 'error', title: 'Error', message: 'Unable to deactivate user.' });
+    } finally {
+      setConfirmDeactivate({ open: false, user: null });
     }
-  }, [fetchUsers]);
+  }, [confirmDeactivate.user, fetchUsers]);
 
   const handleSaveSuccess = useCallback((message: string) => {
     setShowModal(false);
@@ -106,126 +121,179 @@ const UsersPage: React.FC = () => {
     void fetchUsers();
   }, [fetchUsers]);
 
+  const activeUsers = useMemo(() => users.filter((user) => user.recordStatus === 'ACTIVE').length, [users]);
+
+  const renderLoadState = () => (
+    <div className="flex min-h-[320px] items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white">
+      <div className="text-center">
+        <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600" />
+        <p className="mt-4 text-sm text-slate-600">Loading users...</p>
+      </div>
+    </div>
+  );
+
+  const renderErrorState = () => (
+    <div className="rounded-2xl border border-red-200 bg-red-50 p-8 text-center text-sm text-red-600">
+      {loadError}
+    </div>
+  );
+
+  const renderEmptyState = () => (
+    <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center text-slate-600">
+      <div className="text-lg font-semibold">No users found</div>
+      <p className="mt-3 text-sm text-slate-500">
+        {users.length === 0 ? 'Create your first user to get started.' : 'Try a different search or clear filters.'}
+      </p>
+      <button
+        type="button"
+        onClick={handleCreate}
+        className="mt-6 inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+      >
+        + New User
+      </button>
+    </div>
+  );
+
+  const renderTable = () => (
+    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-slate-200 text-sm">
+          <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <tr>
+              <th className="px-6 py-3">User</th>
+              <th className="px-6 py-3">Categories</th>
+              <th className="px-6 py-3">Branches</th>
+              <th className="px-6 py-3">Status</th>
+              <th className="px-6 py-3 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100 bg-white">
+            {filteredUsers.map((user) => (
+              <tr key={user.id} className="hover:bg-slate-50">
+                <td className="px-6 py-4">
+                  <div className="text-sm font-semibold text-slate-900">{user.name}</div>
+                  <div className="text-xs text-slate-500">{user.username}</div>
+                  {user.email ? <div className="text-xs text-slate-500">{user.email}</div> : null}
+                </td>
+                <td className="px-6 py-4">
+                  <div className="flex flex-wrap gap-1">
+                    {user.categories.map((category) => (
+                      <span
+                        key={category.id}
+                        className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600"
+                      >
+                        {category.categoryName}
+                      </span>
+                    ))}
+                  </div>
+                </td>
+                <td className="px-6 py-4">
+                  {user.assignedOutlets.length === 0 ? (
+                    <span className="text-xs text-slate-400">—</span>
+                  ) : (
+                    <div className="flex flex-wrap gap-1">
+                      {user.assignedOutlets.map((outlet) => (
+                        <span key={outlet.id} className="rounded bg-blue-50 px-2 py-0.5 text-xs text-blue-700">
+                          {outlet.name}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </td>
+                <td className="px-6 py-4">
+                  <span
+                    className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
+                      user.recordStatus === 'ACTIVE'
+                        ? 'bg-emerald-50 text-emerald-700'
+                        : 'bg-slate-100 text-slate-500'
+                    }`}
+                  >
+                    {user.recordStatus === 'ACTIVE' ? 'Active' : 'Inactive'}
+                  </span>
+                </td>
+                <td className="px-6 py-4 text-right">
+                  <div className="flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleEdit(user)}
+                      className="inline-flex items-center rounded-lg border border-blue-300 px-3 py-1.5 text-xs font-semibold text-blue-700 transition hover:bg-blue-50"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeactivateRequest(user)}
+                      className="inline-flex items-center rounded-lg border border-red-300 px-3 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-50"
+                    >
+                      Deactivate
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
   return (
     <AdminLayout>
-      <div className="space-y-6">
-        <AdminPageHeader
-          title="Users"
-          description="Create users, assign categories, and control branch access."
-          actions={
+      <div className="flex flex-col gap-8 pb-12">
+        <AdminPageHeader title="Users" description="Create users, assign categories, and control branch access." />
+
+        {(alert || loadError) && (
+          <ToastContainer>
+            {alert ? (
+              <Alert type={alert.type} title={alert.title} message={alert.message} onClose={() => setAlert(null)} />
+            ) : null}
+            {loadError ? (
+              <Alert type="error" title="Users" message={loadError} onClose={() => setLoadError(null)} />
+            ) : null}
+          </ToastContainer>
+        )}
+
+        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-1 flex-col gap-3 md:flex-row md:items-center">
+              <div className="relative w-full md:max-w-lg">
+                <svg
+                  className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+                <input
+                  type="search"
+                  placeholder="Search by name, username, email, or phone"
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                  className="h-11 w-full rounded-lg border border-slate-300 pl-9 pr-3 text-sm placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                />
+              </div>
+              <span className="text-sm text-slate-600 md:pl-4">
+                Showing {filteredUsers.length} users • {activeUsers} active
+              </span>
+            </div>
             <button
               type="button"
               onClick={handleCreate}
-              className="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+              className="inline-flex h-11 items-center justify-center rounded-lg bg-blue-600 px-5 text-sm font-semibold text-white transition hover:bg-blue-700"
             >
               + New User
             </button>
-          }
-        />
-
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <input
-              type="search"
-              placeholder="Search by name, username, email, or phone"
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 md:max-w-sm"
-            />
-            <div className="text-sm text-slate-500">
-              {loading ? 'Loading users...' : `${filteredUsers.length} of ${users.length} users`}
-            </div>
           </div>
+        </section>
 
-          <div className="mt-4 overflow-x-auto">
-            {loading ? (
-              <div className="flex min-h-[200px] items-center justify-center text-slate-500">Loading users...</div>
-            ) : error ? (
-              <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-600">{error}</div>
-            ) : filteredUsers.length === 0 ? (
-              <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-sm text-slate-500">
-                No users found. Try a different search or create a new user.
-              </div>
-            ) : (
-              <table className="min-w-full divide-y divide-slate-200 text-sm">
-                <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  <tr>
-                    <th className="px-4 py-3">User</th>
-                    <th className="px-4 py-3">Categories</th>
-                    <th className="px-4 py-3">Branches</th>
-                    <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {filteredUsers.map((user) => (
-                    <tr key={user.id} className="hover:bg-slate-50">
-                      <td className="px-4 py-3">
-                        <div className="font-medium text-slate-900">{user.name}</div>
-                        <div className="text-xs text-slate-500">{user.username}</div>
-                        {user.email && <div className="text-xs text-slate-500">{user.email}</div>}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex flex-wrap gap-1">
-                          {user.categories.map((category) => (
-                            <span
-                              key={category.id}
-                              className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600"
-                            >
-                              {category.categoryName}
-                            </span>
-                          ))}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        {user.assignedOutlets.length === 0 ? (
-                          <span className="text-xs text-slate-400">—</span>
-                        ) : (
-                          <div className="flex flex-wrap gap-1">
-                            {user.assignedOutlets.map((outlet) => (
-                              <span key={outlet.id} className="rounded bg-blue-50 px-2 py-0.5 text-xs text-blue-700">
-                                {outlet.name}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                            user.recordStatus === 'ACTIVE'
-                              ? 'bg-emerald-50 text-emerald-700'
-                              : 'bg-slate-100 text-slate-500'
-                          }`}
-                        >
-                          {user.recordStatus === 'ACTIVE' ? 'Active' : 'Inactive'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <div className="flex justify-end gap-2">
-                          <button
-                            type="button"
-                            onClick={() => handleEdit(user)}
-                            className="text-blue-600 hover:text-blue-800"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeactivate(user)}
-                            className="text-red-600 hover:text-red-800"
-                          >
-                            Deactivate
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-        </div>
+        {loading ? renderLoadState() : loadError ? renderErrorState() : filteredUsers.length === 0 ? renderEmptyState() : renderTable()}
       </div>
 
       {showModal && (
@@ -237,11 +305,17 @@ const UsersPage: React.FC = () => {
         />
       )}
 
-      <ToastContainer>
-        {alert && (
-          <Alert type={alert.type} title={alert.title} message={alert.message} onClose={() => setAlert(null)} />
-        )}
-      </ToastContainer>
+      {confirmDeactivate.open && confirmDeactivate.user ? (
+        <ConfirmationDialog
+          open={confirmDeactivate.open}
+          title="Deactivate user"
+          message={`Deactivate "${confirmDeactivate.user.name}"? They will no longer be able to sign in.`}
+          confirmLabel="Deactivate"
+          cancelLabel="Cancel"
+          onCancel={handleDeactivateCancel}
+          onConfirm={handleDeactivateConfirm}
+        />
+      ) : null}
     </AdminLayout>
   );
 };

@@ -4,6 +4,7 @@ export interface GoodsReceivedNoteItem {
   id: number;
   productId: number;
   productName: string;
+  purchaseOrderItemId?: number;
   quantity: number;
   unitCost: number;
   unitPrice?: number;
@@ -19,6 +20,8 @@ export interface GoodsReceivedNote {
   supplierCode?: string;
   outletId: number;
   outletName?: string;
+  purchaseOrderId?: number;
+  purchaseOrderNumber?: string;
   receivedDate: string;
   referenceNumber?: string;
   remarks?: string;
@@ -31,6 +34,7 @@ export interface GoodsReceivedNote {
 
 export interface GoodsReceivedNoteItemRequest {
   productId: number;
+  purchaseOrderItemId?: number;
   quantity: number;
   unitCost: number;
   unitPrice?: number;
@@ -38,6 +42,7 @@ export interface GoodsReceivedNoteItemRequest {
 }
 
 export interface GoodsReceivedNoteRequest {
+  purchaseOrderId?: number;
   supplierId?: number;
   outletId: number;
   receivedDate?: string;
@@ -50,14 +55,18 @@ export interface GoodsReceivedNoteRequest {
 export interface GoodsReceivedNoteFormItem {
   id: string;
   productId: string;
+  purchaseOrderItemId?: string;
   quantity: string;
   unitCost: string;
   unitPrice: string;
   batchNumber: string;
+  orderedQuantity?: number;
+  remainingQuantity?: number;
 }
 
 export interface GoodsReceivedNoteFormState {
   supplierId: string;
+  purchaseOrderId: string;
   referenceNumber: string;
   remarks: string;
   status: GoodsReceivedNoteStatus;

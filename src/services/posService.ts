@@ -16,6 +16,7 @@ export interface CreateOrderItemRequest {
 export interface CreateOrderPaymentRequest {
   paymentMethodId: number;
   amount: number;
+  giftCardCode?: string | null;
 }
 
 export interface CreateOrderRequest {
@@ -30,6 +31,30 @@ export interface CreateOrderRequest {
   payments?: CreateOrderPaymentRequest[];
   notes?: string | null;
   isOffline?: boolean;
+  loyaltyPointsRedeemed?: number;
+  loyaltyRewardId?: number;
+  offlineReference?: string;
+  offlineCapturedAt?: string;
+}
+
+export interface OfflineOrderSyncPayload {
+  clientReference: string;
+  capturedAt: string;
+  order: CreateOrderRequest;
+}
+
+export interface OfflineOrderSyncResult {
+  clientReference: string | null;
+  status: 'CREATED' | 'DUPLICATE' | 'FAILED';
+  message: string;
+  order?: Order;
+}
+
+export interface OfflineOrderSyncResponse {
+  results: OfflineOrderSyncResult[];
+  createdCount: number;
+  duplicateCount: number;
+  failedCount: number;
 }
 
 export const posService = {
@@ -42,6 +67,17 @@ export const posService = {
     const response = await apiClient.post<ApiResponse<Order>>('/pos/orders', request);
     if (!response.data.data) {
       throw new Error('Failed to create order');
+    }
+    return response.data.data;
+  },
+
+  async syncOfflineOrders(payloads: OfflineOrderSyncPayload[]): Promise<OfflineOrderSyncResponse> {
+    const response = await apiClient.post<ApiResponse<OfflineOrderSyncResponse>>(
+      '/pos/offline/orders/sync',
+      payloads
+    );
+    if (!response.data.data) {
+      throw new Error('Failed to sync offline orders');
     }
     return response.data.data;
   },

@@ -7,6 +7,7 @@ export interface Customer {
   phone?: string;
   address?: string;
   taxNumber?: string;
+  loyaltyNumber?: string;
   loyaltyPoints: number;
   recordStatus: RecordStatus;
   createdAt?: string;
@@ -19,6 +20,7 @@ export interface CreateCustomerRequest {
   phone?: string;
   address?: string;
   taxNumber?: string;
+  loyaltyNumber?: string;
   loyaltyPoints?: number;
   recordStatus: RecordStatus;
 }

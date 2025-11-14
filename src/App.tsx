@@ -10,6 +10,7 @@ import InvalidUrlErrorPage from './components/errors/InvalidUrlErrorPage';
 import env from './config/env';
 import { useAuth } from './hooks/useAuth';
 import { getDefaultTenantPath } from './utils/authRoles';
+import ScrollToTop from './components/layout/ScrollToTop';
 
 // Lazy load pages for better performance
 const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
@@ -26,11 +27,16 @@ const CashierBalancingPage = lazy(() => import('./pages/admin/cashier-balancing/
 const TablesPage = lazy(() => import('./pages/admin/tables/TablesPage'));
 const ProductsPage = lazy(() => import('./pages/admin/products/ProductsPage'));
 const CouponsPage = lazy(() => import('./pages/admin/coupons/CouponsPage'));
+const LoyaltyProgramPage = lazy(() => import('./pages/admin/loyalty/LoyaltyProgramPage'));
+const GiftCardsPage = lazy(() => import('./pages/admin/gift-cards/GiftCardsPage'));
 const AssignBarcodesPage = lazy(() => import('./pages/admin/assign-barcodes/AssignBarcodesPage'));
 const AssignStocksPage = lazy(() => import('./pages/admin/assign-stocks/AssignStocksPage'));
 const StockAlertsPage = lazy(() => import('./pages/admin/stock-alerts/StockAlertsPage'));
 const StockConfigPage = lazy(() => import('./pages/admin/stock-config/StockConfigPage'));
+const InventoryControlPage = lazy(() => import('./pages/admin/inventory-control/InventoryControlPage'));
 const SuppliersPage = lazy(() => import('./pages/admin/suppliers/SuppliersPage'));
+const PurchaseOrdersPage = lazy(() => import('./pages/admin/purchasing/PurchaseOrdersPage'));
+const SupplierCatalogPage = lazy(() => import('./pages/admin/purchasing/SupplierCatalogPage'));
 const BrandsPage = lazy(() => import('./pages/admin/taxonomy/BrandsPage'));
 const TagsPage = lazy(() => import('./pages/admin/taxonomy/TagsPage'));
 const ProductCategoriesPage = lazy(() => import('./pages/admin/taxonomy/ProductCategoriesPage'));
@@ -67,6 +73,7 @@ function App() {
 
   return (
     <Router>
+      <ScrollToTop />
       <AuthProvider>
         <OutletProvider>
           <Suspense fallback={<LoadingFallback />}>
@@ -158,10 +165,32 @@ function App() {
                         <SuppliersPage />
                       </ProtectedRoute>
                     } />
+                    <Route path="admin/procurement/purchase-orders" element={
+                      <ProtectedRoute screenCode="ADMIN_PURCHASE_ORDERS">
+                        <PurchaseOrdersPage />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="admin/procurement/vendor-catalog" element={
+                      <ProtectedRoute screenCode="ADMIN_VENDOR_CATALOG">
+                        <SupplierCatalogPage />
+                      </ProtectedRoute>
+                    } />
 
                     <Route path="admin/coupons" element={
                       <ProtectedRoute screenCode="ADMIN_COUPONS">
                         <CouponsPage />
+                      </ProtectedRoute>
+                    } />
+
+                    <Route path="admin/loyalty" element={
+                      <ProtectedRoute screenCode="ADMIN_LOYALTY">
+                        <LoyaltyProgramPage />
+                      </ProtectedRoute>
+                    } />
+
+                    <Route path="admin/gift-cards" element={
+                      <ProtectedRoute screenCode="ADMIN_GIFT_CARDS">
+                        <GiftCardsPage />
                       </ProtectedRoute>
                     } />
 
@@ -186,6 +215,11 @@ function App() {
                     <Route path="admin/stock-config" element={
                       <ProtectedRoute screenCode="ADMIN_STOCK_CONFIG">
                         <StockConfigPage />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="admin/inventory/control" element={
+                      <ProtectedRoute screenCode="ADMIN_INVENTORY_CONTROL">
+                        <InventoryControlPage />
                       </ProtectedRoute>
                     } />
 

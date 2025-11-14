@@ -6,6 +6,7 @@ import ToastContainer from '../../../components/common/ToastContainer';
 import ConfirmationDialog from '../../../components/common/ConfirmationDialog';
 import AddCustomerModal from '../../../components/admin/customers/AddCustomerModal';
 import EditCustomerModal from '../../../components/admin/customers/EditCustomerModal';
+import CustomerLoyaltyPanel from '../../../components/admin/customers/CustomerLoyaltyPanel';
 import { customerService } from '../../../services/customerService';
 import type { Customer } from '../../../types/customer';
 
@@ -47,6 +48,7 @@ const CustomersPage: React.FC = () => {
     open: false,
     customer: null,
   });
+  const [loyaltyCustomer, setLoyaltyCustomer] = useState<Customer | null>(null);
 
   const showToast = useCallback((type: AlertType, title: string, message: string) => {
     setAlert({ type, title, message });
@@ -101,6 +103,14 @@ const CustomersPage: React.FC = () => {
   const handleViewClose = useCallback(() => {
     setEditingCustomer(null);
     setModalMode(null);
+  }, []);
+
+  const handleLoyaltyOpen = useCallback((customer: Customer) => {
+    setLoyaltyCustomer(customer);
+  }, []);
+
+  const handleLoyaltyClose = useCallback(() => {
+    setLoyaltyCustomer(null);
   }, []);
 
   const handleCustomerUpdated = useCallback(
@@ -265,6 +275,13 @@ const CustomersPage: React.FC = () => {
                     <div className="flex items-center justify-end gap-2">
                       <button
                         type="button"
+                        onClick={() => handleLoyaltyOpen(customer)}
+                        className="inline-flex items-center rounded-lg border border-amber-200 px-3 py-1.5 text-xs font-semibold text-amber-600 transition hover:bg-amber-50"
+                      >
+                        Loyalty
+                      </button>
+                      <button
+                        type="button"
                         onClick={() => handleView(customer)}
                         className="inline-flex items-center rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
                       >
@@ -393,6 +410,14 @@ const CustomersPage: React.FC = () => {
             cancelLabel="Cancel"
             onConfirm={handleDeleteConfirm}
             onCancel={handleDeleteCancel}
+          />
+        ) : null}
+
+        {loyaltyCustomer ? (
+          <CustomerLoyaltyPanel
+            customer={loyaltyCustomer}
+            onClose={handleLoyaltyClose}
+            showToast={showToast}
           />
         ) : null}
       </div>
