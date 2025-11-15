@@ -12,6 +12,8 @@ import type { Outlet } from '../../../types/outlet';
 import { useAuth } from '../../../hooks/useAuth';
 import { useOutlet } from '../../../contexts/OutletContext';
 import { getUserRoleCodes } from '../../../utils/authRoles';
+import { useBusinessMode } from '../../../hooks/useBusinessMode';
+import buildInvoiceHtml from '../../../utils/invoice';
 
 const ORDER_STATUS_OPTIONS: Array<{ label: string; value: OrderStatus }> = [
   { label: 'All Statuses', value: '' as OrderStatus },
@@ -104,6 +106,7 @@ const OrdersPage: React.FC = () => {
   const { user } = useAuth();
   const { currentOutlet } = useOutlet();
   const roleCodes = useMemo(() => getUserRoleCodes(user), [user]);
+  const { isRestaurantMode } = useBusinessMode();
   const isCashier = roleCodes.has('CASHIER');
   const isAdmin = roleCodes.has('ADMIN');
 
@@ -114,15 +117,19 @@ const OrdersPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedOutlet, setSelectedOutlet] = useState<string>('');
   const [hasManualOutletSelection, setHasManualOutletSelection] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState<string>('');
-  const [selectedType, setSelectedType] = useState<string>('');
-  const [selectedSource, setSelectedSource] = useState<string>('');
+  const [selectedStatus, setSelectedStatus] = useState<OrderStatus | ''>('');
+  const [selectedType, setSelectedType] = useState<OrderType | ''>('');
+  const [selectedSource, setSelectedSource] = useState<'online' | 'instore' | ''>('');
   const [alert, setAlert] = useState<{ type: AlertType; title: string; message: string } | null>(null);
   const [viewingOrder, setViewingOrder] = useState<Order | null>(null);
 
   // Refund modal state
   const [refundModalOpen, setRefundModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [actionState, setActionState] = useState<{ orderId: number | null; action?: string }>({
+    orderId: null,
+    action: undefined,
+  });
 
   const matchesCurrentCashier = useCallback((order: Order) => {
     const idMatch = user?.cashierId !== undefined && user?.cashierId !== null
@@ -144,6 +151,14 @@ const OrdersPage: React.FC = () => {
       if (outletIdFromSelection) {
         filters.outletId = outletIdFromSelection;
       }
+      if (selectedStatus) {
+        filters.status = selectedStatus;
+      }
+      if (selectedSource === 'online') {
+        filters.isOnline = true;
+      } else if (selectedSource === 'instore') {
+        filters.isOnline = false;
+      }
       if (!isAdmin && isCashier) {
         if (user?.cashierId) {
           filters.cashierId = user.cashierId;
@@ -162,7 +177,17 @@ const OrdersPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentOutlet?.id, hasManualOutletSelection, isAdmin, isCashier, matchesCurrentCashier, selectedOutlet, user]);
+  }, [
+    currentOutlet?.id,
+    hasManualOutletSelection,
+    isAdmin,
+    isCashier,
+    matchesCurrentCashier,
+    selectedOutlet,
+    selectedSource,
+    selectedStatus,
+    user,
+  ]);
 
   const fetchOutlets = useCallback(async () => {
     try {
@@ -247,11 +272,11 @@ const OrdersPage: React.FC = () => {
     setViewingOrder(null);
   }, []);
 
-  const handlePrintReceipt = useCallback(async (order: Order) => {
+  const handlePrintReceipt = useCallback(async (orderId: number) => {
     try {
       setAlert({ type: 'info', title: 'Opening Receipt', message: 'Preparing receipt for printing...' });
 
-      const receiptHtml = await orderService.printReceipt(order.id);
+      const receiptHtml = await orderService.printReceipt(orderId);
 
       // Open receipt in a new window which will auto-trigger print dialog
       const printWindow = window.open('', '_blank');
@@ -281,6 +306,136 @@ const OrdersPage: React.FC = () => {
     // Refresh orders to show updated status
     void fetchOrders();
   }, [fetchOrders]);
+
+  const isProcessingAction = useCallback(
+    (orderId: number, action: string) => actionState.orderId === orderId && actionState.action === action,
+    [actionState],
+  );
+
+  const runOrderAction = useCallback(
+    async (order: Order, action: string, executor: () => Promise<unknown>, successMessage: string) => {
+      setActionState({ orderId: order.id, action });
+      try {
+        await executor();
+        setAlert({
+          type: 'success',
+          title: 'Success',
+          message: successMessage,
+        });
+        await fetchOrders();
+      } catch (error) {
+        console.error(`Failed to ${action} order`, error);
+        setAlert({
+          type: 'error',
+          title: 'Action Failed',
+          message: error instanceof Error ? error.message : 'Request failed. Please try again.',
+        });
+      } finally {
+        setActionState({ orderId: null, action: undefined });
+      }
+    },
+    [fetchOrders],
+  );
+
+  const handleHoldOrder = useCallback(
+    (order: Order) => {
+      const notes = window.prompt('Optional - add a note for this hold?', order.notes ?? '');
+      if (notes === null) {
+        return;
+      }
+      void runOrderAction(
+        order,
+        'hold',
+        () => orderService.holdOrder(order.id, notes.trim().length ? notes : undefined),
+        'Order placed on hold.',
+      );
+    },
+    [runOrderAction],
+  );
+
+  const handleRestoreOrder = useCallback(
+    (order: Order) => {
+      void runOrderAction(order, 'restore', () => orderService.restoreOrder(order.id), 'Order restored to cart.');
+    },
+    [runOrderAction],
+  );
+
+  const handleTransferToKitchen = useCallback(
+    (order: Order) => {
+      if (!isRestaurantMode) {
+        setAlert({
+          type: 'warning',
+          title: 'Kitchen Disabled',
+          message: 'Enable restaurant mode in Configuration to send orders to the kitchen.',
+        });
+        return;
+      }
+      void runOrderAction(
+        order,
+        'transfer',
+        () => orderService.transferToKitchen(order.id),
+        'Order forwarded to the kitchen queue.',
+      );
+    },
+    [isRestaurantMode, runOrderAction],
+  );
+
+  const handleDeleteOrder = useCallback(
+    (order: Order) => {
+      const confirmed = window.confirm(`Delete ${order.orderNumber}? This cannot be undone.`);
+      if (!confirmed) {
+        return;
+      }
+      void runOrderAction(order, 'delete', () => orderService.deleteOrder(order.id), 'Order deleted.');
+    },
+    [runOrderAction],
+  );
+
+  const handlePrintInvoice = useCallback(async (orderId: number) => {
+    try {
+      setAlert({
+        type: 'info',
+        title: 'Preparing Invoice',
+        message: 'Generating invoice for printing...',
+      });
+      const invoiceData = await orderService.getInvoiceData(orderId);
+      const invoiceMarkup = buildInvoiceHtml(invoiceData);
+      const invoiceWindow = window.open('', '_blank');
+      if (invoiceWindow) {
+        invoiceWindow.document.write(invoiceMarkup);
+        invoiceWindow.document.close();
+      } else {
+        setAlert({
+          type: 'error',
+          title: 'Pop-ups Blocked',
+          message: 'Please allow pop-ups to view invoices.',
+        });
+      }
+    } catch (error) {
+      console.error('Failed to print invoice', error);
+      setAlert({
+        type: 'error',
+        title: 'Invoice Error',
+        message: error instanceof Error ? error.message : 'Unable to print invoice.',
+      });
+    }
+  }, []);
+
+  const canHoldOrder = (order: Order): boolean => {
+    return ['DRAFT', 'PENDING', 'PREPARING'].includes(order.status) && order.status !== 'ON_HOLD';
+  };
+
+  const canRestoreOrder = (order: Order): boolean => order.status === 'ON_HOLD';
+
+  const canTransferToKitchen = (order: Order): boolean => {
+    if (!isRestaurantMode) {
+      return false;
+    }
+    const isRestaurantOrder = order.orderType === 'DINE_IN' || Boolean(order.tableId);
+    return isRestaurantOrder && ['DRAFT', 'ON_HOLD'].includes(order.status);
+  };
+
+  const canDeleteOrder = (order: Order): boolean => ['DRAFT', 'CANCELLED', 'ON_HOLD'].includes(order.status);
 
   const renderLoadState = () => (
     <div className="flex min-h-[320px] items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white">
@@ -372,7 +527,7 @@ const OrdersPage: React.FC = () => {
                     {formatDate(order.createdDate)}
                   </td>
                   <td className="px-6 py-4 align-top text-right">
-                    <div className="flex flex-row gap-2 justify-end">
+                    <div className="flex flex-wrap justify-end gap-2">
                       <button
                         type="button"
                         onClick={() => handleViewOrder(order)}
@@ -380,15 +535,22 @@ const OrdersPage: React.FC = () => {
                       >
                         View
                       </button>
+                      <button
+                        type="button"
+                        onClick={() => handlePrintInvoice(order.id)}
+                        className="inline-flex items-center justify-center rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2"
+                      >
+                        Invoice
+                      </button>
                       {order.status === 'COMPLETED' && (
                         <>
                           <button
                             type="button"
-                            onClick={() => handlePrintReceipt(order)}
-                            className="inline-flex items-center justify-center rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2"
+                            onClick={() => handlePrintReceipt(order.id)}
+                            className="inline-flex items-center justify-center rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2"
                             title="Print Receipt"
                           >
-                            🖨️ Print
+                            Receipt
                           </button>
                           <button
                             type="button"
@@ -396,9 +558,49 @@ const OrdersPage: React.FC = () => {
                             className="inline-flex items-center justify-center rounded-lg border border-amber-600 px-3 py-1.5 text-sm font-semibold text-amber-600 transition hover:bg-amber-50 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
                             title="Process Refund"
                           >
-                            ↩️ Refund
+                            Refund
                           </button>
                         </>
+                      )}
+                      {canHoldOrder(order) && (
+                        <button
+                          type="button"
+                          onClick={() => handleHoldOrder(order)}
+                          disabled={isProcessingAction(order.id, 'hold')}
+                          className="inline-flex items-center justify-center rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {isProcessingAction(order.id, 'hold') ? 'Holding…' : 'Hold'}
+                        </button>
+                      )}
+                      {canRestoreOrder(order) && (
+                        <button
+                          type="button"
+                          onClick={() => handleRestoreOrder(order)}
+                          disabled={isProcessingAction(order.id, 'restore')}
+                          className="inline-flex items-center justify-center rounded-lg border border-emerald-600 px-3 py-1.5 text-sm font-semibold text-emerald-600 transition hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {isProcessingAction(order.id, 'restore') ? 'Restoring…' : 'Restore'}
+                        </button>
+                      )}
+                      {canTransferToKitchen(order) && (
+                        <button
+                          type="button"
+                          onClick={() => handleTransferToKitchen(order)}
+                          disabled={isProcessingAction(order.id, 'transfer')}
+                          className="inline-flex items-center justify-center rounded-lg border border-purple-600 px-3 py-1.5 text-sm font-semibold text-purple-600 transition hover:bg-purple-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {isProcessingAction(order.id, 'transfer') ? 'Sending…' : 'Send to Kitchen'}
+                        </button>
+                      )}
+                      {canDeleteOrder(order) && (
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteOrder(order)}
+                          disabled={isProcessingAction(order.id, 'delete')}
+                          className="inline-flex items-center justify-center rounded-lg border border-rose-500 px-3 py-1.5 text-sm font-semibold text-rose-600 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {isProcessingAction(order.id, 'delete') ? 'Deleting…' : 'Delete'}
+                        </button>
                       )}
                     </div>
                   </td>
@@ -480,7 +682,7 @@ const OrdersPage: React.FC = () => {
 
             <select
               value={selectedStatus}
-              onChange={(event) => setSelectedStatus(event.target.value)}
+              onChange={(event) => setSelectedStatus(event.target.value as OrderStatus | '')}
               className="h-10 rounded-lg border border-slate-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
             >
               {ORDER_STATUS_OPTIONS.map((option) => (
@@ -492,7 +694,7 @@ const OrdersPage: React.FC = () => {
 
             <select
               value={selectedType}
-              onChange={(event) => setSelectedType(event.target.value)}
+              onChange={(event) => setSelectedType(event.target.value as OrderType | '')}
               className="h-10 rounded-lg border border-slate-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
             >
               {ORDER_TYPE_OPTIONS.map((option) => (
@@ -504,7 +706,7 @@ const OrdersPage: React.FC = () => {
 
             <select
               value={selectedSource}
-              onChange={(event) => setSelectedSource(event.target.value)}
+              onChange={(event) => setSelectedSource(event.target.value as 'online' | 'instore' | '')}
               className="h-10 rounded-lg border border-slate-200 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
             >
               <option value="">All Sources</option>
@@ -520,6 +722,8 @@ const OrdersPage: React.FC = () => {
           <OrderDetailsModal
             order={viewingOrder}
             onClose={handleCloseView}
+            onPrintReceipt={handlePrintReceipt}
+            onPrintInvoice={handlePrintInvoice}
           />
         ) : null}
 

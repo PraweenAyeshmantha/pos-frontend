@@ -23,6 +23,8 @@ export interface BulkUpdateRequest {
   configurations: Record<string, string>;
 }
 
+export type BusinessMode = 'RETAIL' | 'RESTAURANT_CAFE';
+
 export interface GeneralConfigFormData {
   license_key: string;
   module_enabled: boolean;
@@ -42,6 +44,7 @@ export interface GeneralConfigFormData {
   default_customer_id: string;
   pos_endpoint: string;
   kitchen_endpoint: string;
+  business_mode: BusinessMode;
 }
 
 export interface PwaConfigFormData {

@@ -25,7 +25,11 @@ const EnvConfigErrorPage: React.FC<EnvConfigErrorPageProps> = ({ errorMessage })
               <li>Create a <code className="bg-gray-100 px-1 py-0.5 rounded">.env</code> file in the root directory</li>
               <li>Add the required environment variable:
                 <code className="block bg-gray-100 p-2 rounded text-xs mt-1 break-all">
-                  VITE_API_BASE_URL=http://localhost:8080/posai/api
+                # Local development
+                VITE_API_BASE_URL=http://localhost:8080/posai/api
+
+                # Production
+                VITE_API_BASE_URL=/posai/api
                 </code>
               </li>
               <li>You can copy <code className="bg-gray-100 px-1 py-0.5 rounded">.env.example</code> to <code className="bg-gray-100 px-1 py-0.5 rounded">.env</code> and update the values</li>

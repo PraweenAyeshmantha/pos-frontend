@@ -22,6 +22,7 @@ const OrdersPage = lazy(() => import('./pages/admin/orders/OrdersPage'));
 const SettingsPage = lazy(() => import('./pages/admin/settings/SettingsPage'));
 const POSAdminPage = lazy(() => import('./pages/admin/pos-admin/POSAdminPage'));
 const OutletsPage = lazy(() => import('./pages/admin/outlets/OutletsPage'));
+const OutletKitchenViewPage = lazy(() => import('./pages/admin/outlets/OutletKitchenViewPage'));
 const CashiersPage = lazy(() => import('./pages/admin/cashiers/CashiersPage'));
 const CashierBalancingPage = lazy(() => import('./pages/admin/cashier-balancing/CashierBalancingPage'));
 const TablesPage = lazy(() => import('./pages/admin/tables/TablesPage'));
@@ -37,6 +38,7 @@ const InventoryControlPage = lazy(() => import('./pages/admin/inventory-control/
 const SuppliersPage = lazy(() => import('./pages/admin/suppliers/SuppliersPage'));
 const PurchaseOrdersPage = lazy(() => import('./pages/admin/purchasing/PurchaseOrdersPage'));
 const SupplierCatalogPage = lazy(() => import('./pages/admin/purchasing/SupplierCatalogPage'));
+const SalesInsightsPage = lazy(() => import('./pages/admin/analytics/SalesInsightsPage'));
 const BrandsPage = lazy(() => import('./pages/admin/taxonomy/BrandsPage'));
 const TagsPage = lazy(() => import('./pages/admin/taxonomy/TagsPage'));
 const ProductCategoriesPage = lazy(() => import('./pages/admin/taxonomy/ProductCategoriesPage'));
@@ -45,6 +47,8 @@ const UserAccessPage = lazy(() => import('./pages/admin/access/UserAccessPage'))
 const CashierPOSPage = lazy(() => import('./pages/cashier/CashierPOSPage'));
 const CashierDashboardPage = lazy(() => import('./pages/cashier/CashierDashboardPage'));
 const SharedStatisticsPage = lazy(() => import('./pages/cashier/StatisticsPage'));
+const AdminStatisticsPage = lazy(() => import('./pages/admin/statistics/AdminStatisticsPage'));
+const ReportsPage = lazy(() => import('./pages/admin/reports/ReportsPage'));
 const CashierBalancingPageCashier = lazy(() => import('./pages/cashier/CashierBalancingPage'));
 const GoodsReceivedNotesPage = lazy(() => import('./pages/cashier/GoodsReceivedNotesPage'));
 
@@ -147,6 +151,11 @@ function App() {
                         <OutletsPage />
                       </ProtectedRoute>
                     } />
+                    <Route path="admin/outlets/:outletId/kitchen" element={
+                      <ProtectedRoute screenCode="ADMIN_OUTLETS">
+                        <OutletKitchenViewPage />
+                      </ProtectedRoute>
+                    } />
 
                     <Route path="admin/tables" element={
                       <ProtectedRoute screenCode="ADMIN_TABLES">
@@ -191,6 +200,12 @@ function App() {
                     <Route path="admin/gift-cards" element={
                       <ProtectedRoute screenCode="ADMIN_GIFT_CARDS">
                         <GiftCardsPage />
+                      </ProtectedRoute>
+                    } />
+
+                    <Route path="admin/sales-insights" element={
+                      <ProtectedRoute screenCode="ADMIN_SALES_INSIGHTS">
+                        <SalesInsightsPage />
                       </ProtectedRoute>
                     } />
 
@@ -243,7 +258,13 @@ function App() {
 
                     <Route path="admin/statistics" element={
                       <ProtectedRoute screenCode="ADMIN_STATISTICS">
-                        <SharedStatisticsPage />
+                        <AdminStatisticsPage />
+                      </ProtectedRoute>
+                    } />
+
+                    <Route path="admin/reports" element={
+                      <ProtectedRoute screenCode="ADMIN_REPORTS">
+                        <ReportsPage />
                       </ProtectedRoute>
                     } />
                    

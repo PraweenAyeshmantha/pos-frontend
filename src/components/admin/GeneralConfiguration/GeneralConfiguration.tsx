@@ -1,6 +1,6 @@
 import React, { useState, useEffect, memo, useCallback } from 'react';
 import { configurationService } from '../../../services/configurationService';
-import type { GeneralConfigFormData } from '../../../types/configuration';
+import type { BusinessMode, GeneralConfigFormData } from '../../../types/configuration';
 import Alert from '../../common/Alert';
 import type { AlertType } from '../../common/Alert';
 import ToastContainer from '../../common/ToastContainer';
@@ -10,6 +10,8 @@ import LoginConfiguration from '../LoginConfiguration/LoginConfiguration';
 import PrinterConfiguration from '../PrinterConfiguration/PrinterConfiguration';
 import LayoutConfiguration from '../LayoutConfiguration/LayoutConfiguration';
 import AdminPageHeader from '../../layout/AdminPageHeader';
+
+const BUSINESS_MODE_STORAGE_KEY = 'posBusinessMode';
 
 const tabDefinitions = [
   { key: 'general', label: 'General' },
@@ -29,6 +31,12 @@ const tabDescriptions: Record<TabKey, string> = {
   login: 'Control authentication behavior and session rules.',
   printer: 'Connect receipt printers and manage output settings.',
   layout: 'Customize register layout, shortcuts, and panels.',
+};
+
+const persistBusinessMode = (mode: BusinessMode) => {
+  if (typeof window !== 'undefined') {
+    window.localStorage.setItem(BUSINESS_MODE_STORAGE_KEY, mode);
+  }
 };
 
 const GeneralConfiguration: React.FC = () => {
@@ -56,6 +64,7 @@ const GeneralConfiguration: React.FC = () => {
     default_customer_id: '',
     pos_endpoint: '/pos',
     kitchen_endpoint: '/kitchen',
+    business_mode: 'RETAIL',
   });
 
   const [logoPreview, setLogoPreview] = useState<string>('');
@@ -71,7 +80,8 @@ const GeneralConfiguration: React.FC = () => {
         configMap[config.configKey] = config.configValue;
       });
 
-      setFormData({
+      const resolvedMode = (configMap.business_mode as BusinessMode) || 'RETAIL';
+      const nextFormData: GeneralConfigFormData = {
         license_key: configMap.license_key || '',
         module_enabled: configMap.module_enabled === 'true',
         inventory_type: (configMap.inventory_type || 'CUSTOM') as 'CUSTOM' | 'CENTRALIZED',
@@ -90,7 +100,11 @@ const GeneralConfiguration: React.FC = () => {
         default_customer_id: configMap.default_customer_id || '',
         pos_endpoint: configMap.pos_endpoint || '/pos',
         kitchen_endpoint: configMap.kitchen_endpoint || '/kitchen',
-      });
+        business_mode: resolvedMode,
+      };
+
+      setFormData(nextFormData);
+      persistBusinessMode(resolvedMode);
 
       if (configMap.logo_url) {
         setLogoPreview(configMap.logo_url);
@@ -137,9 +151,11 @@ const GeneralConfiguration: React.FC = () => {
         default_customer_id: formData.default_customer_id,
         pos_endpoint: formData.pos_endpoint,
         kitchen_endpoint: formData.kitchen_endpoint,
+        business_mode: formData.business_mode,
       };
 
       await configurationService.bulkUpdateConfigurations(configurations);
+      persistBusinessMode(formData.business_mode);
   setMessage({ type: 'success', text: 'Configurations saved successfully!' });
     } catch (error) {
       console.error('Error saving configurations:', error);
@@ -258,6 +274,29 @@ const GeneralConfiguration: React.FC = () => {
                   <option value="CUSTOM">Custom/Manual Stock</option>
                   <option value="CENTRALIZED">Centralized Stock</option>
                 </select>
+              </div>
+
+              {/* Business Mode */}
+              <div className="flex flex-col gap-2 border-b border-gray-200 py-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <label className="font-semibold text-gray-800">Business Mode</label>
+                    <button className="text-gray-400 hover:text-gray-600" title="Business mode information">
+                      ⓘ
+                    </button>
+                  </div>
+                  <select
+                    value={formData.business_mode}
+                    onChange={(event) => handleInputChange('business_mode', event.target.value as BusinessMode)}
+                    className="min-w-[300px] rounded-md border border-gray-300 bg-white px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="RETAIL">Retail / Grocery</option>
+                    <option value="RESTAURANT_CAFE">Restaurant / Cafe</option>
+                  </select>
+                </div>
+                <p className="text-sm text-slate-500">
+                  Restaurant mode unlocks tables, kitchen routing, and dine-in workflows. Choose Retail for counter-only operations.
+                </p>
               </div>
 
               {/* Order Status */}

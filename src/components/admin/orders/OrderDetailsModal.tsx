@@ -6,6 +6,7 @@ interface OrderDetailsModalProps {
   order: Order;
   onClose: () => void;
   onPrintReceipt?: (orderId: number) => void;
+  onPrintInvoice?: (orderId: number) => void;
 }
 
 const formatCurrency = (value?: number): string => {
@@ -75,7 +76,7 @@ const getStatusLabel = (status: string): string => {
   return labels[status] ?? status;
 };
 
-const OrderDetailsModal: React.FC<OrderDetailsModalProps> = memo(({ order, onClose, onPrintReceipt }) => {
+const OrderDetailsModal: React.FC<OrderDetailsModalProps> = memo(({ order, onClose, onPrintReceipt, onPrintInvoice }) => {
   const handleBackdropClick = (event: React.MouseEvent<HTMLDivElement>) => {
     if (event.target === event.currentTarget) {
       onClose();
@@ -95,18 +96,32 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = memo(({ order, onClo
             <span className="text-lg font-bold text-blue-600">{order.orderNumber}</span>
           </div>
           <div className="flex items-center gap-2">
-            {onPrintReceipt && (
-              <button
-                type="button"
-                onClick={() => onPrintReceipt(order.id)}
-                className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
-              >
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                </svg>
-                Print Receipt
-              </button>
-            )}
+            <div className="flex items-center gap-2">
+              {onPrintInvoice && (
+                <button
+                  type="button"
+                  onClick={() => onPrintInvoice(order.id)}
+                  className="flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-6h6v6m-7 4h8a2 2 0 002-2V7a2 2 0 00-2-2h-3l-2-2H7a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  Print Invoice
+                </button>
+              )}
+              {onPrintReceipt && (
+                <button
+                  type="button"
+                  onClick={() => onPrintReceipt(order.id)}
+                  className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                  </svg>
+                  Print Receipt
+                </button>
+              )}
+            </div>
             <button
               type="button"
               onClick={onClose}
@@ -165,6 +180,19 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = memo(({ order, onClo
                 </div>
               </div>
             </div>
+
+            {/* Table Information */}
+            {order.tableNumber && (
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <h3 className="mb-3 text-sm font-semibold text-slate-900">Dining Table</h3>
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs font-medium text-slate-600">Table</span>
+                  <span className="text-sm text-slate-900">
+                    #{order.tableNumber}
+                  </span>
+                </div>
+              </div>
+            )}
 
             {/* Customer Information */}
             {order.customerId && (

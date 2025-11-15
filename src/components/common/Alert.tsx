@@ -6,12 +6,13 @@ export interface AlertProps {
   type: AlertType;
   title: string;
   message: string;
+  className?: string;
   onClose?: () => void;
   autoHideDuration?: number;
 }
 const DEFAULT_AUTO_HIDE_MS = 4000;
 
-const Alert: React.FC<AlertProps> = ({ type, title, message, onClose, autoHideDuration = DEFAULT_AUTO_HIDE_MS }) => {
+const Alert: React.FC<AlertProps> = ({ type, title, message, className, onClose, autoHideDuration = DEFAULT_AUTO_HIDE_MS }) => {
   const [visible, setVisible] = useState(true);
 
   const alertStyles = useMemo(() => {
@@ -88,7 +89,7 @@ const Alert: React.FC<AlertProps> = ({ type, title, message, onClose, autoHideDu
   };
 
   return (
-    <div className={`${alertStyles.bgColor} text-white rounded-lg shadow-lg p-4 flex items-start space-x-4 min-w-[300px] max-w-[500px] animate-slide-in`}>
+    <div className={`${alertStyles.bgColor} text-white rounded-lg shadow-lg p-4 flex items-start space-x-4 min-w-[300px] max-w-[500px] animate-slide-in ${className ?? ''}`}>
       <div className={`${alertStyles.iconBg} rounded-full p-2 flex-shrink-0`}>
         {alertStyles.icon}
       </div>

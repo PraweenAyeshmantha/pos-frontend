@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../../../components/layout/AdminLayout';
 import Alert, { type AlertType } from '../../../components/common/Alert';
 import ToastContainer from '../../../components/common/ToastContainer';
@@ -8,6 +9,10 @@ import type { Outlet, OutletMode } from '../../../types/outlet';
 import type { RecordStatus } from '../../../types/configuration';
 import AddOutletModal from '../../../components/admin/outlets/AddOutletModal';
 import AdminPageHeader from '../../../components/layout/AdminPageHeader';
+import { useOutlet } from '../../../contexts/OutletContext';
+import useTenantId from '../../../hooks/useTenantId';
+import type { OutletSummary } from '../../../types/auth';
+import { useBusinessMode } from '../../../hooks/useBusinessMode';
 
 const MODE_LABELS: Record<OutletMode, string> = {
   GROCERY_RETAIL: 'Grocery / Retail',
@@ -36,6 +41,10 @@ const formatDateTime = (value?: string): string => {
 };
 
 const OutletsPage: React.FC = () => {
+  const navigate = useNavigate();
+  const tenantId = useTenantId();
+  const { selectOutlet } = useOutlet();
+  const { isRestaurantMode } = useBusinessMode();
   const [outlets, setOutlets] = useState<Outlet[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,6 +57,13 @@ const OutletsPage: React.FC = () => {
   });
   const [alert, setAlert] = useState<{ type: AlertType; title: string; message: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [selectedOutletIds, setSelectedOutletIds] = useState<Set<number>>(new Set());
+  const [bulkProcessing, setBulkProcessing] = useState(false);
+  const [pendingOutletAction, setPendingOutletAction] = useState<{ id: number; action: 'assign' | 'visit' } | null>(null);
+
+  const showAlert = useCallback((type: AlertType, title: string, message: string) => {
+    setAlert({ type, title, message });
+  }, []);
 
   const fetchOutlets = useCallback(async () => {
     try {
@@ -55,6 +71,7 @@ const OutletsPage: React.FC = () => {
       setError(null);
       const data = await outletService.getAll();
       setOutlets(data);
+      setSelectedOutletIds(new Set());
     } catch (err) {
       setError('Failed to load outlets. Please try again.');
       console.error('Error fetching outlets:', err);
@@ -62,6 +79,13 @@ const OutletsPage: React.FC = () => {
       setLoading(false);
     }
   }, []);
+
+  const toOutletSummary = useCallback((outlet: Outlet): OutletSummary => ({
+    id: outlet.id,
+    name: outlet.name,
+    code: outlet.code,
+    recordStatus: outlet.recordStatus,
+  }), []);
 
   useEffect(() => {
     fetchOutlets();
@@ -133,6 +157,121 @@ const OutletsPage: React.FC = () => {
     setDeleteConfirm({ show: false, outlet: null });
   }, []);
 
+  const clearSelection = useCallback(() => {
+    setSelectedOutletIds(new Set());
+  }, []);
+
+  const handleBulkStatusUpdate = useCallback(
+    async (status: RecordStatus) => {
+      if (selectedOutletIds.size === 0) {
+        return;
+      }
+      try {
+        setBulkProcessing(true);
+        await Promise.all(
+          Array.from(selectedOutletIds).map(async (id) => {
+            const outlet = outlets.find((item) => item.id === id);
+            if (!outlet) {
+              return;
+            }
+            await outletService.update({
+              id: outlet.id,
+              name: outlet.name,
+              code: outlet.code,
+              mode: outlet.mode,
+              address: outlet.address,
+              phone: outlet.phone,
+              email: outlet.email,
+              recordStatus: status,
+            });
+          }),
+        );
+        showAlert('success', 'Bulk Update', `Updated ${selectedOutletIds.size} outlet(s).`);
+        clearSelection();
+        fetchOutlets();
+      } catch (error) {
+        console.error('Bulk update failed', error);
+        showAlert('error', 'Bulk Update Failed', 'Unable to update selected outlets.');
+      } finally {
+        setBulkProcessing(false);
+      }
+    },
+    [clearSelection, fetchOutlets, outlets, selectedOutletIds, showAlert],
+  );
+
+  const handleBulkDelete = useCallback(async () => {
+    if (selectedOutletIds.size === 0) {
+      return;
+    }
+    const confirmed = window.confirm(
+      `Delete ${selectedOutletIds.size} outlet(s)? This cannot be undone.`,
+    );
+    if (!confirmed) {
+      return;
+    }
+    try {
+      setBulkProcessing(true);
+      await Promise.all(Array.from(selectedOutletIds).map((id) => outletService.delete(id)));
+      showAlert('success', 'Bulk Delete', 'Selected outlets deleted.');
+      clearSelection();
+      fetchOutlets();
+    } catch (error) {
+      console.error('Bulk delete failed', error);
+      showAlert('error', 'Bulk Delete Failed', 'Unable to delete selected outlets.');
+    } finally {
+      setBulkProcessing(false);
+    }
+  }, [clearSelection, fetchOutlets, selectedOutletIds, showAlert]);
+
+  const runOutletNavigation = useCallback(
+    async (outlet: Outlet, targetPath: string, action: 'assign' | 'visit') => {
+      if (!tenantId) {
+        showAlert('error', 'Tenant Missing', 'Select a tenant to continue.');
+        return;
+      }
+      setPendingOutletAction({ id: outlet.id, action });
+      try {
+        await selectOutlet(toOutletSummary(outlet));
+        navigate(`/posai/${tenantId}${targetPath}`);
+      } catch (error) {
+        console.error('Failed to switch outlet context', error);
+        showAlert('error', 'Outlet Switch Failed', 'Unable to switch outlet. Please try again.');
+      } finally {
+        setPendingOutletAction(null);
+      }
+    },
+    [navigate, selectOutlet, showAlert, tenantId, toOutletSummary],
+  );
+
+  const handleAssignStocks = useCallback(
+    (outlet: Outlet) => {
+      void runOutletNavigation(outlet, '/admin/assign-stocks', 'assign');
+    },
+    [runOutletNavigation],
+  );
+
+  const handleVisitPos = useCallback(
+    (outlet: Outlet) => {
+      void runOutletNavigation(outlet, '/cashier/pos', 'visit');
+    },
+    [runOutletNavigation],
+  );
+
+  const handleKitchenView = useCallback(
+    (outlet: Outlet) => {
+      if (!isRestaurantMode) {
+        showAlert('warning', 'Restaurant Features Disabled', 'Enable Restaurant/Cafe mode in Configuration to access the kitchen view.');
+        return;
+      }
+      if (!tenantId) {
+        showAlert('error', 'Tenant Missing', 'Select a tenant to continue.');
+        return;
+      }
+      navigate(`/posai/${tenantId}/admin/outlets/${outlet.id}/kitchen`);
+    },
+    [isRestaurantMode, navigate, showAlert, tenantId],
+  );
+
   const filteredOutlets = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     if (!query) {
@@ -152,6 +291,33 @@ const OutletsPage: React.FC = () => {
     });
   }, [outlets, searchQuery]);
 
+  const allVisibleSelected = filteredOutlets.length > 0 && filteredOutlets.every((outlet) => selectedOutletIds.has(outlet.id));
+  const selectionCount = selectedOutletIds.size;
+
+  const handleToggleSelection = useCallback((id: number) => {
+    setSelectedOutletIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }, []);
+
+  const handleToggleSelectAll = useCallback(() => {
+    setSelectedOutletIds((prev) => {
+      const next = new Set(prev);
+      if (filteredOutlets.every((outlet) => next.has(outlet.id))) {
+        filteredOutlets.forEach((outlet) => next.delete(outlet.id));
+      } else {
+        filteredOutlets.forEach((outlet) => next.add(outlet.id));
+      }
+      return next;
+    });
+  }, [filteredOutlets]);
+
   const totalOutlets = outlets.length;
   const activeOutlets = useMemo(
     () => outlets.filter((outlet) => outlet.recordStatus === 'ACTIVE').length,
@@ -161,6 +327,9 @@ const OutletsPage: React.FC = () => {
   const handleDeleteRequest = useCallback((outlet: Outlet) => {
     setDeleteConfirm({ show: true, outlet });
   }, []);
+
+  const isRowActionLoading = (outletId: number, action: 'assign' | 'visit'): boolean =>
+    pendingOutletAction?.id === outletId && pendingOutletAction.action === action;
 
   const renderLoadState = () => (
     <div className="flex min-h-[320px] items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white">
@@ -195,6 +364,15 @@ const OutletsPage: React.FC = () => {
         <table className="min-w-full divide-y divide-slate-200">
           <thead className="bg-slate-50">
             <tr>
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                  checked={allVisibleSelected}
+                  onChange={handleToggleSelectAll}
+                  aria-label="Select all outlets"
+                />
+              </th>
               <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Name</th>
               <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Mode</th>
               <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Address</th>
@@ -209,6 +387,15 @@ const OutletsPage: React.FC = () => {
           <tbody className="divide-y divide-slate-200 bg-white">
             {filteredOutlets.map((outlet) => (
               <tr key={outlet.id} className="hover:bg-slate-50">
+                <td className="px-4 py-4 align-top">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                    checked={selectedOutletIds.has(outlet.id)}
+                    onChange={() => handleToggleSelection(outlet.id)}
+                    aria-label={`Select ${outlet.name}`}
+                  />
+                </td>
                 <td className="px-6 py-4 align-top">
                   <span className="block text-sm font-semibold text-slate-900">{outlet.name}</span>
                 </td>
@@ -259,6 +446,33 @@ const OutletsPage: React.FC = () => {
                       className="text-rose-600 transition hover:text-rose-700"
                     >
                       Delete
+                    </button>
+                  </div>
+                  <div className="mt-2 flex flex-wrap items-center justify-end gap-2 text-xs font-semibold">
+                    <button
+                      type="button"
+                      onClick={() => handleAssignStocks(outlet)}
+                      disabled={isRowActionLoading(outlet.id, 'assign')}
+                      className="rounded-md border border-blue-200 px-3 py-1 text-blue-600 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {isRowActionLoading(outlet.id, 'assign') ? 'Assigning…' : 'Assign Stocks'}
+                    </button>
+                    {isRestaurantMode ? (
+                      <button
+                        type="button"
+                        onClick={() => handleKitchenView(outlet)}
+                        className="rounded-md border border-purple-200 px-3 py-1 text-purple-600 hover:bg-purple-50"
+                      >
+                        Kitchen View
+                      </button>
+                    ) : null}
+                    <button
+                      type="button"
+                      onClick={() => handleVisitPos(outlet)}
+                      disabled={isRowActionLoading(outlet.id, 'visit')}
+                      className="rounded-md border border-emerald-200 px-3 py-1 text-emerald-600 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {isRowActionLoading(outlet.id, 'visit') ? 'Switching…' : 'Visit POS'}
                     </button>
                   </div>
                 </td>
@@ -327,6 +541,47 @@ const OutletsPage: React.FC = () => {
             </div>
           </div>
         </section>
+
+        {selectionCount > 0 && (
+          <section className="flex flex-col gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+            <div className="font-semibold">
+              {selectionCount} outlet{selectionCount === 1 ? '' : 's'} selected
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => handleBulkStatusUpdate('ACTIVE')}
+                disabled={bulkProcessing}
+                className="rounded-lg bg-emerald-600 px-4 py-2 font-semibold text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Enable
+              </button>
+              <button
+                type="button"
+                onClick={() => handleBulkStatusUpdate('INACTIVE')}
+                disabled={bulkProcessing}
+                className="rounded-lg bg-amber-500 px-4 py-2 font-semibold text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Disable
+              </button>
+              <button
+                type="button"
+                onClick={handleBulkDelete}
+                disabled={bulkProcessing}
+                className="rounded-lg bg-rose-600 px-4 py-2 font-semibold text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Delete
+              </button>
+              <button
+                type="button"
+                onClick={clearSelection}
+                className="rounded-lg border border-blue-200 px-4 py-2 font-semibold text-blue-700 hover:bg-white"
+              >
+                Clear
+              </button>
+            </div>
+          </section>
+        )}
 
         {loading ? renderLoadState() : filteredOutlets.length === 0 ? renderEmptyState() : renderTable()}
       </div>
