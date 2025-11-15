@@ -343,6 +343,7 @@ const SalesInsightsPage: React.FC = () => {
       {error && (
         <Alert
           type="error"
+          title="Unable to load insights"
           message={error}
           className="mb-6"
         />

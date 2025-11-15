@@ -6,7 +6,7 @@ import ToastContainer from '../../../components/common/ToastContainer';
 import { outletService } from '../../../services/outletService';
 import { tableService } from '../../../services/tableService';
 import type { Outlet } from '../../../types/outlet';
-import type { TableReservation, TableServiceSession, TableStatus } from '../../../types/table';
+import type { TableReservation, TableServiceSession, TableStatus, TableSessionStatus } from '../../../types/table';
 import type { RecordStatus } from '../../../types/configuration';
 import { useBusinessMode } from '../../../hooks/useBusinessMode';
 
@@ -41,6 +41,8 @@ const statusOptions: Array<{ label: string; value: RecordStatus }> = [
 ];
 
 const defaultTableStatus: TableStatus = 'AVAILABLE';
+const ACTIVE_SESSION_STATUS: TableSessionStatus = 'ACTIVE';
+const COMPLETED_SESSION_STATUS: TableSessionStatus = 'COMPLETED';
 
 const formatServiceDuration = (startedAt?: string, endedAt?: string, _tick: number = 0): string => {
   if (!startedAt) {
@@ -355,7 +357,7 @@ const TablesPage: React.FC = () => {
         return;
       }
       setServiceSessions((prev) => {
-        if (prev.some((session) => session.tableId === tableId && session.status === 'ACTIVE')) {
+        if (prev.some((session) => session.tableId === tableId && session.status === ACTIVE_SESSION_STATUS)) {
           showAlert('error', 'Session Active', 'Complete the current session before starting a new one.');
           return prev;
         }
@@ -366,9 +368,9 @@ const TablesPage: React.FC = () => {
           startedAt: new Date().toISOString(),
           guestCount,
           waiter: waiterAssignments.get(tableId),
-          status: 'ACTIVE',
+          status: ACTIVE_SESSION_STATUS,
         };
-        const next = [...prev, session];
+        const next: TableServiceSession[] = [...prev, session];
         persistSessions(next);
         return next;
       });
@@ -379,9 +381,9 @@ const TablesPage: React.FC = () => {
   const completeService = useCallback(
     (tableId: number) => {
       setServiceSessions((prev) => {
-        const next = prev.map((session) =>
-          session.tableId === tableId && session.status === 'ACTIVE'
-            ? { ...session, status: 'COMPLETED', endedAt: new Date().toISOString() }
+        const next = prev.map<TableServiceSession>((session) =>
+          session.tableId === tableId && session.status === ACTIVE_SESSION_STATUS
+            ? { ...session, status: COMPLETED_SESSION_STATUS, endedAt: new Date().toISOString() }
             : session,
         );
         persistSessions(next);
@@ -392,7 +394,7 @@ const TablesPage: React.FC = () => {
   );
 
   const getActiveSession = useCallback(
-    (tableId: number) => serviceSessions.find((session) => session.tableId === tableId && session.status === 'ACTIVE'),
+    (tableId: number) => serviceSessions.find((session) => session.tableId === tableId && session.status === ACTIVE_SESSION_STATUS),
     [serviceSessions],
   );
 
@@ -577,15 +579,18 @@ const TablesPage: React.FC = () => {
       showAlert('error', 'Invalid Tables', 'Only saved tables can be transferred.');
       return;
     }
-    const waiter = waiterAssignments.get(from.id);
+    const fromId = from.id as number;
+    const toId = to.id as number;
+    const toName = to.name;
+    const waiter = waiterAssignments.get(fromId);
     if (waiter) {
-      handleAssignWaiter(to.id, waiter);
-      handleAssignWaiter(from.id, '');
+      handleAssignWaiter(toId, waiter);
+      handleAssignWaiter(fromId, '');
     }
     setServiceSessions((prev) => {
-      const next = prev.map((session) =>
-        session.tableId === from.id && session.status === 'ACTIVE'
-          ? { ...session, tableId: to.id, tableNumber: to.name }
+      const next = prev.map<TableServiceSession>((session) =>
+        session.tableId === fromId && session.status === ACTIVE_SESSION_STATUS
+          ? { ...session, tableId: toId, tableNumber: toName }
           : session,
       );
       persistSessions(next);

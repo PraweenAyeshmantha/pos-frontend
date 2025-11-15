@@ -70,8 +70,11 @@ cp .env.example .env
 Edit `.env` file:
 
 ```env
+# Local development
 VITE_API_BASE_URL=http://localhost:8080/posai/api
-VITE_TENANT_ID=PaPos
+
+# Production deployments should use a relative base to avoid hardcoding hosts
+# VITE_API_BASE_URL=/posai/api
 ```
 
 ### 3. Run Development Server

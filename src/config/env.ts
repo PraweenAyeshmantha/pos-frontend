@@ -15,16 +15,22 @@ interface EnvConfig {
  * Instead of throwing, marks config as invalid if required variables are missing
  */
 function validateEnv(): EnvConfig {
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
   const mode = import.meta.env.MODE;
+  const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
+  const fallbackRelativeBase = '/posai/api';
 
-  // Check if VITE_API_BASE_URL is set
+  // Prefer configured base URL when present, otherwise fall back to a relative path
+  // The fallback ensures production builds default to /posai/api without hardcoding localhost.
+  const apiBaseUrl = configuredApiBaseUrl && configuredApiBaseUrl.length > 0
+    ? configuredApiBaseUrl.replace(/\/+$/, '')
+    : (mode === 'production' ? fallbackRelativeBase : '');
+
+  // Check if VITE_API_BASE_URL (or fallback) is available
   if (!apiBaseUrl) {
     const errorMessage = 
       '❌ VITE_API_BASE_URL is not set!\n\n' +
-      'Please create a .env file in the root directory with:\n' +
-      'VITE_API_BASE_URL=your_api_url_here\n\n' +
-      'Example: VITE_API_BASE_URL=http://localhost:8080/posai/api\n' +
+      'For local development: VITE_API_BASE_URL=http://localhost:8080/posai/api\n' +
+      'For production deployments: VITE_API_BASE_URL=/posai/api\n' +
       'You can copy .env.example to .env and update the values.';
     
     console.error(errorMessage);
