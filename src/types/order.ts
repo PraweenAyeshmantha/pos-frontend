@@ -45,6 +45,10 @@ export interface Order {
   cashierName?: string;
   cashierUsername?: string;
 
+  // Table details
+  tableId?: number;
+  tableNumber?: string;
+
   // Order items
   items?: OrderItem[];
   payments?: OrderPayment[];

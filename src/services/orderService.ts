@@ -1,5 +1,6 @@
 import apiClient from './apiClient';
 import type { ApiResponse } from '../types/configuration';
+import type { InvoiceData } from '../types/invoice';
 import type { Order, OrderFilters, PartialRefundRequest, RefundResponse } from '../types/order';
 
 const buildQuery = (filters?: OrderFilters): string => {
@@ -77,6 +78,48 @@ export const orderService = {
       responseType: 'text',
     });
     return response.data;
+  },
+
+  async holdOrder(orderId: number, notes?: string | null): Promise<Order> {
+    const response = await apiClient.post<ApiResponse<Order>>(
+      `/admin/orders/${orderId}/hold`,
+      { notes: notes ?? undefined },
+    );
+    if (!response.data.data) {
+      throw new Error('Failed to hold order');
+    }
+    return response.data.data;
+  },
+
+  async restoreOrder(orderId: number): Promise<Order> {
+    const response = await apiClient.post<ApiResponse<Order>>(`/admin/orders/${orderId}/restore`, {});
+    if (!response.data.data) {
+      throw new Error('Failed to restore order');
+    }
+    return response.data.data;
+  },
+
+  async transferToKitchen(orderId: number): Promise<Order> {
+    const response = await apiClient.post<ApiResponse<Order>>(
+      `/admin/orders/${orderId}/transfer-to-kitchen`,
+      {},
+    );
+    if (!response.data.data) {
+      throw new Error('Failed to transfer order to kitchen');
+    }
+    return response.data.data;
+  },
+
+  async deleteOrder(orderId: number): Promise<void> {
+    await apiClient.delete(`/admin/orders/${orderId}`);
+  },
+
+  async getInvoiceData(orderId: number): Promise<InvoiceData> {
+    const response = await apiClient.get<ApiResponse<InvoiceData>>(`/admin/orders/${orderId}/invoice`);
+    if (!response.data.data) {
+      throw new Error('Failed to load invoice data');
+    }
+    return response.data.data;
   },
 
   async processPartialRefund(orderId: number, request: PartialRefundRequest): Promise<RefundResponse> {

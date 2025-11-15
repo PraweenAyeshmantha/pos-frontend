@@ -46,6 +46,15 @@ const POSAdminPage: React.FC = () => {
             screenCode: 'ADMIN_STATISTICS',
           },
           {
+            id: 'sales-insights',
+            title: 'Sales Insights',
+            description: 'Analyze sales summaries, profitability, and detailed transactional breakdowns.',
+            path: '/admin/sales-insights',
+            icon: '💰',
+            accentClass: 'bg-orange-100 text-orange-600',
+            screenCode: 'ADMIN_SALES_INSIGHTS',
+          },
+          {
             id: 'configuration',
             title: 'Configuration',
             description: 'Update POS settings, integrations, and layout preferences.',

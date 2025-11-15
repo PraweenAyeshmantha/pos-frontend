@@ -32,3 +32,30 @@ export interface UpdateDiningTableRequest {
   status: TableStatus;
   recordStatus: RecordStatus;
 }
+
+export type ReservationStatus = 'PENDING' | 'CONFIRMED' | 'SEATED' | 'COMPLETED' | 'CANCELLED';
+
+export interface TableReservation {
+  id: string;
+  tableId: number;
+  tableNumber: string;
+  guestName: string;
+  partySize: number;
+  reservationTime: string;
+  status: ReservationStatus;
+  contactPhone?: string;
+  notes?: string;
+}
+
+export type TableSessionStatus = 'ACTIVE' | 'COMPLETED';
+
+export interface TableServiceSession {
+  id: string;
+  tableId: number;
+  tableNumber: string;
+  startedAt: string;
+  endedAt?: string;
+  waiter?: string;
+  guestCount?: number;
+  status: TableSessionStatus;
+}

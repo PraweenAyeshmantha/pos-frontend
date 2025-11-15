@@ -46,6 +46,7 @@ const BASE_ITEMS: NavigationItemConfig[] = [
   { id: 'admin-access', label: 'Access', icon: '🔐', path: '/admin/access', screenCode: 'ADMIN_USER_ACCESS', area: 'admin', priority: 40 },
   { id: 'admin-customers', label: 'Customers', icon: '👥', path: '/admin/customers', screenCode: 'SHARED_CUSTOMERS', area: 'admin', priority: 50 },
   { id: 'admin-orders', label: 'Orders', icon: '🛍️', path: '/admin/orders', screenCode: 'SHARED_ORDERS', area: 'admin', priority: 60 },
+  { id: 'admin-reports', label: 'Reports', icon: '📊', path: '/admin/reports', screenCode: 'ADMIN_REPORTS', area: 'admin', priority: 65 },
   { id: 'admin-gift-cards', label: 'Gift Cards', icon: '🎁', path: '/admin/gift-cards', screenCode: 'ADMIN_GIFT_CARDS', area: 'admin', priority: 70 },
   { id: 'admin-settings', label: 'Settings', icon: '⚙️', path: '/admin/settings', screenCode: 'SHARED_SETTINGS', area: 'admin', priority: 90 },
   { id: 'cashier-home', label: 'POS Home', icon: '🏠', path: '/cashier/dashboard', screenCode: 'CASHIER_DASHBOARD', area: 'cashier', priority: 10 },
