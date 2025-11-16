@@ -45,79 +45,86 @@ The following configuration keys are available in the GENERAL category:
 - **Values**: `PRODUCT_ID` or `SKU`
 - **Description**: Enables automated generation of barcodes for products
 
-### 6. Enable Order Emails
+### 6. System Currency
+- **Key**: `system_currency`
+- **Type**: STRING
+- **Default**: `USD`
+- **Values**: `USD`, `LKR`
+- **Description**: Defines the system-wide currency symbol/format used across POS reports.
+
+### 7. Enable Order Emails
 - **Key**: `enable_order_emails`
 - **Type**: BOOLEAN
 - **Default**: `false`
 - **Description**: Activate/deactivate email notifications for orders made at POS
 
-### 7. Enable Split/Multiple Payment Methods
+### 8. Enable Split/Multiple Payment Methods
 - **Key**: `enable_split_payment`
 - **Type**: BOOLEAN
 - **Default**: `true`
 - **Description**: Allow customers to make payments using multiple payment methods
 
-### 8. Enable Order Note
+### 9. Enable Order Note
 - **Key**: `enable_order_note`
 - **Type**: BOOLEAN
 - **Default**: `true`
 - **Description**: Allow entering order notes for orders made at POS
 
-### 9. Enable Offline Orders for Online Mode (Fast Orders)
+### 10. Enable Offline Orders for Online Mode (Fast Orders)
 - **Key**: `enable_offline_orders`
 - **Type**: BOOLEAN
 - **Default**: `false`
 - **Description**: Allow generation of orders offline before automatically syncing online to expedite order creation
 
-### 10. Enable Adding Custom Product
+### 11. Enable Adding Custom Product
 - **Key**: `enable_custom_product`
 - **Type**: BOOLEAN
 - **Default**: `true`
 - **Description**: Allow adding custom products with custom pricing at POS
 
-### 11. Enable Open Cash Drawer Popup
+### 12. Enable Open Cash Drawer Popup
 - **Key**: `enable_cash_drawer_popup`
 - **Type**: BOOLEAN
 - **Default**: `true`
 - **Description**: Automated popup to enter open cash drawer amount daily at POS
 
-### 12. Show Variations as Different Products
+### 13. Show Variations as Different Products
 - **Key**: `show_variations_as_products`
 - **Type**: BOOLEAN
 - **Default**: `false`
 - **Description**: Display product variants as separate products at POS
 
-### 13. Enable Unit/Weight Based Pricing
+### 14. Enable Unit/Weight Based Pricing
 - **Key**: `enable_weight_based_pricing`
 - **Type**: BOOLEAN
 - **Default**: `false`
 - **Description**: Allow pricing adjustment based on weight entered at POS
 
-### 14. Automatic Send Orders to Kitchen When Put to Hold
+### 15. Automatic Send Orders to Kitchen When Put to Hold
 - **Key**: `auto_send_to_kitchen_on_hold`
 - **Type**: BOOLEAN
 - **Default**: `false`
 - **Description**: Automatically send orders on hold to kitchen from POS terminal
 
-### 15. Logo
+### 16. Logo
 - **Key**: `logo_url`
 - **Type**: STRING
 - **Default**: "" (empty)
 - **Description**: Brand logo URL for POS screen and sales receipts/invoices
 
-### 16. Select Default/Guest Customer
+### 17. Select Default/Guest Customer
 - **Key**: `default_customer_id`
 - **Type**: NUMBER
 - **Default**: "" (empty)
 - **Description**: Default customer ID for all POS orders (can be updated within POS)
 
-### 17. POS Endpoint
+### 18. POS Endpoint
 - **Key**: `pos_endpoint`
 - **Type**: STRING
 - **Default**: `/pos`
 - **Description**: Endpoint URL for Point of Sale
 
-### 18. Kitchen Endpoint
+### 19. Kitchen Endpoint
 - **Key**: `kitchen_endpoint`
 - **Type**: STRING
 - **Default**: `/kitchen`
@@ -302,7 +309,7 @@ Boolean splitPaymentEnabled = configurationService.getConfigValueAsBoolean(
 
 ## Database Migration
 
-The configurations are automatically initialized when the application starts through Liquibase migrations. The migration file `014-insert-default-general-configurations.yaml` creates all 18 configuration entries with their default values.
+The configurations are automatically initialized when the application starts through Liquibase migrations. The migration file `014-insert-default-general-configurations.yaml` creates all 19 configuration entries with their default values.
 
 ## Best Practices
 

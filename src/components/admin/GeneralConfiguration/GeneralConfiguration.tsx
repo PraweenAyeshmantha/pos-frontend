@@ -1,6 +1,6 @@
 import React, { useState, useEffect, memo, useCallback } from 'react';
 import { configurationService } from '../../../services/configurationService';
-import type { BusinessMode, GeneralConfigFormData } from '../../../types/configuration';
+import type { BusinessMode, GeneralConfigFormData, SystemCurrency } from '../../../types/configuration';
 import Alert from '../../common/Alert';
 import type { AlertType } from '../../common/Alert';
 import ToastContainer from '../../common/ToastContainer';
@@ -10,6 +10,7 @@ import LoginConfiguration from '../LoginConfiguration/LoginConfiguration';
 import PrinterConfiguration from '../PrinterConfiguration/PrinterConfiguration';
 import LayoutConfiguration from '../LayoutConfiguration/LayoutConfiguration';
 import AdminPageHeader from '../../layout/AdminPageHeader';
+import { persistSystemCurrency } from '../../../hooks/useSystemCurrency';
 
 const BUSINESS_MODE_STORAGE_KEY = 'posBusinessMode';
 
@@ -51,6 +52,7 @@ const GeneralConfiguration: React.FC = () => {
     inventory_type: 'CUSTOM',
     default_order_status: 'PENDING',
     default_barcode_type: 'PRODUCT_ID',
+    system_currency: 'USD',
     enable_order_emails: false,
     enable_split_payment: true,
     enable_order_note: true,
@@ -81,12 +83,14 @@ const GeneralConfiguration: React.FC = () => {
       });
 
       const resolvedMode = (configMap.business_mode as BusinessMode) || 'RETAIL';
+      const resolvedCurrency: SystemCurrency = configMap.system_currency === 'LKR' ? 'LKR' : 'USD';
       const nextFormData: GeneralConfigFormData = {
         license_key: configMap.license_key || '',
         module_enabled: configMap.module_enabled === 'true',
         inventory_type: (configMap.inventory_type || 'CUSTOM') as 'CUSTOM' | 'CENTRALIZED',
         default_order_status: configMap.default_order_status || 'PENDING',
         default_barcode_type: (configMap.default_barcode_type || 'PRODUCT_ID') as 'PRODUCT_ID' | 'SKU',
+        system_currency: resolvedCurrency,
         enable_order_emails: configMap.enable_order_emails === 'true',
         enable_split_payment: configMap.enable_split_payment === 'true',
         enable_order_note: configMap.enable_order_note === 'true',
@@ -105,6 +109,7 @@ const GeneralConfiguration: React.FC = () => {
 
       setFormData(nextFormData);
       persistBusinessMode(resolvedMode);
+      persistSystemCurrency(resolvedCurrency);
 
       if (configMap.logo_url) {
         setLogoPreview(configMap.logo_url);
@@ -138,6 +143,7 @@ const GeneralConfiguration: React.FC = () => {
         inventory_type: formData.inventory_type,
         default_order_status: formData.default_order_status,
         default_barcode_type: formData.default_barcode_type,
+        system_currency: formData.system_currency,
         enable_order_emails: String(formData.enable_order_emails),
         enable_split_payment: String(formData.enable_split_payment),
         enable_order_note: String(formData.enable_order_note),
@@ -156,6 +162,7 @@ const GeneralConfiguration: React.FC = () => {
 
       await configurationService.bulkUpdateConfigurations(configurations);
       persistBusinessMode(formData.business_mode);
+      persistSystemCurrency(formData.system_currency as SystemCurrency);
   setMessage({ type: 'success', text: 'Configurations saved successfully!' });
     } catch (error) {
       console.error('Error saving configurations:', error);
@@ -338,6 +345,24 @@ const GeneralConfiguration: React.FC = () => {
                 >
                   <option value="PRODUCT_ID">Product ID</option>
                   <option value="SKU">SKU</option>
+                </select>
+              </div>
+
+              {/* System Currency */}
+              <div className="flex items-center justify-between border-b border-gray-200 py-4">
+                <div className="flex items-center space-x-3">
+                  <label className="font-semibold text-gray-800">System Currency</label>
+                  <button className="text-gray-400 hover:text-gray-600" title="System currency information">
+                    ⓘ
+                  </button>
+                </div>
+                <select
+                  value={formData.system_currency}
+                  onChange={(e) => handleInputChange('system_currency', e.target.value as SystemCurrency)}
+                  className="min-w-[300px] rounded-md border border-gray-300 bg-white px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="USD">USD — US Dollar ($)</option>
+                  <option value="LKR">LKR — Sri Lankan Rupee (Rs)</option>
                 </select>
               </div>
 

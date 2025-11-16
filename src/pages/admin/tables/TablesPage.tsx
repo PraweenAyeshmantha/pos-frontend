@@ -9,6 +9,7 @@ import type { Outlet } from '../../../types/outlet';
 import type { TableReservation, TableServiceSession, TableStatus, TableSessionStatus } from '../../../types/table';
 import type { RecordStatus } from '../../../types/configuration';
 import { useBusinessMode } from '../../../hooks/useBusinessMode';
+import { formatCurrency } from '../../../utils/currency';
 
 interface TableRow {
   id?: number;
@@ -110,10 +111,9 @@ const TablesPage: React.FC = () => {
       return null;
     }
     const share = total / parties;
-    const formatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
     return Array.from({ length: parties }, (_, index) => ({
       label: `Guest ${index + 1}`,
-      amount: formatter.format(share),
+      amount: formatCurrency(share),
     }));
   }, [splitBillConfig.amount, splitBillConfig.parties]);
 

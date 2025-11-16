@@ -24,6 +24,7 @@ export interface BulkUpdateRequest {
 }
 
 export type BusinessMode = 'RETAIL' | 'RESTAURANT_CAFE';
+export type SystemCurrency = 'USD' | 'LKR';
 
 export interface GeneralConfigFormData {
   license_key: string;
@@ -31,6 +32,7 @@ export interface GeneralConfigFormData {
   inventory_type: 'CUSTOM' | 'CENTRALIZED';
   default_order_status: string;
   default_barcode_type: 'PRODUCT_ID' | 'SKU';
+  system_currency: SystemCurrency;
   enable_order_emails: boolean;
   enable_split_payment: boolean;
   enable_order_note: boolean;

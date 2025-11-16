@@ -11,6 +11,7 @@ import { transactionService, type Transaction } from '../../services/transaction
 import { statisticsService } from '../../services/statisticsService';
 import type { CashierSession } from '../../types/cashierSession';
 import { useOutlet } from '../../contexts/OutletContext';
+import { formatCurrency } from '../../utils/currency';
 
 const CashierBalancingPage: React.FC = () => {
   const { currentOutlet } = useOutlet();
@@ -266,13 +267,6 @@ const CashierBalancingPage: React.FC = () => {
   const handleCloseCashModal = useCallback(() => {
     setShowCashModal(false);
   }, []);
-
-  const formatCurrency = (amount: number): string => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
-  };
 
   const formatDateTime = (value?: string): string => {
     if (!value) {

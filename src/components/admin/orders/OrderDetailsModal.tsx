@@ -1,6 +1,7 @@
 import React, { memo } from 'react';
 import { createPortal } from 'react-dom';
 import type { Order } from '../../../types/order';
+import { formatCurrency } from '../../../utils/currency';
 
 interface OrderDetailsModalProps {
   order: Order;
@@ -8,17 +9,6 @@ interface OrderDetailsModalProps {
   onPrintReceipt?: (orderId: number) => void;
   onPrintInvoice?: (orderId: number) => void;
 }
-
-const formatCurrency = (value?: number): string => {
-  if (typeof value !== 'number' || Number.isNaN(value)) {
-    return '$0.00';
-  }
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-  }).format(value);
-};
 
 const formatDate = (dateString?: string): string => {
   if (!dateString) {

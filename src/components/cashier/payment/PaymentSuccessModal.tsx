@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Order } from '../../../types/order';
+import { formatCurrency } from '../../../utils/currency';
 
 interface PaymentSuccessModalProps {
   open: boolean;
@@ -8,14 +9,6 @@ interface PaymentSuccessModalProps {
   onPrintReceipt?: () => void;
   onNewOrder?: () => void;
 }
-
-const currencyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-  minimumFractionDigits: 2,
-});
-
-const formatCurrency = (value: number): string => currencyFormatter.format(value);
 
 const PaymentSuccessModal: React.FC<PaymentSuccessModalProps> = ({
   open,

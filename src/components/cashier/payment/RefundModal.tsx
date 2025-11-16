@@ -3,6 +3,7 @@ import Alert, { type AlertType } from '../../common/Alert';
 import ToastContainer from '../../common/ToastContainer';
 import { orderService } from '../../../services/orderService';
 import type { Order, OrderItem, PartialRefundRequest, RefundResponse } from '../../../types/order';
+import { formatCurrency } from '../../../utils/currency';
 
 interface RefundModalProps {
   open: boolean;
@@ -19,14 +20,6 @@ interface RefundItem {
   refundQuantity: number;
   maxRefundQuantity: number;
 }
-
-const currencyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-  minimumFractionDigits: 2,
-});
-
-const formatCurrency = (value: number): string => currencyFormatter.format(value);
 
 const RefundModal: React.FC<RefundModalProps> = ({ open, onClose, onSuccess, order: initialOrder }) => {
   const [orderNumber, setOrderNumber] = useState('');

@@ -1,17 +1,5 @@
 import type { InvoiceData } from '../types/invoice';
-
-const currencyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-  minimumFractionDigits: 2,
-});
-
-const formatCurrency = (value?: number): string => {
-  if (typeof value !== 'number' || Number.isNaN(value)) {
-    return currencyFormatter.format(0);
-  }
-  return currencyFormatter.format(value);
-};
+import { formatCurrency } from './currency';
 
 const formatDate = (value?: string): string => {
   if (!value) {

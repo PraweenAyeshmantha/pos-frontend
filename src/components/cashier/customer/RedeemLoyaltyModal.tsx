@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import type { LoyaltySummary } from '../../../types/loyalty';
+import { formatCurrency } from '../../../utils/currency';
 
 interface RedeemLoyaltyModalProps {
   open: boolean;
@@ -109,7 +110,7 @@ const RedeemLoyaltyModal: React.FC<RedeemLoyaltyModalProps> = ({
               </div>
             )}
             <div className="mt-2 rounded-xl bg-white px-3 py-2 text-xs text-slate-500">
-              1 pt ≈ {currencyPerPoint > 0 ? `$${currencyPerPoint.toFixed(2)}` : '$0.00'}
+              1 pt ≈ {formatCurrency(currencyPerPoint)}
             </div>
           </div>
 
@@ -130,7 +131,7 @@ const RedeemLoyaltyModal: React.FC<RedeemLoyaltyModalProps> = ({
           </label>
 
           <div className="rounded-xl bg-blue-50 px-4 py-3 text-sm text-blue-900">
-            Redeems for approximately <span className="font-semibold">{`$${redemptionValue.toFixed(2)}`}</span>
+            Redeems for approximately <span className="font-semibold">{formatCurrency(redemptionValue)}</span>
           </div>
 
           {error && <p className="text-sm text-rose-600">{error}</p>}

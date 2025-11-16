@@ -17,18 +17,7 @@ import type {
   GoodsReceivedNoteRequest,
 } from '../../types/goodsReceivedNote';
 import type { PurchaseOrder } from '../../types/purchaseOrder';
-
-const currencyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-});
-
-const formatCurrency = (value?: number): string => {
-  if (typeof value !== 'number' || Number.isNaN(value)) {
-    return currencyFormatter.format(0);
-  }
-  return currencyFormatter.format(value);
-};
+import { formatCurrency } from '../../utils/currency';
 
 const formatDate = (value?: string): string => {
   if (!value) {

@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import type { PaymentMethod } from '../../../types/payment';
 import type { GiftCardLookupResponse } from '../../../types/giftCard';
 import { giftCardService } from '../../../services/giftCardService';
+import { formatCurrency } from '../../../utils/currency';
 
 interface PaymentEntry {
   id: string;
@@ -26,14 +27,6 @@ interface PaymentModalProps {
   enableOrderNotes?: boolean;
   enableSplitPayment?: boolean;
 }
-
-const currencyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-  minimumFractionDigits: 2,
-});
-
-const formatCurrency = (value: number): string => currencyFormatter.format(value);
 
 const PaymentModal: React.FC<PaymentModalProps> = ({
   open,
