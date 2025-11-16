@@ -15,6 +15,7 @@ import type { Product, ProductWithStockDetails } from '../../../types/product';
 import type { Brand, ProductCategory, Tag } from '../../../types/taxonomy';
 import type { ProductWithStock } from '../../../types/stock';
 import { useOutlet } from '../../../contexts/OutletContext';
+import { formatCurrency } from '../../../utils/currency';
 
 const formatProductType = (type?: string): string => {
   if (!type) {
@@ -42,19 +43,6 @@ const formatDateTime = (value?: string): string => {
     hour: '2-digit',
     minute: '2-digit',
   });
-};
-
-const currencyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-  minimumFractionDigits: 2,
-});
-
-const formatCurrency = (value?: number): string => {
-  if (typeof value !== 'number' || Number.isNaN(value)) {
-    return '—';
-  }
-  return currencyFormatter.format(value);
 };
 
 const resolveTimestamp = (value?: string): number => {

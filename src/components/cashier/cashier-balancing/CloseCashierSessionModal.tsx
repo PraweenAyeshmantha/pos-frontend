@@ -2,6 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { cashierSessionService } from '../../../services/cashierSessionService';
 import type { CashierSession } from '../../../types/cashierSession';
+import { formatCurrency, getCurrencySymbol } from '../../../utils/currency';
 
 interface CloseCashierSessionModalProps {
   session: CashierSession;
@@ -21,6 +22,7 @@ const DEFAULT_FORM_DATA: FormData = {
 };
 
 const CloseCashierSessionModal: React.FC<CloseCashierSessionModalProps> = ({ session, currentBalance, onClose, onSuccess }) => {
+  const currencySymbol = getCurrencySymbol();
   const [formData, setFormData] = useState<FormData>(DEFAULT_FORM_DATA);
   const [saving, setSaving] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,13 +63,6 @@ const CloseCashierSessionModal: React.FC<CloseCashierSessionModalProps> = ({ ses
     [formData, session, onSuccess, onClose],
   );
 
-  const formatCurrency = (amount: number): string => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
-  };
-
   const modalContent = (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
@@ -104,7 +99,7 @@ const CloseCashierSessionModal: React.FC<CloseCashierSessionModalProps> = ({ ses
             </label>
             <div className="relative mt-1">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <span className="text-slate-500 sm:text-sm">$</span>
+                <span className="text-slate-500 sm:text-sm">{currencySymbol}</span>
               </div>
               <input
                 type="number"

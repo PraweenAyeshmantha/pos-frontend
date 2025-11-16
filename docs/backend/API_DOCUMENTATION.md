@@ -1789,19 +1789,20 @@ The following configuration keys are available in the GENERAL category (initiali
 3. `inventory_type` - Inventory type (CUSTOM or CENTRALIZED)
 4. `default_order_status` - Default order status for POS orders
 5. `default_barcode_type` - Default barcode type (PRODUCT_ID or SKU)
-6. `enable_order_emails` - Enable order email notifications
-7. `enable_split_payment` - Enable split/multiple payment methods
-8. `enable_order_note` - Enable order notes
-9. `enable_offline_orders` - Enable offline order mode
-10. `enable_custom_product` - Enable custom product addition
-11. `enable_cash_drawer_popup` - Enable cash drawer popup
-12. `show_variations_as_products` - Show variations as separate products
-13. `enable_weight_based_pricing` - Enable weight-based pricing
-14. `auto_send_to_kitchen_on_hold` - Auto-send orders to kitchen on hold
-15. `logo_url` - Brand logo URL
-16. `default_customer_id` - Default customer ID
-17. `pos_endpoint` - POS endpoint URL
-18. `kitchen_endpoint` - Kitchen endpoint URL
+6. `system_currency` - System currency code (USD or LKR)
+7. `enable_order_emails` - Enable order email notifications
+8. `enable_split_payment` - Enable split/multiple payment methods
+9. `enable_order_note` - Enable order notes
+10. `enable_offline_orders` - Enable offline order mode
+11. `enable_custom_product` - Enable custom product addition
+12. `enable_cash_drawer_popup` - Enable cash drawer popup
+13. `show_variations_as_products` - Show variations as separate products
+14. `enable_weight_based_pricing` - Enable weight-based pricing
+15. `auto_send_to_kitchen_on_hold` - Auto-send orders to kitchen on hold
+16. `logo_url` - Brand logo URL
+17. `default_customer_id` - Default customer ID
+18. `pos_endpoint` - POS endpoint URL
+19. `kitchen_endpoint` - Kitchen endpoint URL
 
 For detailed documentation, see [GENERAL_CONFIGURATION_GUIDE.md](GENERAL_CONFIGURATION_GUIDE.md)
 

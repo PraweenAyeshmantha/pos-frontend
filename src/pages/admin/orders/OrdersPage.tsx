@@ -14,6 +14,7 @@ import { useOutlet } from '../../../contexts/OutletContext';
 import { getUserRoleCodes } from '../../../utils/authRoles';
 import { useBusinessMode } from '../../../hooks/useBusinessMode';
 import buildInvoiceHtml from '../../../utils/invoice';
+import { formatCurrency } from '../../../utils/currency';
 
 const ORDER_STATUS_OPTIONS: Array<{ label: string; value: OrderStatus }> = [
   { label: 'All Statuses', value: '' as OrderStatus },
@@ -34,17 +35,6 @@ const ORDER_TYPE_OPTIONS: Array<{ label: string; value: OrderType | '' }> = [
   { label: 'Takeaway', value: 'TAKEAWAY' },
   { label: 'Delivery', value: 'DELIVERY' },
 ];
-
-const formatCurrency = (value?: number): string => {
-  if (typeof value !== 'number' || Number.isNaN(value)) {
-    return '$0.00';
-  }
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-  }).format(value);
-};
 
 const formatDate = (dateString?: string): string => {
   if (!dateString) {

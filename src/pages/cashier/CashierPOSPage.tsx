@@ -32,6 +32,7 @@ import type { Customer } from '../../types/customer';
 import type { LoyaltySummary } from '../../types/loyalty';
 import { useAuth } from '../../hooks/useAuth';
 import { useOutlet } from '../../contexts/OutletContext';
+import { formatCurrency as formatCurrencyUtil } from '../../utils/currency';
 
 type CategoryKey = 'all' | number;
 
@@ -52,13 +53,7 @@ interface CartItem {
   taxRate?: number; // Tax rate percentage (e.g., 10 for 10%)
 }
 
-const currencyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-  minimumFractionDigits: 2,
-});
-
-const formatCurrency = (value: number): string => currencyFormatter.format(value);
+const formatCurrency = (value: number): string => formatCurrencyUtil(value);
 
 const buildOfflineReceiptHtml = (order: Order): string => {
   const itemsRows = (order.items ?? [])

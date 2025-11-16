@@ -13,11 +13,9 @@ import type { Supplier } from '../../../types/supplier';
 import type { Outlet } from '../../../types/outlet';
 import type { Product } from '../../../types/product';
 import type { PurchaseOrder, PurchaseOrderStatus } from '../../../types/purchaseOrder';
+import { formatCurrency } from '../../../utils/currency';
 
 const OPEN_STATUSES: PurchaseOrderStatus[] = ['DRAFT', 'SUBMITTED', 'PARTIALLY_RECEIVED'];
-
-const formatCurrency = (value: number): string =>
-  value.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 const PurchaseOrdersPage: React.FC = () => {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);

@@ -9,6 +9,7 @@ import CashTransactionModal from '../../../components/admin/cashier-balancing/Ca
 import { cashierSessionService } from '../../../services/cashierSessionService';
 import { transactionService, type Transaction } from '../../../services/transactionService';
 import type { CashierSession } from '../../../types/cashierSession';
+import { formatCurrency } from '../../../utils/currency';
 
 const CashierBalancingPage: React.FC = () => {
   const [sessions, setSessions] = useState<CashierSession[]>([]);
@@ -105,13 +106,6 @@ const CashierBalancingPage: React.FC = () => {
     () => sessions.filter((session) => session.status === 'CLOSED'),
     [sessions],
   );
-
-  const formatCurrency = (amount: number): string => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
-  };
 
   const formatDateTime = (value?: string): string => {
     if (!value) {

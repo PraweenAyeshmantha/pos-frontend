@@ -7,14 +7,7 @@ import { transactionService, type Transaction, type CreateTransactionRequest } f
 import { statisticsService, type DailySalesReport } from '../../services/statisticsService';
 import { useAuth } from '../../hooks/useAuth';
 import { useOutlet } from '../../contexts/OutletContext';
-
-const formatCurrency = (value: number): string => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-  }).format(value);
-};
+import { formatCurrency } from '../../utils/currency';
 
 const formatDateTime = (dateString: string): string => {
   try {

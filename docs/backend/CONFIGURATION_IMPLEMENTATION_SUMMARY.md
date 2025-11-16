@@ -4,7 +4,7 @@
 This document summarizes the implementation of the Configuration modules for the POS Backend system, which provides pre-configured settings to customize POS behavior.
 
 The system includes:
-- **General Configuration**: 18 settings for POS behavior
+- **General Configuration**: 19 settings for POS behavior
 - **PWA Configuration**: 6 settings for Progressive Web App
 - **Login Configuration**: 8 settings for login screen
 - **Printer Configuration**: 8 settings for barcode and invoice printing
@@ -13,7 +13,7 @@ The system includes:
 
 ### 1. Database Layer
 **File:** `src/main/resources/db/changelog/v1.0/014-insert-default-general-configurations.yaml`
-- Created Liquibase migration with 18 configuration entries
+- Created Liquibase migration with 19 configuration entries
 - Each configuration includes:
   - Unique key-category combination
   - Default value
@@ -67,7 +67,7 @@ Created comprehensive documentation:
 
 ## Configuration Keys Reference
 
-### General Configuration (18 keys)
+### General Configuration (19 keys)
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
@@ -76,6 +76,7 @@ Created comprehensive documentation:
 | inventory_type | STRING | CUSTOM | Inventory type (CUSTOM or CENTRALIZED) |
 | default_order_status | STRING | PENDING | Default order status for POS |
 | default_barcode_type | STRING | PRODUCT_ID | Barcode type (PRODUCT_ID or SKU) |
+| system_currency | STRING | USD | System-wide currency (USD or LKR) |
 | enable_order_emails | BOOLEAN | false | Enable order email notifications |
 | enable_split_payment | BOOLEAN | true | Enable multiple payment methods |
 | enable_order_note | BOOLEAN | true | Enable order notes |
@@ -291,4 +292,4 @@ Potential improvements for future versions:
 
 ## Conclusion
 
-The General Configuration implementation provides a robust, flexible, and well-documented system for managing POS settings. All 18 configuration keys from the requirements have been successfully implemented with appropriate defaults, comprehensive documentation, and thorough testing.
+The General Configuration implementation provides a robust, flexible, and well-documented system for managing POS settings. All 19 configuration keys from the requirements have been successfully implemented with appropriate defaults, comprehensive documentation, and thorough testing.

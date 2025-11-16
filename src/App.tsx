@@ -11,6 +11,7 @@ import env from './config/env';
 import { useAuth } from './hooks/useAuth';
 import { getDefaultTenantPath } from './utils/authRoles';
 import ScrollToTop from './components/layout/ScrollToTop';
+import { useSystemCurrency } from './hooks/useSystemCurrency';
 
 // Lazy load pages for better performance
 const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
@@ -70,6 +71,7 @@ const TenantLanding = () => {
 };
 
 function App() {
+  useSystemCurrency();
   // Check if environment is properly configured
   if (!env.isValid) {
     return <EnvConfigErrorPage errorMessage={env.errorMessage} />;

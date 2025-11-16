@@ -1,12 +1,8 @@
-const currencyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-  minimumFractionDigits: 2,
-});
+import { formatCurrency as systemFormatCurrency } from './currency';
 
 const numberFormatter = new Intl.NumberFormat('en-US');
 
-export const formatCurrency = (value: number) => currencyFormatter.format(value);
+export const formatCurrency = (value: number) => systemFormatCurrency(value);
 export const formatNumber = (value: number) => numberFormatter.format(value);
 
 export const getTodayRange = () => {

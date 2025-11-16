@@ -2,6 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { transactionService } from '../../../services/transactionService';
 import type { CashierSession } from '../../../types/cashierSession';
+import { formatCurrency, getCurrencySymbol } from '../../../utils/currency';
 
 interface CashTransactionModalProps {
   session: CashierSession;
@@ -17,6 +18,7 @@ interface FormData {
 }
 
 const CashTransactionModal: React.FC<CashTransactionModalProps> = ({ session, onClose, onSuccess }) => {
+  const currencySymbol = getCurrencySymbol();
   const [formData, setFormData] = useState<FormData>({
     transactionType: 'CASH_IN',
     amount: '',
@@ -70,13 +72,6 @@ const CashTransactionModal: React.FC<CashTransactionModalProps> = ({ session, on
     },
     [session.id, formData, onSuccess, onClose],
   );
-
-  const formatCurrency = (amount: number): string => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
-  };
 
   const modalContent = (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
@@ -149,7 +144,7 @@ const CashTransactionModal: React.FC<CashTransactionModalProps> = ({ session, on
               </label>
               <div className="relative mt-1">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                  <span className="text-gray-500 sm:text-sm">$</span>
+                  <span className="text-gray-500 sm:text-sm">{currencySymbol}</span>
                 </div>
                 <input
                   type="number"
