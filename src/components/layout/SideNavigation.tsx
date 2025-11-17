@@ -14,9 +14,12 @@ const SideNavigation: React.FC = () => {
   const { tenantId } = useParams<{ tenantId: string }>();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [maxPrimaryItems, setMaxPrimaryItems] = useState(MAX_PRIMARY_ITEMS);
   const navigationItems = useMemo<NavigationItemConfig[]>(() => buildNavigationItems(user), [user]);
   const moreMenuRef = useRef<HTMLDivElement | null>(null);
   const moreButtonRef = useRef<HTMLButtonElement | null>(null);
+  const navigationContainerRef = useRef<HTMLDivElement | null>(null);
+  const firstNavButtonRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     if (!showMoreMenu) {
@@ -75,11 +78,46 @@ const SideNavigation: React.FC = () => {
     handleLogout();
   }, [handleCloseDialog, handleLogout]);
 
-  const visibleItems = navigationItems.slice(0, MAX_PRIMARY_ITEMS);
-  const overflowItems = navigationItems.slice(MAX_PRIMARY_ITEMS);
+  useEffect(() => {
+    // Dynamically calculate how many navigation buttons can fit in the current viewport.
+    const updateMaxPrimaryItems = () => {
+      const containerHeight = navigationContainerRef.current?.clientHeight ?? 0;
+      const navButtonHeight = firstNavButtonRef.current?.offsetHeight ?? 76;
 
-  const renderNavButton = (item: NavigationItemConfig, variant: 'primary' | 'dropdown' = 'primary') => (
+      if (!containerHeight || !navButtonHeight) {
+        setMaxPrimaryItems(MAX_PRIMARY_ITEMS);
+        return;
+      }
+
+      const computedMax = Math.max(1, Math.floor(containerHeight / navButtonHeight));
+      setMaxPrimaryItems(computedMax);
+    };
+
+    updateMaxPrimaryItems();
+    window.addEventListener('resize', updateMaxPrimaryItems);
+
+    let resizeObserver: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined' && navigationContainerRef.current) {
+      resizeObserver = new ResizeObserver(updateMaxPrimaryItems);
+      resizeObserver.observe(navigationContainerRef.current);
+    }
+
+    return () => {
+      window.removeEventListener('resize', updateMaxPrimaryItems);
+      resizeObserver?.disconnect();
+    };
+  }, [navigationItems.length, isLoading]);
+
+  const visibleItems = navigationItems.slice(0, maxPrimaryItems);
+  const overflowItems = navigationItems.slice(maxPrimaryItems);
+
+  const renderNavButton = (
+    item: NavigationItemConfig,
+    variant: 'primary' | 'dropdown' = 'primary',
+    ref?: React.Ref<HTMLButtonElement>
+  ) => (
     <button
+      ref={ref}
       key={item.id}
       onClick={() => handleNavigation(item.path)}
       className={`flex flex-col items-center justify-center w-full py-4 transition-all ${
@@ -102,14 +140,19 @@ const SideNavigation: React.FC = () => {
       </div>
 
       <div className="flex-1 flex flex-col items-center w-full overflow-hidden">
-        <div className="flex-1 flex flex-col items-center space-y-2 w-full overflow-hidden">
+        <div
+          ref={navigationContainerRef}
+          className="flex-1 flex flex-col items-center space-y-2 w-full overflow-hidden"
+        >
           {isLoading ? (
             <div className="flex flex-col items-center space-y-2 w-full py-4">
               <div className="w-12 h-12 bg-gray-200 rounded-full animate-pulse" />
               <div className="w-8 h-2 bg-gray-200 rounded animate-pulse" />
             </div>
           ) : (
-            visibleItems.map((item) => renderNavButton(item))
+            visibleItems.map((item, index) =>
+              renderNavButton(item, 'primary', index === 0 ? firstNavButtonRef : undefined)
+            )
           )}
         </div>
 
